@@ -29,8 +29,12 @@ def ensure_qai_hub_config():
     
     # 創建 config 文件，特別為 Snapdragon 設備優化
     config_file = qai_config_dir / "client.ini"
-    config_content = """[default]
+    config_content = """[DEFAULT]
+api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+
+[default]
 api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 organization = 
 base_api_url = https://api.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
