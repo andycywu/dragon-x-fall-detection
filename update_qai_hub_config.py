@@ -128,6 +128,33 @@ def check_windows_arm():
             return True
     return False
 
+def check_windows_long_path():
+    """檢查 Windows 長路徑支援"""
+    if platform.system() != "Windows":
+        return False
+    
+    try:
+        # 檢查長路徑是否已啟用
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\FileSystem") as key:
+            value, _ = winreg.QueryValueEx(key, "LongPathsEnabled")
+            if value == 1:
+                print("Windows 長路徑支援已啟用")
+                return True
+            else:
+                print("\n警告: Windows 長路徑支援未啟用")
+                print("安裝某些 Python 套件時可能會遇到路徑過長錯誤")
+                print("解決方法:")
+                print("1. 以管理員身份開啟 PowerShell，執行:")
+                print("   Set-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" -Name \"LongPathsEnabled\" -Value 1 -Type DWord")
+                print("2. 重新啟動電腦")
+                print("3. 或者使用短路徑的虛擬環境，例如:")
+                print("   python -m venv C:\\qai_env")
+                return False
+    except Exception:
+        print("無法檢查 Windows 長路徑支援狀態")
+        return False
+
 def verify_configuration():
     """驗證配置是否成功"""
     try:
@@ -154,6 +181,10 @@ def main():
     
     # 檢查 Windows ARM 環境
     check_windows_arm()
+    
+    # 檢查 Windows 長路徑支援
+    if platform.system() == "Windows":
+        check_windows_long_path()
     
     # 檢查 SDK 安裝
     check_sdk_installation()
