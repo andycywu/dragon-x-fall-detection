@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Dragon X 跌倒檢測系統啟動腳本 - Windows 版本
 
 echo ========================================

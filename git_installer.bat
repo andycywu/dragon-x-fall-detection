@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Windows上安裝Git的腳本
 
 echo 📦 在Windows上安裝Git...

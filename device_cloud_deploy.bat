@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Device Cloud Windows部署腳本
 
 echo 🐉 在Device Cloud上部署Dragon X Fall Detection System
