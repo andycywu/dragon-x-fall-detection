@@ -61,7 +61,8 @@ if not "%PIP_EXTRA%"=="--no-index --find-links=wheelhouse" (
 REM 5) 共同必備套件（盡量選用有 wheel 的版本）
 echo === 安裝共同必備套件 ===
 REM * 避免用 opencv-python，改用 headless 減少體積
-pip install %PIP_EXTRA% numpy==1.26.4 opencv-python-headless==4.10.0.84 requests>=2.25.0 Pillow>=8.0.0 streamlit>=1.28.0 || goto :pip_error
+REM * 固定 protobuf 版本為 4.25.3 (mediapipe需要)
+pip install %PIP_EXTRA% protobuf==4.25.3 numpy==1.26.4 opencv-python-headless==4.10.0.84 requests>=2.25.0 Pillow>=8.0.0 streamlit>=1.28.0 || goto :pip_error
 
 REM 6) ONNX Runtime 與加速器
 pip install %PIP_EXTRA% onnxruntime==1.18.0 || goto :pip_error
@@ -91,13 +92,16 @@ REM   pip install %PIP_EXTRA% torch==2.3.1 torchvision==0.18.1 || echo [WARN] Py
 REM )
 
 REM 10) QAI Hub SDK
-pip install %PIP_EXTRA% qai-hub qai-hub-models || goto :pip_error
+echo === 安裝 QAI Hub SDK (與 protobuf 4.25.3 相容的版本) ===
+pip install %PIP_EXTRA% "protobuf>=3.20.0,<=4.25.3" qai-hub qai-hub-models || goto :pip_error
 
 REM 10.1) 安裝和設置 QAI Hub 認證（新增）
 echo === 設置 QAI Hub 認證 ===
-python setup_qai_hub.py
+echo QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 > "%USERPROFILE%\.env"
+setx QAI_HUB_API_TOKEN "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2" >nul
+python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
 if errorlevel 1 (
-  echo [WARN] QAI Hub 認證設置失敗。請稍後手動執行 python setup_qai_hub.py
+  echo [WARN] QAI Hub 認證設置失敗。請稍後手動執行 python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
 ) else (
   echo QAI Hub 認證設置成功！
 )

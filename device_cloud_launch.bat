@@ -58,9 +58,14 @@ if %errorlevel%==0 (
 
 REM 設置QAI Hub認證
 echo === 設置QAI Hub認證...
-python setup_qai_hub.py
+echo QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 > "%USERPROFILE%\.env"
+python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
 if %errorlevel% NEQ 0 (
     echo !!! QAI Hub認證設置失敗，但仍將嘗試啟動系統
+    echo !!! 請確認：
+    echo !!!  1. .qai_hub 目錄是否存在於 %USERPROFILE% 目錄下
+    echo !!!  2. client.ini 文件是否包含正確的API密鑰
+    echo !!!  3. 手動運行 python -c "import qai_hub as hub; print(hub.get_devices())" 測試連接
 )
 
 REM 啟動AI檢測系統

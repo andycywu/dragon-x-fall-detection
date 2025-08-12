@@ -33,6 +33,22 @@ def setup_qai_hub_credentials(api_token=None):
                 except Exception as e:
                     print(f"!!! 讀取配置文件失敗: {e}")
     
+    # 如果仍然沒有 API 令牌，嘗試從 .env 文件中讀取
+    if not api_token:
+        env_path = Path.home() / ".env"
+        if env_path.exists():
+            try:
+                with open(env_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if '=' in line:
+                            key, value = line.strip().split('=', 1)
+                            if key == 'QAI_HUB_API_TOKEN':
+                                api_token = value
+                                print(">>> 從 .env 文件獲取到 API 令牌")
+                                break
+            except Exception as e:
+                print(f"!!! 讀取 .env 文件失敗: {e}")
+    
     # 如果仍然沒有 API 令牌，要求用戶輸入
     if not api_token:
         print("!!! 未找到 QAI Hub API 令牌")
@@ -43,6 +59,11 @@ def setup_qai_hub_credentials(api_token=None):
         if not api_token:
             print("!!! 未提供 API 令牌，無法繼續設置")
             return False
+    
+    # 使用備用默認令牌（如果未提供）
+    if not api_token:
+        api_token = 'h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2'
+        print(">>> 使用默認 API 令牌")
     
     # 創建 QAI Hub 配置目錄
     config_dir = Path.home() / ".qai_hub"
@@ -84,6 +105,13 @@ def setup_qai_hub_credentials(api_token=None):
     
     print(f">>> QAI Hub 配置範例已創建: {example_config_path}")
     
+    # 創建 .env 文件
+    env_path = Path.home() / ".env"
+    with open(env_path, 'w', encoding='utf-8') as f:
+        f.write(f"QAI_HUB_API_TOKEN={api_token}\n")
+    
+    print(f">>> 環境變量設置已儲存至 .env 文件: {env_path}")
+    
     return True
 
 def test_qai_hub_connection():
@@ -106,6 +134,11 @@ def test_qai_hub_connection():
         return True
     except Exception as e:
         print(f"!!! QAI Hub 連接失敗: {e}")
+        print("請確認:")
+        print("1. 網絡連接是否正常")
+        print("2. API 令牌是否有效")
+        print("3. 是否安裝了兼容的 qai-hub 和 protobuf 版本")
+        print("   - 建議: pip install protobuf==4.25.3 qai-hub")
         return False
 
 def main():
@@ -113,6 +146,7 @@ def main():
     parser = argparse.ArgumentParser(description='QAI Hub 設置工具')
     parser.add_argument('--token', type=str, help='QAI Hub API 令牌')
     parser.add_argument('--test', action='store_true', help='測試 QAI Hub 連接')
+    parser.add_argument('--force', action='store_true', help='強制重新設置所有配置')
     
     args = parser.parse_args()
     
@@ -123,8 +157,9 @@ def main():
         # 設置認證
         success = setup_qai_hub_credentials(args.token)
         
-        if success and input("是否測試 QAI Hub 連接? (y/n): ").lower() == 'y':
-            test_qai_hub_connection()
+        if success:
+            if args.force or input("是否測試 QAI Hub 連接? (y/n): ").lower() == 'y':
+                test_qai_hub_connection()
 
 if __name__ == "__main__":
     main()
