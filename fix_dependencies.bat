@@ -31,13 +31,24 @@ echo QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 > "%USERPROFILE%
 echo 設置 QAI Hub 認證...
 python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 --force
 
-echo 4) 檢查 QAI Hub 配置
+echo 4) 修復 QAI Hub client.ini 配置（重點）
 echo 創建 .qai_hub 目錄...
 if not exist "%USERPROFILE%\.qai_hub" mkdir "%USERPROFILE%\.qai_hub"
 
-echo 檢查 client.ini 文件...
+echo 創建 client.ini 文件...
 echo [DEFAULT] > "%USERPROFILE%\.qai_hub\client.ini"
 echo api_key = h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 >> "%USERPROFILE%\.qai_hub\client.ini"
+
+echo 驗證 client.ini 文件...
+if exist "%USERPROFILE%\.qai_hub\client.ini" (
+  echo 成功: client.ini 文件已創建
+  type "%USERPROFILE%\.qai_hub\client.ini"
+) else (
+  echo 錯誤: client.ini 文件創建失敗
+)
+
+echo 運行專用修復工具...
+python fix_client_ini.py
 
 echo 5) 測試 MediaPipe 相容性
 python -c "import mediapipe as mp; print('MediaPipe 版本:', mp.__version__); print('MediaPipe 初始化成功')" 2>nul
