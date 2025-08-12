@@ -1,40 +1,58 @@
 # 🐉 Dragon X Fall Detection System Dependencies
-# Qualcomm Snapdragon X Elite優化版依賴包
+# Qualcomm Snapdragon X Elite優化版依賴包 (ARM64-optimized, wheel-friendly versions to avoid source compilation)
 
-# 核心AI框架
-onnxruntime>=1.15.0
-torch>=1.13.0
-torchvision>=0.14.0
-mediapipe>=0.10.0
+# Core AI Framework 核心AI框架
+onnxruntime==1.18.0
+# 以下加速器將由 install_platform_accelerators.py 自動安裝:
+# - Windows: onnxruntime-directml (x64/ARM64)
+# - Windows ARM64: onnxruntime-qnn (Snapdragon)
+# - macOS ARM64: onnxruntime-coreml (Apple Silicon)
+# - Linux ARM64: onnxruntime-qnn
 
-# 計算機視覺
-opencv-python>=4.5.0
-Pillow>=8.0.0
-numpy>=1.21.0
-scipy>=1.7.0
+# PyTorch - platform-specific versions
+# 注意: 這裡提供適合各平台的版本
+# 使用 install_platform_accelerators.py 會自動選擇最適合您平台的版本
+torch>=2.0.0
+torchvision>=0.15.0
+# 不再使用 CPU-only 特定版本，使用 pip 自動選擇適合的版本
+# --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Web界面和API
-streamlit>=1.28.0
-requests>=2.25.0
-fastapi>=0.68.0
-uvicorn>=0.15.0
+mediapipe==0.10.14
 
-# 語音處理
-openai-whisper>=20230918
-sounddevice>=0.4.4
-librosa>=0.9.0
+# Computer Vision 計算機視覺
+opencv-python-headless==4.10.0.84
+Pillow==9.5.0
+numpy==1.23.5
+scipy==1.10.1
 
-# 數據處理
-pandas>=1.3.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
-plotly>=5.0.0
-transformers>=4.20.0
+# Web Interface and API Web界面和API
+streamlit==1.28.0
+requests==2.28.2
+fastapi==0.95.1
+uvicorn==0.22.0
 
-# QAI Hub客戶端
-qai-hub>=0.9.0
+# Speech Processing 語音處理
+faster-whisper==1.0.0
+ctranslate2==4.5.0
+sounddevice==0.4.4
+librosa==0.9.2
 
-# 系統工具
-psutil>=5.8.0
-tqdm>=4.62.0
-pyyaml>=5.4.0
+# Data Processing 數據處理
+pandas==1.5.3
+matplotlib==3.7.1
+seaborn==0.12.2
+plotly==5.14.1
+transformers==4.29.2
+
+# QAI Hub Client QAI Hub客戶端
+qai-hub==0.9.0
+
+# System Utilities 系統工具
+psutil==5.9.4
+tqdm==4.65.0
+pyyaml==6.0
+
+# Development Tools 開發工具
+pytest==7.3.1
+black==23.3.0
+flake8==6.0.0

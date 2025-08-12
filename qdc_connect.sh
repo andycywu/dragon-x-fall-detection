@@ -28,7 +28,7 @@ echo -e "${GREEN}✅ SSH密鑰權限設置完成${NC}"
 # 設置QDC隧道常量
 QDC_SSH_HOST="ssh.qdc.qualcomm.com"
 QDC_TUNNEL_USER="sshtunnel"
-QDC_DEVICE_HOST="sa296481.sa.svc.cluster.local"
+QDC_DEVICE_HOST="sa296826.sa.svc.cluster.local"
 LOCAL_PORT=2222
 REMOTE_PORT=22
 
