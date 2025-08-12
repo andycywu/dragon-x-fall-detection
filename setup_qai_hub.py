@@ -144,7 +144,7 @@ def get_api_token_from_sources(config_path=None, verbose=True):
     
     # 6. 使用備用默認令牌
     if not api_token:
-        api_token = 'h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2'
+        api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
         if verbose:
             print_info("使用默認 API 令牌")
     
@@ -161,7 +161,7 @@ def setup_qai_hub_credentials(api_token=None, force=False, verbose=True):
     # 檢查令牌格式
     if not api_token or len(api_token) < 10:
         print_error("API 令牌格式不正確或為空")
-        print_info("正確的 API 令牌應為長字符串，例如: h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2")
+        print_info("正確的 API 令牌應為長字符串，例如: pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d")
         if not force:
             print_info("請訪問 https://aihub.qualcomm.com/ 獲取訪問權限")
             print_info("如果您已有訪問權限，請參考 https://app.aihub.qualcomm.com/docs 獲取設置說明")

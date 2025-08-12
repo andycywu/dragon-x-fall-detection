@@ -16,7 +16,7 @@ set "BOLD=[1m"
 set "RESET=[0m"
 
 REM 設置環境變量
-set QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+set QAI_HUB_API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 set PYTHONPATH=%PYTHONPATH%;%CD%
 
 REM 檢查 client.ini 文件是否存在
