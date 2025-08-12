@@ -27,15 +27,17 @@ chmod +x fix_qai_hub_macos.sh
 
 #### 2. 配置文件格式問題
 
-QAI Hub 的配置文件格式需要非常精確。以下是正確的格式：
+QAI Hub 的配置文件格式需要非常精確。以下是唯一正確的格式：
 
 ```ini
 [default]
 api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
-base_api_url = https://api.aihub.qualcomm.com
+base_api_url = https://app.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
 ```
+
+**重要：** 請注意 `base_api_url` 和 `web_url` 都應設為 `https://app.aihub.qualcomm.com`
 
 如果修復腳本無法解決問題，請手動編輯配置文件：
 
@@ -48,12 +50,17 @@ nano ~/.qai_hub/client.ini
 
 #### 1. 執行修復批處理腳本
 
-我們提供了一個針對 Windows 的修復批處理檔案：
+我們提供了兩個針對 Windows 的修復批處理檔案：
 
-```bat
-# 執行修復腳本
-fix_qai_hub_client.bat
+```batch
+# 簡易版 URL 切換工具
+qai_hub_url_switcher.bat
+
+# 完整版互動式修復工具
+qai_hub_fixer.bat
 ```
+
+這些工具會自動測試新舊 API URL，使用能正常工作的那個，並確保您的配置正確設置。詳細說明請參考 `QAI_HUB_URL_SWITCHER_README.md`。
 
 #### 2. 配置文件路徑和格式
 
@@ -69,9 +76,11 @@ fix_qai_hub_client.bat
 [default]
 api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
-base_api_url = https://api.aihub.qualcomm.com
+base_api_url = https://app.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
 ```
+
+**重要說明：** 唯一正確的 URL 是 `https://app.aihub.qualcomm.com`。請勿使用其他 URL。
 
 #### 3. Windows 長路徑問題
 
@@ -115,8 +124,8 @@ web_url = https://app.aihub.qualcomm.com
 如果您遇到網絡連接問題，可以嘗試以下步驟：
 
 ```bash
-# 測試連接到 API 服務器
-ping -c 3 api.aihub.qualcomm.com
+# 測試連接到 QAI Hub 服務器
+ping -c 3 app.aihub.qualcomm.com
 
 # 或使用我們的診斷工具
 python test_qai_hub_api.py
