@@ -16,7 +16,7 @@ echo "================================="
 SSH_KEY="qdc_id_2025-8-11_62.pem"
 QDC_SSH_HOST="ssh.qdc.qualcomm.com"
 QDC_TUNNEL_USER="sshtunnel"
-QDC_DEVICE_HOST="sa296812.sa.svc.cluster.local"  # 用戶提供的設備主機名
+QDC_DEVICE_HOST="sa296826.sa.svc.cluster.local"  # 用戶提供的設備主機名
 LOCAL_PORT=2222
 REMOTE_PORT=22
 QDC_DEVICE_USER="hcktest"
