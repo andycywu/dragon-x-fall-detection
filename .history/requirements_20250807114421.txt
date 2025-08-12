@@ -1,0 +1,13 @@
+opencv-python
+mediapipe
+onnxruntime
+streamlit
+numpy
+sounddevice
+scipy
+openai-whisper
+torch
+transformers
+plotly
+pandas
+librosa

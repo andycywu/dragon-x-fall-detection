@@ -1,0 +1,10 @@
+# QAI Hub Live Demo 依賴包
+streamlit>=1.28.0
+plotly>=5.17.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+face-recognition>=1.3.0
+qai-hub>=0.16.0
+tensorflow>=2.19.0
+ultralytics>=8.3.0

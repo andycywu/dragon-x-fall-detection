@@ -1,0 +1,20 @@
+{
+  "timestamp": 1754881798.380106,
+  "steps": {
+    "load_models": "completed",
+    "export_torchscript": "completed",
+    "upload_qai_hub": "completed",
+    "submit_compile_jobs": "completed",
+    "convert_onnx": "completed"
+  },
+  "final_status": {
+    "loaded_models": [
+      "face",
+      "pose",
+      "hand"
+    ],
+    "onnx_sessions": [],
+    "qai_hub_uploads": 0,
+    "compile_jobs": 0
+  }
+}

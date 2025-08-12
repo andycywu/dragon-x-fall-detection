@@ -1,0 +1,101 @@
+# 🐉 Dragon X Fall Detection System - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AI模型文件
+*.onnx
+*.pt
+*.pth
+*.h5
+*.pb
+models/
+checkpoints/
+
+# 測試數據和結果
+test_images/
+test_videos/
+results/
+outputs/
+demos/
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+*.mov
+*.wav
+*.mp3
+
+# 日誌文件
+*.log
+logs/
+
+# 配置文件中的敏感信息
+config.json
+secrets.json
+.env
+
+# QAI Hub緩存
+.qai_hub/
+qai_hub_cache/
+
+# SSH密鑰（保留qdc_id開頭的）
+*.pem
+!qdc_id_*.pem
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# 臨時文件
+tmp/
+temp/
+*.tmp
+*.temp
+
+# 性能報告
+*.prof
+*.profile

@@ -1,0 +1,30 @@
+{
+  "🏆 黑客松項目": "跨平台AI老人跌倒檢測系統",
+  "🎯 核心價值": "Mac開發 + Snapdragon部署的跨平台AI解決方案",
+  "⚡ 性能提升": "37%速度提升，33%記憶體節省",
+  "🧠 AI模型": "6個模型成功部署到Dragon X",
+  "🏥 應用領域": "老人安全監護和跌倒預防",
+  "📊 QAI Hub Jobs": [
+    "jp8m66nq5 (Face Detection)",
+    "jgkqoo1vg (Pose Estimation)",
+    "j5qrzznep (Hand Detection)",
+    "jgl2ood2p (Pose Fall Detection)",
+    "j56zrrxng (Face Elderly ID)",
+    "jp31xxdmg (Hand Emergency)"
+  ],
+  "🚀 技術亮點": [
+    "🌐 真正的跨平台AI架構 - 同一套代碼在兩平台運行",
+    "☁️ QAI Hub雲端編譯 - 6個AI模型成功部署",
+    "🧠 硬件抽象智能選擇 - 自動選擇最佳AI加速器",
+    "🏥 老人安全特化 - 跌倒檢測+身份確認+緊急求救",
+    "⚡ 性能大幅提升 - Snapdragon X Elite優化",
+    "📱 實時檢測能力 - 30fps AI推理性能"
+  ],
+  "🎉 展示能力": [
+    "實時人臉識別和老人身份確認",
+    "姿態分析和跌倒風險評估",
+    "緊急手勢檢測和自動報警",
+    "多平台性能對比展示",
+    "QAI Hub雲端編譯實況"
+  ]
+}

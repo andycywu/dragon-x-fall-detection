@@ -1,0 +1,40 @@
+{
+  "monitor_start": "2025-08-11T11:25:12.246825",
+  "jobs": {
+    "check_1": {
+      "Face Detection": {
+        "name": "Face Detection",
+        "job_id": "j56zrrmyg",
+        "timestamp": "2025-08-11T11:25:12.864900",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/j56zrrmyg",
+        "status": "COMPLETED",
+        "success": true
+      },
+      "Pose Estimation": {
+        "name": "Pose Estimation",
+        "job_id": "jp31xx7ng",
+        "timestamp": "2025-08-11T11:25:13.471059",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jp31xx7ng",
+        "status": "COMPLETED",
+        "success": true
+      },
+      "Hand Detection": {
+        "name": "Hand Detection",
+        "job_id": "jgonoowkp",
+        "timestamp": "2025-08-11T11:25:14.178300",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jgonoowkp",
+        "status": "COMPLETED",
+        "success": true
+      }
+    }
+  },
+  "summary": {
+    "total_jobs": 3,
+    "completed": 3,
+    "in_progress": 0,
+    "errors": 0,
+    "completion_rate": "3/3",
+    "success_rate": "100.0%"
+  },
+  "monitor_end": "2025-08-11T11:25:15.104772"
+}

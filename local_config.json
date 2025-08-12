@@ -1,0 +1,6 @@
+{
+  "development_mode": true,
+  "log_level": "INFO",
+  "output_directory": "./output",
+  "model_cache_directory": "./models"
+}

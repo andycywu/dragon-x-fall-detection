@@ -1,0 +1,14 @@
+{
+  "system": "QAI Hub + ONNX Runtime Integration",
+  "timestamp": 1754881666.038217,
+  "loaded_models": [
+    "face",
+    "pose",
+    "hand"
+  ],
+  "onnx_sessions": [],
+  "job_statuses": {},
+  "providers": [
+    "CPUExecutionProvider"
+  ]
+}

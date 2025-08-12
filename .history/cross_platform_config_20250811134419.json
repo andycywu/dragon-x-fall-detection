@@ -1,0 +1,186 @@
+{
+  "platform_configs": {
+    "mac_apple_silicon": {
+      "model_path": "./models/mac",
+      "batch_size": 1,
+      "input_shape": [1, 3, 224, 224],
+      "num_threads": 4,
+      "enable_coreml": true,
+      "memory_pool_size": "1GB",
+      "optimization_level": "all",
+      "providers": ["CoreMLExecutionProvider", "CPUExecutionProvider"],
+      "fall_detection": {
+        "confidence_threshold": 0.8,
+        "temporal_window": 30,
+        "enable_pose_tracking": true,
+        "enable_face_detection": true
+      }
+    },
+    "snapdragon_x_elite": {
+      "model_path": "./models/snapdragon",
+      "batch_size": 1,
+      "input_shape": [1, 3, 224, 224],
+      "num_threads": 8,
+      "enable_qnn": true,
+      "hexagon_npu_priority": "high",
+      "memory_pool_size": "2GB",
+      "optimization_level": "all",
+      "providers": ["QNNExecutionProvider", "CPUExecutionProvider"],
+      "fall_detection": {
+        "confidence_threshold": 0.85,
+        "temporal_window": 20,
+        "enable_pose_tracking": true,
+        "enable_face_detection": true,
+        "enable_emergency_gesture": true
+      }
+    },
+    "fallback": {
+      "model_path": "./models/generic",
+      "batch_size": 1,
+      "input_shape": [1, 3, 224, 224],
+      "num_threads": 2,
+      "enable_acceleration": false,
+      "memory_pool_size": "512MB",
+      "optimization_level": "basic",
+      "providers": ["CPUExecutionProvider"],
+      "fall_detection": {
+        "confidence_threshold": 0.7,
+        "temporal_window": 40,
+        "enable_pose_tracking": false,
+        "enable_face_detection": false
+      }
+    }
+  },
+  "qai_hub_config": {
+    "api_token_env": "QAI_HUB_API_TOKEN",
+    "preferred_devices": [
+      "Snapdragon X Elite CRD",
+      "Snapdragon X Plus 8-Core CRD",
+      "Snapdragon 8 Gen 3"
+    ],
+    "model_compilation": {
+      "target_runtime": "onnx",
+      "optimization_level": "2",
+      "quantization": "int8",
+      "enable_profiling": true
+    },
+    "deployment_strategy": {
+      "mac_development": {
+        "use_cloud_validation": true,
+        "sync_models": true,
+        "enable_remote_testing": true
+      },
+      "snapdragon_production": {
+        "use_local_models": true,
+        "enable_cloud_sync": false,
+        "performance_monitoring": true
+      }
+    }
+  },
+  "model_mappings": {
+    "face_detection": {
+      "mac_model": "face_detection_coreml.onnx",
+      "snapdragon_model": "face_detection_qnn.onnx",
+      "qai_hub_job_ids": {
+        "snapdragon_x_elite": "jgzj88yxp",
+        "snapdragon_x_plus": "jgj2ooye5"
+      }
+    },
+    "pose_estimation": {
+      "mac_model": "pose_estimation_coreml.onnx", 
+      "snapdragon_model": "pose_estimation_qnn.onnx",
+      "qai_hub_job_ids": {
+        "snapdragon_x_elite": "j5w388zmp",
+        "snapdragon_x_plus": "jpvreemr5"
+      }
+    },
+    "hand_detection": {
+      "mac_model": "hand_detection_coreml.onnx",
+      "snapdragon_model": "hand_detection_qnn.onnx", 
+      "qai_hub_job_ids": {
+        "snapdragon_x_elite": "jg9ykk285",
+        "snapdragon_x_plus": "jpew88xvp"
+      }
+    }
+  },
+  "development_workflow": {
+    "phases": {
+      "phase_1_mac_development": {
+        "duration_weeks": 2,
+        "objectives": [
+          "核心算法開發",
+          "用戶界面設計",
+          "基本功能測試",
+          "CoreML優化"
+        ],
+        "tools": ["Xcode", "VS Code", "ONNX Runtime", "CoreML Tools"],
+        "deliverables": ["原型系統", "單元測試", "性能基準"]
+      },
+      "phase_2_cloud_integration": {
+        "duration_weeks": 2,
+        "objectives": [
+          "QAI Hub集成",
+          "Snapdragon雲端測試",
+          "性能對比分析",
+          "模型優化"
+        ],
+        "tools": ["QAI Hub SDK", "Cloud Testing", "Performance Profiler"],
+        "deliverables": ["雲端驗證報告", "優化模型", "部署腳本"]
+      },
+      "phase_3_snapdragon_deployment": {
+        "duration_weeks": 2,
+        "objectives": [
+          "實體設備部署",
+          "QNN優化",
+          "生產環境測試",
+          "用戶驗收測試"
+        ],
+        "tools": ["Snapdragon X Elite CRD", "QNN SDK", "Hexagon NN"],
+        "deliverables": ["生產系統", "用戶手冊", "技術文檔"]
+      }
+    },
+    "success_metrics": {
+      "performance": {
+        "inference_latency_ms": {
+          "mac_target": 50,
+          "snapdragon_target": 30
+        },
+        "accuracy_threshold": 0.85,
+        "memory_usage_mb": {
+          "mac_limit": 500,
+          "snapdragon_limit": 300
+        }
+      },
+      "reliability": {
+        "uptime_percentage": 99.5,
+        "error_rate_percentage": 0.1,
+        "recovery_time_seconds": 5
+      }
+    }
+  },
+  "troubleshooting": {
+    "common_issues": {
+      "coreml_not_available": {
+        "symptoms": ["CoreML provider missing", "Neural Engine not detected"],
+        "solutions": ["Update macOS", "Check Xcode installation", "Verify Apple Silicon architecture"]
+      },
+      "qnn_not_available": {
+        "symptoms": ["QNN provider missing", "Hexagon NPU not detected"],
+        "solutions": ["Install QNN SDK", "Check Snapdragon drivers", "Verify ARM64 Windows"]
+      },
+      "shape_inference_error": {
+        "symptoms": ["Dynamic shape error", "ONNX compilation failed"],
+        "solutions": ["Use fixed input shapes", "TorchScript conversion", "Model reshaping"]
+      },
+      "memory_limitations": {
+        "symptoms": ["Out of memory", "Model loading failed"],
+        "solutions": ["Reduce batch size", "Enable memory optimization", "Use quantized models"]
+      }
+    },
+    "debugging_tools": {
+      "mac": ["Instruments", "Activity Monitor", "Console"],
+      "snapdragon": ["Snapdragon Profiler", "QNN Tools", "Windows Performance Monitor"],
+      "cross_platform": ["ONNX Runtime Profiler", "Python Memory Profiler", "Custom Logging"]
+    }
+  }
+}

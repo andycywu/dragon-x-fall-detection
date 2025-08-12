@@ -1,0 +1,87 @@
+{
+  "status_report": {
+    "system_name": "Dragon X\u8001\u4eba\u8dcc\u5012\u9810\u9632\u6aa2\u6e2c\u7cfb\u7d71",
+    "timestamp": 1754891401.716942,
+    "dragon_x_device": {
+      "name": "Snapdragon X Elite CRD",
+      "status": "ready"
+    },
+    "models_status": {
+      "pose_fall_detection": "loaded",
+      "face_elderly_id": "loaded",
+      "hand_emergency_gesture": "loaded"
+    },
+    "qai_hub_jobs": {
+      "pose_fall_detection_job": {
+        "job_id": "jg9ykkrm5",
+        "status": "compiling",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jg9ykkrm5"
+      },
+      "face_elderly_id_job": {
+        "job_id": "jp1w779ng",
+        "status": "compiling",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jp1w779ng"
+      },
+      "hand_emergency_gesture_job": {
+        "job_id": "jgdq88k65",
+        "status": "compiling",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jgdq88k65"
+      }
+    },
+    "hackathon_readiness": true
+  },
+  "detection_results": {
+    "timestamp": 1754891405.364296,
+    "dragon_x_device": "Snapdragon X Elite CRD",
+    "fall_prevention_analysis": {
+      "fall_risk": "normal",
+      "risk_score": 0.0,
+      "confidence": 0.0,
+      "message": "\u2705 \u6b63\u5e38\u72c0\u614b",
+      "indicators": [],
+      "recommendation": "\u7e7c\u7e8c\u4fdd\u6301\u826f\u597d\u59ff\u614b"
+    },
+    "detections": {
+      "pose": {
+        "keypoints": [
+          {
+            "keypoints": [
+              {
+                "x": 0.5,
+                "y": 0.3,
+                "confidence": 0.8
+              },
+              {
+                "x": 0.45,
+                "y": 0.5,
+                "confidence": 0.9
+              },
+              {
+                "x": 0.55,
+                "y": 0.5,
+                "confidence": 0.9
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "qai_hub_jobs": {
+      "pose_fall_detection": {
+        "job_id": "jg9ykkrm5",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jg9ykkrm5",
+        "target_device": "Snapdragon X Elite CRD"
+      },
+      "face_elderly_id": {
+        "job_id": "jp1w779ng",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jp1w779ng",
+        "target_device": "Snapdragon X Elite CRD"
+      },
+      "hand_emergency_gesture": {
+        "job_id": "jgdq88k65",
+        "dashboard_url": "https://app.aihub.qualcomm.com/jobs/jgdq88k65",
+        "target_device": "Snapdragon X Elite CRD"
+      }
+    }
+  }
+}

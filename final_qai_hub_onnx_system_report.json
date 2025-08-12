@@ -1,0 +1,32 @@
+{
+  "system_info": {
+    "target_device": "Samsung Galaxy Tab S7",
+    "onnx_providers": [
+      "CoreMLExecutionProvider"
+    ]
+  },
+  "model_components": {
+    "face_detector": {
+      "loaded": true,
+      "description": "MediaPipe Face Detector",
+      "error": null
+    },
+    "face_landmark": {
+      "loaded": true,
+      "description": "MediaPipe Face Landmark Detector",
+      "error": null
+    }
+  },
+  "qai_hub_models": {
+    "face_detector": {
+      "model_id": "mnzd388zq",
+      "description": "MediaPipe Face Detector"
+    },
+    "face_landmark": {
+      "model_id": "mm536pp9q",
+      "description": "MediaPipe Face Landmark Detector"
+    }
+  },
+  "qai_hub_jobs": {},
+  "onnx_sessions": []
+}
