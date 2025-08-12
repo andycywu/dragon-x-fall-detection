@@ -22,7 +22,7 @@ echo 用戶配置目錄: %USERPROFILE%
 echo.
 
 REM 設置 API 令牌
-set API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+set API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 
 REM 檢查 QAI Hub 相關目錄
 set QAI_CONFIG_DIR=%USERPROFILE%\.qai_hub

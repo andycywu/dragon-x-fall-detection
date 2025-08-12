@@ -71,7 +71,7 @@ def fix_client_ini():
     
     # 2. 如果沒有找到，使用默認值
     if not api_token:
-        api_token = 'h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2'
+        api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
         print_info(f"使用默認 API 令牌: {api_token}")
     
     # 同時設置所有可能的環境變量

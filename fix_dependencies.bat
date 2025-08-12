@@ -25,11 +25,11 @@ pip install qai-hub==0.31.0 qai-hub-models==0.33.1
 
 echo 3) 設置 QAI Hub 認證
 echo 設置 API 令牌環境變數...
-setx QAI_HUB_API_TOKEN "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2" >nul
-echo QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 > "%USERPROFILE%\.env"
+setx QAI_HUB_API_TOKEN "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d" >nul
+echo QAI_HUB_API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d > "%USERPROFILE%\.env"
 
 echo 設置 QAI Hub 認證...
-python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 --force
+python setup_qai_hub.py --token pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d --force
 
 echo 4) 修復 QAI Hub client.ini 配置（重點）
 echo 創建 .qai_hub 目錄...
@@ -37,7 +37,7 @@ if not exist "%USERPROFILE%\.qai_hub" mkdir "%USERPROFILE%\.qai_hub"
 
 echo 創建 client.ini 文件...
 echo [DEFAULT] > "%USERPROFILE%\.qai_hub\client.ini"
-echo api_key = h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 >> "%USERPROFILE%\.qai_hub\client.ini"
+echo api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d >> "%USERPROFILE%\.qai_hub\client.ini"
 
 echo 驗證 client.ini 文件...
 if exist "%USERPROFILE%\.qai_hub\client.ini" (
