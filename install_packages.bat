@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Qualcomm Snapdragon 套件安裝腳本（加速版：優先離線 / ARM64 原生）
 
 setlocal ENABLEDELAYEDEXPANSION

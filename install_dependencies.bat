@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 :: Dragon X Fall Detection System 依賴包安裝腳本 (Windows 版本)
 echo 🐉 Dragon X Fall Detection System - 環境設置
 echo ===============================================

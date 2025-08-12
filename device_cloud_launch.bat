@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM Qualcomm Device Cloud啟動腳本
 
 echo === Dragon X Fall Detection System ===

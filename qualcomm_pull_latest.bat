@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM 在 Qualcomm Snapdragon X Elite Windows 11 裝置上拉取最新的程式碼
 REM 使用方法: qualcomm_pull_latest.bat
 
