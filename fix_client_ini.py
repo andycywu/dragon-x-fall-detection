@@ -61,18 +61,19 @@ def fix_client_ini():
     # 獲取 API 令牌 - 嘗試多個來源
     api_token = None
     
-    # 1. 嘗試從環境變量獲取
+    # 使用新的固定 API 令牌
+    api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
+    print_info(f"使用指定的 API 令牌: {api_token}")
+    
+    # 檢查環境變量中是否有舊的令牌
     env_vars = ['QAI_HUB_API_TOKEN', 'QAI_API_KEY', 'QAI_HUB_API_KEY']
     for var in env_vars:
         if var in os.environ:
-            api_token = os.environ[var]
-            print_success(f"從環境變量 {var} 獲取 API 令牌")
-            break
-    
-    # 2. 如果沒有找到，使用默認值
-    if not api_token:
-        api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
-        print_info(f"使用默認 API 令牌: {api_token}")
+            old_token = os.environ[var]
+            if old_token != api_token:
+                print_warning(f"環境變量 {var} 中的 API 令牌已過時，將被更新")
+            else:
+                print_success(f"環境變量 {var} 中的 API 令牌已正確設置")
     
     # 同時設置所有可能的環境變量
     for var in env_vars:

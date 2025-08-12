@@ -12,7 +12,7 @@ def fix_qai_hub_config():
     print("Fixing QAI Hub configuration...")
     
     # API token
-    api_token = "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+    api_token = "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
     
     # Create .qai_hub directory
     home_dir = Path.home()
@@ -23,7 +23,7 @@ def fix_qai_hub_config():
     # Create config file with proper format
     config_file = qai_config_dir / "client.ini"
     config_content = """[default]
-api_token = h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 organization = 
 base_api_url = https://api.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com

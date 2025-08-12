@@ -59,95 +59,26 @@ def print_info(text):
 
 def get_api_token_from_sources(config_path=None, verbose=True):
     """從多個來源獲取 API 令牌"""
-    api_token = None
+    # 使用固定的新 API 令牌
+    api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
+    if verbose:
+        print_info("使用指定的 API 令牌")
     
-    # 1. 檢查命令行參數中的 token
-    if config_path:
+    # 檢查命令行參數中是否提供了令牌
+    if config_path and config_path != api_token:
         if verbose:
-            print_info(f"嘗試從提供的參數獲取 API 令牌")
-        api_token = config_path
+            print_warning(f"提供的參數與指定的 API 令牌不同，將使用指定的令牌")
     
-    # 2. 檢查環境變量
-    if not api_token:
-        env_vars = ['QAI_HUB_API_TOKEN', 'QAI_API_KEY', 'QAI_HUB_API_KEY']
-        for var in env_vars:
-            if var in os.environ:
-                api_token = os.environ[var]
-                if verbose:
-                    print_success(f"從環境變量 {var} 獲取到 API 令牌")
-                break
+    # 檢查環境變量是否有舊令牌
+    env_vars = ['QAI_HUB_API_TOKEN', 'QAI_API_KEY', 'QAI_HUB_API_KEY']
+    for var in env_vars:
+        if var in os.environ and os.environ[var] != api_token:
+            if verbose:
+                print_warning(f"環境變量 {var} 中的 API 令牌與指定的不同，將使用指定的令牌")
+            # 更新環境變量
+            os.environ[var] = api_token
     
-    # 3. 從配置文件中讀取
-    if not api_token:
-        config_files = [
-            Path.cwd() / "qai_hub_config.json",
-            Path.cwd() / "config.json",
-            Path.cwd() / "api_config.json"
-        ]
-        
-        for config_file in config_files:
-            if config_file.exists():
-                try:
-                    with open(config_file, 'r', encoding='utf-8') as f:
-                        config = json.load(f)
-                        for key in ['api_token', 'api_key', 'token', 'key']:
-                            if key in config and config[key]:
-                                api_token = config[key]
-                                if verbose:
-                                    print_success(f"從配置文件 {config_file.name} 獲取到 API 令牌")
-                                break
-                        if api_token:
-                            break
-                except Exception as e:
-                    if verbose:
-                        print_warning(f"讀取配置文件 {config_file} 失敗: {e}")
-    
-    # 4. 從 .env 文件中讀取
-    if not api_token:
-        env_paths = [
-            Path.home() / ".env",
-            Path.cwd() / ".env"
-        ]
-        
-        for env_path in env_paths:
-            if env_path.exists():
-                try:
-                    with open(env_path, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            if '=' in line:
-                                key, value = line.strip().split('=', 1)
-                                if key.strip() in ['QAI_HUB_API_TOKEN', 'QAI_API_KEY', 'API_KEY', 'QAI_TOKEN']:
-                                    api_token = value.strip()
-                                    if verbose:
-                                        print_success(f"從 {env_path.name} 文件獲取到 API 令牌")
-                                    break
-                        if api_token:
-                            break
-                except Exception as e:
-                    if verbose:
-                        print_warning(f"讀取 {env_path} 文件失敗: {e}")
-    
-    # 5. 從現有的 client.ini 中讀取
-    if not api_token:
-        client_ini = Path.home() / ".qai_hub" / "client.ini"
-        if client_ini.exists():
-            try:
-                config = configparser.ConfigParser()
-                config.read(client_ini)
-                if 'DEFAULT' in config and 'api_key' in config['DEFAULT']:
-                    api_token = config['DEFAULT']['api_key']
-                    if verbose:
-                        print_success(f"從現有的 client.ini 獲取到 API 令牌")
-            except Exception as e:
-                if verbose:
-                    print_warning(f"讀取 client.ini 失敗: {e}")
-    
-    # 6. 使用備用默認令牌
-    if not api_token:
-        api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
-        if verbose:
-            print_info("使用默認 API 令牌")
-    
+    return api_token
     return api_token
 
 def setup_qai_hub_credentials(api_token=None, force=False, verbose=True):
@@ -246,7 +177,7 @@ def setup_qai_hub_credentials(api_token=None, force=False, verbose=True):
     
     # 創建示例 QAI Hub 配置文件
     example_config = {
-        "api_token": api_token,
+        "api_token": 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d',
         "device_preference": "Snapdragon X Elite CRD",
         "fallback_device": "Snapdragon X Plus 8-Core CRD",
         "inference_backend": "QNN",

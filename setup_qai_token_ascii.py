@@ -13,7 +13,7 @@ def setup_qai_hub_token():
     print("Setting up QAI Hub API token...")
     
     # API token
-    api_token = "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+    api_token = "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
     
     # Create .qai_hub directory
     home_dir = Path.home()

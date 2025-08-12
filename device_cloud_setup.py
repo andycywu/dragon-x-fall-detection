@@ -14,7 +14,9 @@ from pathlib import Path
 class DeviceCloudSetup:
     def __init__(self):
         self.project_root = Path(__file__).parent
-        self.qai_token = "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+        # 初始配置
+        self.cloud_url = "https://aihub.qualcomm.com/"
+        self.qai_token = "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
         
         # 檢查環境變量中是否有令牌
         if 'QAI_HUB_API_TOKEN' in os.environ:
@@ -305,7 +307,7 @@ echo === Dragon X Fall Detection System ===
 echo ==================================
 
 REM 設置環境變量
-set QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+set QAI_HUB_API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 set PYTHONPATH=%PYTHONPATH%;%CD%{arm64_extra}
 
 REM 檢查系統信息
@@ -369,7 +371,7 @@ echo "=== Dragon X Fall Detection System ==="
 echo "=================================="
 
 # 設置環境變量
-export QAI_HUB_API_TOKEN="h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+export QAI_HUB_API_TOKEN="pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # 檢查CPU/NPU狀態

@@ -97,11 +97,11 @@ pip install %PIP_EXTRA% "protobuf>=3.20.0,<=4.25.3" qai-hub qai-hub-models || go
 
 REM 10.1) 安裝和設置 QAI Hub 認證（新增）
 echo === 設置 QAI Hub 認證 ===
-echo QAI_HUB_API_TOKEN=h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2 > "%USERPROFILE%\.env"
-setx QAI_HUB_API_TOKEN "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2" >nul
-python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+echo QAI_HUB_API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d > "%USERPROFILE%\.env"
+setx QAI_HUB_API_TOKEN "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d" >nul
+python setup_qai_hub.py --token pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 if errorlevel 1 (
-  echo [WARN] QAI Hub 認證設置失敗。請稍後手動執行 python setup_qai_hub.py --token h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+  echo [WARN] QAI Hub 認證設置失敗。請稍後手動執行 python setup_qai_hub.py --token pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 ) else (
   echo QAI Hub 認證設置成功！
 )

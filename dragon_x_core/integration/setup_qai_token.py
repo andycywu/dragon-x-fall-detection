@@ -13,7 +13,7 @@ def setup_qai_hub_token():
     print("🔧 設定 QAI Hub API 令牌...")
     
     # API 令牌
-    api_token = "h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+    api_token = "pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
     
     # 創建 .qai_hub 目錄
     home_dir = Path.home()

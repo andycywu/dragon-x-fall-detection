@@ -198,7 +198,7 @@ def show_next_steps(report):
     # QAI Hub設置建議
     if not os.getenv('QAI_HUB_API_TOKEN'):
         print("\n🔑 啟用QAI Hub雲端功能:")
-        print("   export QAI_HUB_API_TOKEN='h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2'")
+        print("   export QAI_HUB_API_TOKEN='pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'")
         print("   python real_qai_hub_onnx_detector.py")
 
 def main():
