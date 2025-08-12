@@ -131,18 +131,12 @@ def fix_client_ini():
     created = False
     try:
         config = configparser.ConfigParser()
-        # 使用兩種可能的格式：DEFAULT 和 default
-        config['DEFAULT'] = {'api_key': api_token}
-        # 也創建 default 區段並設置 api_token 和 api_key
+        # QAI Hub SDK 0.34.0 格式
         config['default'] = {
             'api_token': api_token,
             'api_key': api_token,
-            'organization': '',
-            'base_api_url': 'https://api.aihub.qualcomm.com',
-            'web_url': 'https://app.aihub.qualcomm.com',
-            'profile': 'default',
-            'device_group': 'default',
-            'model_path': 'models'
+            'base_api_url': 'https://api.qai-hub.qualcomm.com',
+            'web_url': 'https://app.aihub.qualcomm.com'
         }
         
         with open(client_ini_str, 'w') as f:
@@ -156,17 +150,11 @@ def fix_client_ini():
         if not created:
             try:
                 with open(client_ini_str, 'w') as f:
-                    f.write("[DEFAULT]\n")
-                    f.write(f"api_key = {api_token}\n")
-                    f.write("\n[default]\n")
+                    f.write("[default]\n")
                     f.write(f"api_token = {api_token}\n")
                     f.write(f"api_key = {api_token}\n")
-                    f.write("organization = \n")
-                    f.write("base_api_url = https://api.aihub.qualcomm.com\n")
-                    f.write("web_url = https://app.aihub.qualcomm.com\n")
-                    f.write("profile = default\n")
-                    f.write("device_group = default\n")
-                    f.write("model_path = models\n")
+                    f.write(f"base_api_url = https://api.qai-hub.qualcomm.com\n")
+                    f.write(f"web_url = https://app.aihub.qualcomm.com\n")
                 print_success(f"已直接寫入 client.ini (方法 2)")
                 created = True
             except Exception as e:
@@ -175,18 +163,11 @@ def fix_client_ini():
                 # 方法 3: 使用 Path 對象
                 if not created:
                     try:
-                        content = f"""[DEFAULT]
-api_key = {api_token}
-
-[default]
+                        content = f"""[default]
 api_token = {api_token}
 api_key = {api_token}
-organization = 
-base_api_url = https://api.aihub.qualcomm.com
+base_api_url = https://api.qai-hub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
-profile = default
-device_group = default
-model_path = models
 """
                         Path(client_ini_str).write_text(content)
                         print_success(f"已使用 Path 對象寫入 client.ini (方法 3)")
@@ -198,10 +179,10 @@ model_path = models
                         if not created:
                             try:
                                 if platform.system() == "Windows":
-                                    cmd = f'echo [DEFAULT] > "{client_ini_str}" && echo api_key = {api_token} >> "{client_ini_str}" && echo. >> "{client_ini_str}" && echo [default] >> "{client_ini_str}" && echo api_token = {api_token} >> "{client_ini_str}" && echo api_key = {api_token} >> "{client_ini_str}" && echo organization = >> "{client_ini_str}" && echo base_api_url = https://api.aihub.qualcomm.com >> "{client_ini_str}" && echo web_url = https://app.aihub.qualcomm.com >> "{client_ini_str}" && echo profile = default >> "{client_ini_str}" && echo device_group = default >> "{client_ini_str}" && echo model_path = models >> "{client_ini_str}"'
+                                    cmd = f'echo [default] > "{client_ini_str}" && echo api_token = {api_token} >> "{client_ini_str}" && echo api_key = {api_token} >> "{client_ini_str}" && echo base_api_url = https://api.qai-hub.qualcomm.com >> "{client_ini_str}" && echo web_url = https://app.aihub.qualcomm.com >> "{client_ini_str}"'
                                     os.system(cmd)
                                 else:
-                                    cmd = f'''echo -e "[DEFAULT]\\napi_key = {api_token}\\n\\n[default]\\napi_token = {api_token}\\napi_key = {api_token}\\norganization = \\nbase_api_url = https://api.aihub.qualcomm.com\\nweb_url = https://app.aihub.qualcomm.com\\nprofile = default\\ndevice_group = default\\nmodel_path = models" > "{client_ini_str}"'''
+                                    cmd = f'''echo -e "[default]\\napi_token = {api_token}\\napi_key = {api_token}\\nbase_api_url = https://api.qai-hub.qualcomm.com\\nweb_url = https://app.aihub.qualcomm.com" > "{client_ini_str}"'''
                                     os.system(cmd)
                                 print_success(f"已使用系統命令創建 client.ini (方法 4)")
                                 created = True
