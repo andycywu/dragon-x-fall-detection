@@ -157,7 +157,7 @@ echo 1) 以管理員身份運行此批處理文件
 echo 2) 檢查您的用戶帳戶是否有寫入 %USERPROFILE% 目錄的權限
 echo 3) 手動創建 %USERPROFILE%\.qai_hub\client.ini 文件，內容如下:
 echo    [DEFAULT]
-echo    api_key = h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+echo    api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 echo 4) 檢查防病毒軟件是否阻止了此操作
 
 :end

@@ -5,7 +5,7 @@ echo "=== Dragon X Fall Detection System ==="
 echo "=================================="
 
 # 設置環境變量
-export QAI_HUB_API_TOKEN="h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2"
+export QAI_HUB_API_TOKEN="pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # 檢測 CPU 架構

@@ -12,27 +12,22 @@ import getpass
 
 def get_api_token():
     """獲取 QAI Hub API Token"""
-    # 首先檢查環境變量
-    api_token = os.environ.get('QAI_HUB_TOKEN') or os.environ.get('QAI_HUB_API_TOKEN')
+    # 使用固定的新 API 令牌
+    fixed_api_token = 'pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d'
+    print("✅ 使用指定的 API Token")
     
-    if api_token:
-        print("✅ 從環境變量獲取 API Token")
-        return api_token
+    # 檢查環境變量是否有舊令牌
+    env_token = os.environ.get('QAI_HUB_TOKEN') or os.environ.get('QAI_HUB_API_TOKEN')
+    if env_token and env_token != fixed_api_token:
+        print("⚠️ 環境變量中的 API Token 與指定的不同，將使用指定的 Token")
     
-    # 使用 .env 文件中指定的 token
-    env_path = Path.cwd() / ".env"
-    if env_path.exists():
-        try:
-            with open(env_path, 'r') as f:
-                for line in f:
-                    if line.startswith('QAI_HUB_API_TOKEN='):
-                        api_token = line.split('=', 1)[1].strip()
-                        if api_token:
-                            print(f"✅ 從 .env 文件讀取 API Token")
-                            return api_token
-        except Exception as e:
-            print(f"⚠️ 讀取 .env 文件失敗: {e}")
+    # 設置環境變量為正確的值
+    os.environ['QAI_HUB_API_TOKEN'] = fixed_api_token
     
+    return fixed_api_token
+    
+    # 不再需要從文件或用戶輸入獲取令牌，這裡保留註釋作為參考
+    """
     # 其次檢查預定義文件
     token_files = [
         Path.cwd() / "qai_hub_token.txt",
@@ -74,6 +69,7 @@ def get_api_token():
             print(f"✅ API Token 已保存到: {save_path}")
         except Exception as e:
             print(f"⚠️ 無法保存 API Token: {e}")
+    """
     
     return api_token
 

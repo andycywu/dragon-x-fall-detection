@@ -57,7 +57,7 @@ QAI Hub 配置文件位於：`C:\Users\HCKTest\.qai_hub\client.ini`
 配置內容：
 ```ini
 [default]
-api_token = h0eubh7un3kk64u6oxisg9rbt8bbgubs913bzls2
+api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 organization = 
 base_api_url = https://api.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
