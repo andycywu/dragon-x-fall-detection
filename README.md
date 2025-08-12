@@ -1,13 +1,16 @@
 # 🐉 Dragon X Fall Detection System
 **跨平台AI老人跌倒檢測系統 - Qualcomm Snapdragon X Elite優化版**
 
-## 🔄 2025年8月11日更新: Windows Device Cloud相容性改進
+## 🔄 2025年8月11日更新: Windows Device Cloud相容性改進與QAI Hub配置更新
 
 - ✅ 新增Windows相容版本主程式 `main_windows.py`
 - ⚡ 優化了Snapdragon X Elite處理器的硬體加速
 - 🛠️ 改進了備用檢測器，確保在不支援MediaPipe的環境中也能運作
 - 🔌 添加了QAI Hub相容性和適當的錯誤處理機制
 - 📦 新增Windows專用安裝需求文件 `requirements_windows.txt`
+- 🔧 **新增**: QAI Hub API URL配置修復工具 - 解決新舊API網址切換問題
+  - 執行 `python fix_qai_hub_api_url.py` 自動檢測並修復QAI Hub配置
+  - 在Windows上可以直接雙擊 `fix_qai_hub_api_url.bat` 運行修復工具
 
 ## 🏆 黑客松項目亮點
 - ✅ **9個AI模型**成功部署到Snapdragon X Elite CRD  
@@ -247,6 +250,14 @@ streamlit run ui_dashboard.py
    ```bash
    export QAI_HUB_API_TOKEN="your_token_here"
    ```
+   - 修復QAI Hub API URL問題:
+   ```bash
+   # 自動修復QAI Hub配置問題
+   python fix_qai_hub_api_url.py
+   # 或在Windows上雙擊執行
+   # fix_qai_hub_api_url.bat
+   ```
+   - 查看 `QAI_HUB_CONFIG_FIX.md` 獲取詳細說明
    - 如果QAI Hub不可用，系統會自動回退到CPU執行
 
 4. **部署問題**:
@@ -281,6 +292,9 @@ streamlit run ui_dashboard.py
 ├── requirements.txt                     # Mac依賴
 ├── requirements_windows.txt             # Windows相容依賴 (新增!)
 ├── deploy_to_device_cloud.py            # Device Cloud部署工具
+├── fix_qai_hub_api_url.py               # QAI Hub API URL修復工具 (新增!)
+├── fix_qai_hub_api_url.bat              # Windows版QAI Hub修復工具 (新增!)
+├── QAI_HUB_CONFIG_FIX.md                # QAI Hub配置修復說明 (新增!)
 ├── snapdragon_realtime_demo_windows.py  # Device Cloud即時演示
 ├── snapdragon_video_demo_windows.py     # Device Cloud視頻處理演示
 ├── aws_virtual_camera_test_windows.py   # 攝像頭測試工具

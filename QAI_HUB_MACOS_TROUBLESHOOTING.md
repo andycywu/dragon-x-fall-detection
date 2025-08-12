@@ -1,8 +1,8 @@
-# QAI Hub 連接問題排解指南 - macOS 版本
+# QAI Hub 連接問題排解指南
 
 ## 問題摘要
 
-在 macOS 上，`QAI Hub` 連接問題通常與以下幾個方面有關：
+在使用不同作業系統時，`QAI Hub` 連接問題通常與以下幾個方面有關：
 
 1. **配置文件格式不正確** - `client.ini` 文件格式需要特別注意
 2. **網絡連接問題** - 無法連接到 Qualcomm 的 API 服務器
@@ -11,7 +11,9 @@
 
 ## 修復步驟
 
-### 1. 執行全面修復腳本
+### macOS 環境
+
+#### 1. 執行全面修復腳本
 
 我們已經創建了一個專門針對 macOS 的修復腳本，它會嘗試多種方法修復問題：
 
@@ -23,7 +25,7 @@ chmod +x fix_qai_hub_macos.sh
 ./fix_qai_hub_macos.sh
 ```
 
-### 2. 配置文件格式問題
+#### 2. 配置文件格式問題
 
 QAI Hub 的配置文件格式需要非常精確。以下是正確的格式：
 
@@ -40,6 +42,35 @@ web_url = https://app.aihub.qualcomm.com
 ```bash
 # 打開配置文件
 nano ~/.qai_hub/client.ini
+```
+
+### Windows 環境
+
+#### 1. 執行修復批處理腳本
+
+我們提供了一個針對 Windows 的修復批處理檔案：
+
+```bat
+# 執行修復腳本
+fix_qai_hub_client.bat
+```
+
+#### 2. 配置文件路徑和格式
+
+在 Windows 上，配置文件位於：
+
+```
+%USERPROFILE%\.qai_hub\client.ini
+```
+
+正確的格式是：
+
+```ini
+[default]
+api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+base_api_url = https://api.qai-hub.qualcomm.com
+web_url = https://app.aihub.qualcomm.com
 ```
 
 ### 3. 網絡連接問題
@@ -90,6 +121,8 @@ echo $QAI_HUB_API_TOKEN
 
 我們提供了多個診斷工具來幫助您排查問題：
 
+### macOS 診斷工具
+
 1. **基本配置修復**：
 
    ```bash
@@ -108,11 +141,37 @@ echo $QAI_HUB_API_TOKEN
    python check_qai_hub_status.py
    ```
 
+### Windows 診斷工具
+
+1. **基本配置修復**：
+
+   ```batch
+   python fix_client_ini_windows.py
+   ```
+
+2. **API 連接測試**：
+
+   ```batch
+   python test_qai_hub_api_windows.py
+   ```
+
+3. **QAI Hub 狀態檢查**：
+
+   ```batch
+   python check_qai_hub_status.py
+   ```
+
 ## 如果所有方法都失敗
 
 如果您嘗試了所有方法但仍然無法連接到 QAI Hub API，我們提供了一個離線演示模式：
 
 ```bash
+# macOS/Linux
+python qai_hub_demo_offline.py
+```
+
+```batch
+# Windows
 python qai_hub_demo_offline.py
 ```
 
@@ -122,7 +181,7 @@ python qai_hub_demo_offline.py
 
 1. **Failed to load configuration file**
    - 原因：找不到配置文件或格式不正確
-   - 解決方案：運行 `fix_client_ini_macos.py`
+   - 解決方案：運行對應作業系統的修復工具
 
 2. **API key validation failed**
    - 原因：API 令牌無效或過期
