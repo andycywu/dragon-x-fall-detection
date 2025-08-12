@@ -1,0 +1,12 @@
+{
+    "python.defaultInterpreterPath": "./.venv_mediapipe/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "terminal.integrated.profiles.osx": {
+        "zsh with MediaPipe": {
+            "path": "zsh",
+            "args": ["-l", "-c", "cd /Users/andycyw/mvp_fall_detection_starter && source .venv_mediapipe/bin/activate && exec zsh"]
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh with MediaPipe"
+}

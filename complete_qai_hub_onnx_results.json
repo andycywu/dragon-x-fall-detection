@@ -1,0 +1,36 @@
+{
+  "mediapipe_models": {
+    "face_detector": {
+      "loaded": true,
+      "description": "MediaPipe Face Detector",
+      "has_torchscript": false,
+      "error": null
+    },
+    "face_landmark": {
+      "loaded": true,
+      "description": "MediaPipe Face Landmark Detector",
+      "has_torchscript": false,
+      "error": null
+    },
+    "pose_detector": {
+      "loaded": true,
+      "description": "MediaPipe Pose Detector",
+      "has_torchscript": false,
+      "error": null
+    },
+    "hand_detector": {
+      "loaded": true,
+      "description": "MediaPipe Hand Detector",
+      "has_torchscript": false,
+      "error": null
+    }
+  },
+  "qai_hub_models": {},
+  "compile_jobs": {},
+  "onnx_sessions": [],
+  "target_device": "Samsung Galaxy Tab S7",
+  "onnx_providers": [
+    "CoreMLExecutionProvider",
+    "CPUExecutionProvider"
+  ]
+}

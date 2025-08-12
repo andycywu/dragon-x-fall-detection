@@ -1,0 +1,81 @@
+{
+  "current_phase": "setup",
+  "start_time": "2025-08-11T13:39:30.239227",
+  "phases": {
+    "setup": {
+      "status": "failed",
+      "start_time": "2025-08-11T13:39:30.239587",
+      "end_time": null,
+      "tasks": [
+        {
+          "name": "檢查Python環境",
+          "status": "completed",
+          "start_time": "2025-08-11T13:39:30.239630",
+          "end_time": "2025-08-11T13:39:30.239644"
+        },
+        {
+          "name": "驗證依賴項",
+          "status": "failed",
+          "start_time": "2025-08-11T13:39:30.745831",
+          "end_time": "2025-08-11T13:39:56.675503"
+        },
+        {
+          "name": "配置開發環境",
+          "status": "completed",
+          "start_time": "2025-08-11T13:39:57.185591",
+          "end_time": "2025-08-11T13:39:57.186513"
+        },
+        {
+          "name": "測試基本功能",
+          "status": "completed",
+          "start_time": "2025-08-11T13:39:57.688736",
+          "end_time": "2025-08-11T13:39:57.736955"
+        }
+      ],
+      "progress": 75.0,
+      "notes": []
+    },
+    "mac_development": {
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "tasks": [],
+      "progress": 0.0,
+      "notes": []
+    },
+    "cloud_integration": {
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "tasks": [],
+      "progress": 0.0,
+      "notes": []
+    },
+    "snapdragon_preparation": {
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "tasks": [],
+      "progress": 0.0,
+      "notes": []
+    },
+    "deployment": {
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "tasks": [],
+      "progress": 0.0,
+      "notes": []
+    },
+    "validation": {
+      "status": "pending",
+      "start_time": null,
+      "end_time": null,
+      "tasks": [],
+      "progress": 0.0,
+      "notes": []
+    }
+  },
+  "overall_progress": 0.0,
+  "estimated_completion": null
+}

@@ -1,0 +1,10 @@
+.history/
+*.HEIC
+*.jpg
+.venv_mediapipe/
+**/venv/
+__pycache__/
+*.pyc
+*.so
+*.dylib
+*.dat

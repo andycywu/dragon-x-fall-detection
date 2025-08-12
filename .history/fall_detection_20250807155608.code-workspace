@@ -1,0 +1,26 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "./.venv_mediapipe/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "terminal.integrated.defaultProfile.osx": "zsh",
+        "terminal.integrated.profiles.osx": {
+            "zsh": {
+                "path": "zsh",
+                "args": ["-l"]
+            }
+        },
+        "terminal.integrated.shellIntegration.enabled": true,
+        "python.envFile": "${workspaceFolder}/.env"
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.vscode-pylance"
+        ]
+    }
+}

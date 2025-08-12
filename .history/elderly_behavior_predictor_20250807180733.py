@@ -1,0 +1,649 @@
+
+#!/usr/bin/env python3
+"""
+📌 Module: elderly_behavior_predictor.py
+🧠 完整老人行為預測與風險評估系統
+
+整合人臉識別、姿態追蹤、風險評估和語音互動功能
+"""
+
+import cv2
+import numpy as np
+import json
+import sqlite3
+import time
+import os
+import threading
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple, Any, Optional
+import logging
+from dataclasses import dataclass, asdict
+import face_recognition
+import pyttsx3
+import speech_recognition as sr
+import whisper
+import math
+from collections import deque, defaultdict
+import warnings
+warnings.filterwarnings("ignore")
+
+# 嘗試導入我們的檢測系統
+try:
+    from completely_fixed_detector import CompletelyFixedHackathonDetector
+except ImportError:
+    print("⚠️ 無法導入檢測系統，將使用模擬模式")
+    CompletelyFixedHackathonDetector = None
+
+# 配置日誌
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class PostureData:
+    """姿態數據結構"""
+    timestamp: float
+    user_id: str
+    joint_angles: Dict[str, float]
+    balance_score: float
+    stability_score: float
+    posture_deviation: float
+    activity_level: float
+    face_detected: bool
+    
+@dataclass
+class RiskAssessment:
+    """風險評估結果"""
+    fall_risk_score: float
+    stability_trend: str
+    activity_level: str
+    fatigue_indicator: float
+    alert_level: str
+    recommendations: List[str]
+    last_updated: float
+
+class ElderlyBehaviorPredictor:
+    """
+    🧠 老人行為預測與風險評估系統
+    
+    功能：
+    1. 人臉識別確認用戶身份
+    2. 追蹤姿態數據並分析穩定性
+    3. 計算跌倒風險評分
+    4. 語音互動檢查健康狀況
+    5. 生成行為分析報告和預警
+    """
+    
+    def __init__(self, data_dir: str = "elderly_data"):
+        """初始化行為預測系統"""
+        self.data_dir = data_dir
+        os.makedirs(data_dir, exist_ok=True)
+        
+        # 數據存儲
+        self.db_path = os.path.join(data_dir, "elderly_behavior.db")
+        self.face_encodings_path = os.path.join(data_dir, "face_encodings.json")
+        
+        # 姿態追蹤緩存
+        self.posture_history = deque(maxlen=1000)  # 最近1000個姿態記錄
+        self.user_profiles = {}  # 用戶配置檔案
+        self.known_faces = {}  # 已知人臉編碼
+        
+        # 風險評估參數
+        self.risk_thresholds = {
+            'low': 0.3,
+            'medium': 0.7,
+            'high': 0.9
+        }
+        
+        # 語音系統
+        self.tts_engine = None
+        self.whisper_model = None
+        self.speech_recognizer = None
+        
+        # 檢測系統
+        self.pose_detector = None
+        
+        # 初始化組件
+        self._init_database()
+        self._init_face_recognition()
+        self._init_voice_systems()
+        self._init_pose_detection()
+        
+        logger.info("🚀 老人行為預測系統初始化完成")
+    
+    def _init_database(self):
+        """初始化SQLite數據庫"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # 創建姿態數據表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS posture_data (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp REAL,
+                    user_id TEXT,
+                    joint_angles TEXT,
+                    balance_score REAL,
+                    stability_score REAL,
+                    posture_deviation REAL,
+                    activity_level REAL,
+                    face_detected BOOLEAN
+                )
+            ''')
+            
+            # 創建風險評估表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_assessments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp REAL,
+                    user_id TEXT,
+                    fall_risk_score REAL,
+                    stability_trend TEXT,
+                    activity_level TEXT,
+                    fatigue_indicator REAL,
+                    alert_level TEXT,
+                    recommendations TEXT
+                )
+            ''')
+            
+            # 創建語音記錄表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS voice_interactions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp REAL,
+                    user_id TEXT,
+                    question TEXT,
+                    response TEXT,
+                    keywords TEXT,
+                    sentiment_score REAL
+                )
+            ''')
+            
+            conn.commit()
+            conn.close()
+            logger.info("✅ 數據庫初始化成功")
+            
+        except Exception as e:
+            logger.error(f"❌ 數據庫初始化失敗: {e}")
+    
+    def _init_face_recognition(self):
+        """初始化人臉識別系統"""
+        try:
+            # 載入已知人臉編碼
+            if os.path.exists(self.face_encodings_path):
+                with open(self.face_encodings_path, 'r') as f:
+                    face_data = json.load(f)
+                    for user_id, encoding_list in face_data.items():
+                        self.known_faces[user_id] = np.array(encoding_list)
+                logger.info(f"✅ 載入 {len(self.known_faces)} 個已知人臉")
+            else:
+                logger.info("ℹ️ 尚未有已知人臉數據，請先註冊用戶")
+                
+        except Exception as e:
+            logger.error(f"❌ 人臉識別系統初始化失敗: {e}")
+    
+    def _init_voice_systems(self):
+        """初始化語音系統"""
+        try:
+            # TTS 引擎
+            self.tts_engine = pyttsx3.init()
+            self.tts_engine.setProperty('rate', 150)  # 語速
+            self.tts_engine.setProperty('volume', 0.8)  # 音量
+            
+            # Whisper 模型
+            self.whisper_model = whisper.load_model("base")
+            
+            # 語音識別
+            self.speech_recognizer = sr.Recognizer()
+            
+            logger.info("✅ 語音系統初始化成功")
+            
+        except Exception as e:
+            logger.error(f"❌ 語音系統初始化失敗: {e}")
+    
+    def _init_pose_detection(self):
+        """初始化姿態檢測系統"""
+        try:
+            if CompletelyFixedHackathonDetector:
+                self.pose_detector = CompletelyFixedHackathonDetector()
+                logger.info("✅ 姿態檢測系統初始化成功")
+            else:
+                logger.warning("⚠️ 姿態檢測系統未載入，將使用模擬模式")
+                
+        except Exception as e:
+            logger.error(f"❌ 姿態檢測系統初始化失敗: {e}")
+    
+    def register_user(self, user_id: str, name: str, image_path: str, 
+                     profile_info: Dict = None) -> bool:
+        """
+        註冊新用戶並建立人臉編碼
+        
+        Args:
+            user_id: 用戶唯一標識
+            name: 用戶姓名
+            image_path: 用戶照片路徑
+            profile_info: 額外用戶信息（年齡、健康狀況等）
+        """
+        try:
+            # 載入並編碼人臉
+            image = face_recognition.load_image_file(image_path)
+            face_encodings = face_recognition.face_encodings(image)
+            
+            if not face_encodings:
+                logger.error(f"❌ 在照片中未檢測到人臉: {image_path}")
+                return False
+            
+            # 使用第一個檢測到的人臉
+            face_encoding = face_encodings[0]
+            self.known_faces[user_id] = face_encoding
+            
+            # 保存人臉編碼
+            face_data = {}
+            for uid, encoding in self.known_faces.items():
+                face_data[uid] = encoding.tolist()
+            
+            with open(self.face_encodings_path, 'w') as f:
+                json.dump(face_data, f)
+            
+            # 保存用戶配置
+            self.user_profiles[user_id] = {
+                'name': name,
+                'registered_time': time.time(),
+                'profile_info': profile_info or {},
+                'last_seen': None
+            }
+            
+            logger.info(f"✅ 用戶 {name} ({user_id}) 註冊成功")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ 用戶註冊失敗: {e}")
+            return False
+    
+    def identify_user(self, frame: np.ndarray) -> Optional[str]:
+        """
+        從影像中識別用戶
+        
+        Args:
+            frame: 輸入影像
+            
+        Returns:
+            識別到的用戶ID，未識別則返回None
+        """
+        try:
+            if not self.known_faces:
+                return None
+            
+            # 檢測人臉
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            face_locations = face_recognition.face_locations(rgb_frame)
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+            
+            for face_encoding in face_encodings:
+                # 與已知人臉比較
+                for user_id, known_encoding in self.known_faces.items():
+                    matches = face_recognition.compare_faces([known_encoding], face_encoding)
+                    if matches[0]:
+                        # 更新最後見到時間
+                        if user_id in self.user_profiles:
+                            self.user_profiles[user_id]['last_seen'] = time.time()
+                        return user_id
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ 用戶識別失敗: {e}")
+            return None
+    
+    def analyze_pose_stability(self, landmarks: List[Tuple[float, float]]) -> Dict[str, float]:
+        """
+        分析姿態穩定性
+        
+        Args:
+            landmarks: MediaPipe 姿態關鍵點
+            
+        Returns:
+            包含各種穩定性指標的字典
+        """
+        try:
+            if not landmarks or len(landmarks) < 33:
+                return {'balance_score': 0.0, 'stability_score': 0.0, 'posture_deviation': 1.0}
+            
+            # 關鍵點索引（MediaPipe Pose）
+            nose = landmarks[0] if landmarks[0] else (0, 0)
+            left_shoulder = landmarks[11] if landmarks[11] else (0, 0)
+            right_shoulder = landmarks[12] if landmarks[12] else (0, 0)
+            left_hip = landmarks[23] if landmarks[23] else (0, 0)
+            right_hip = landmarks[24] if landmarks[24] else (0, 0)
+            left_ankle = landmarks[27] if landmarks[27] else (0, 0)
+            right_ankle = landmarks[28] if landmarks[28] else (0, 0)
+            
+            # 計算身體中線
+            shoulder_center = ((left_shoulder[0] + right_shoulder[0]) / 2, 
+                             (left_shoulder[1] + right_shoulder[1]) / 2)
+            hip_center = ((left_hip[0] + right_hip[0]) / 2, 
+                         (left_hip[1] + right_hip[1]) / 2)
+            
+            # 平衡評分：基於身體中線的垂直度
+            if shoulder_center[0] != 0 and hip_center[0] != 0:
+                body_angle = math.atan2(
+                    hip_center[0] - shoulder_center[0],
+                    hip_center[1] - shoulder_center[1]
+                )
+                balance_score = max(0, 1 - abs(body_angle) / (math.pi / 6))  # 30度內為good
+            else:
+                balance_score = 0.5
+            
+            # 穩定性評分：基於雙腳距離和對稱性
+            ankle_distance = abs(left_ankle[0] - right_ankle[0]) if left_ankle[0] and right_ankle[0] else 0
+            shoulder_distance = abs(left_shoulder[0] - right_shoulder[0]) if left_shoulder[0] and right_shoulder[0] else 0
+            
+            if shoulder_distance > 0:
+                stance_ratio = ankle_distance / shoulder_distance
+                stability_score = min(1.0, stance_ratio * 2)  # 腳距與肩距比例
+            else:
+                stability_score = 0.5
+            
+            # 姿態偏差：頭部相對於身體中心的位置
+            if nose[0] and shoulder_center[0]:
+                head_deviation = abs(nose[0] - shoulder_center[0]) / shoulder_distance if shoulder_distance > 0 else 0
+                posture_deviation = min(1.0, head_deviation)
+            else:
+                posture_deviation = 0.5
+            
+            return {
+                'balance_score': float(balance_score),
+                'stability_score': float(stability_score),
+                'posture_deviation': float(posture_deviation),
+                'body_angle': float(body_angle) if 'body_angle' in locals() else 0.0,
+                'stance_ratio': float(stance_ratio) if 'stance_ratio' in locals() else 0.0
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ 姿態穩定性分析失敗: {e}")
+            return {'balance_score': 0.0, 'stability_score': 0.0, 'posture_deviation': 1.0}
+    
+    def calculate_joint_angles(self, landmarks: List[Tuple[float, float]]) -> Dict[str, float]:
+        """
+        計算關節角度
+        
+        Args:
+            landmarks: MediaPipe 姿態關鍵點
+            
+        Returns:
+            關節角度字典
+        """
+        try:
+            if not landmarks or len(landmarks) < 33:
+                return {}
+            
+            def calculate_angle(p1, p2, p3):
+                """計算三點間的角度"""
+                if not all([p1, p2, p3]) or not all([len(p) >= 2 for p in [p1, p2, p3]]):
+                    return 0.0
+                
+                v1 = np.array([p1[0] - p2[0], p1[1] - p2[1]])
+                v2 = np.array([p3[0] - p2[0], p3[1] - p2[1]])
+                
+                cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-6)
+                cos_angle = np.clip(cos_angle, -1.0, 1.0)
+                angle = np.arccos(cos_angle)
+                return np.degrees(angle)
+            
+            # 計算主要關節角度
+            joint_angles = {}
+            
+            # 左肘角度 (肩-肘-腕)
+            if all([landmarks[11], landmarks[13], landmarks[15]]):
+                joint_angles['left_elbow'] = calculate_angle(landmarks[11], landmarks[13], landmarks[15])
+            
+            # 右肘角度
+            if all([landmarks[12], landmarks[14], landmarks[16]]):
+                joint_angles['right_elbow'] = calculate_angle(landmarks[12], landmarks[14], landmarks[16])
+            
+            # 左膝角度 (髖-膝-踝)
+            if all([landmarks[23], landmarks[25], landmarks[27]]):
+                joint_angles['left_knee'] = calculate_angle(landmarks[23], landmarks[25], landmarks[27])
+            
+            # 右膝角度
+            if all([landmarks[24], landmarks[26], landmarks[28]]):
+                joint_angles['right_knee'] = calculate_angle(landmarks[24], landmarks[26], landmarks[28])
+            
+            # 軀幹角度 (肩中心-髖中心-垂直線)
+            if all([landmarks[11], landmarks[12], landmarks[23], landmarks[24]]):
+                shoulder_center = ((landmarks[11][0] + landmarks[12][0]) / 2, 
+                                 (landmarks[11][1] + landmarks[12][1]) / 2)
+                hip_center = ((landmarks[23][0] + landmarks[24][0]) / 2,
+                            (landmarks[23][1] + landmarks[24][1]) / 2)
+                vertical_point = (hip_center[0], hip_center[1] + 100)
+                joint_angles['trunk'] = calculate_angle(shoulder_center, hip_center, vertical_point)
+            
+            return joint_angles
+            
+        except Exception as e:
+            logger.error(f"❌ 關節角度計算失敗: {e}")
+            return {}
+    
+    def update_posture_history(self, user_id: str, frame: np.ndarray) -> bool:
+        """
+        更新用戶姿態歷史記錄
+        
+        Args:
+            user_id: 用戶ID
+            frame: 當前影像幀
+            
+        Returns:
+            更新是否成功
+        """
+        try:
+            current_time = time.time()
+            
+            # 姿態檢測
+            if self.pose_detector:
+                success, landmarks, info = self.pose_detector.detect_pose(frame)
+                if not success or not landmarks:
+                    return False
+            else:
+                # 模擬數據
+                landmarks = [(100 + i * 10, 100 + i * 5) for i in range(33)]
+            
+            # 分析穩定性
+            stability_metrics = self.analyze_pose_stability(landmarks)
+            
+            # 計算關節角度
+            joint_angles = self.calculate_joint_angles(landmarks)
+            
+            # 活動水平評估（基於關鍵點變化）
+            activity_level = self._calculate_activity_level(landmarks, user_id)
+            
+            # 創建姿態數據記錄
+            posture_data = PostureData(
+                timestamp=current_time,
+                user_id=user_id,
+                joint_angles=joint_angles,
+                balance_score=stability_metrics.get('balance_score', 0.0),
+                stability_score=stability_metrics.get('stability_score', 0.0),
+                posture_deviation=stability_metrics.get('posture_deviation', 0.0),
+                activity_level=activity_level,
+                face_detected=True  # 已經通過人臉識別確認
+            )
+            
+            # 添加到歷史記錄
+            self.posture_history.append(posture_data)
+            
+            # 保存到數據庫
+            self._save_posture_data(posture_data)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ 姿態歷史更新失敗: {e}")
+            return False
+    
+    def _calculate_activity_level(self, landmarks: List[Tuple[float, float]], 
+                                user_id: str) -> float:
+        """計算活動水平"""
+        try:
+            # 獲取用戶的最近姿態記錄
+            recent_data = [data for data in self.posture_history 
+                          if data.user_id == user_id and 
+                          time.time() - data.timestamp < 30]  # 最近30秒
+            
+            if len(recent_data) < 2:
+                return 0.5  # 默認中等活動水平
+            
+            # 計算關鍵點位置變化
+            movement_sum = 0.0
+            for i in range(1, len(recent_data)):
+                # 這裡簡化計算，實際應該比較關鍵點位置
+                movement_sum += abs(recent_data[i].balance_score - recent_data[i-1].balance_score)
+                movement_sum += abs(recent_data[i].stability_score - recent_data[i-1].stability_score)
+            
+            # 標準化活動水平
+            activity_level = min(1.0, movement_sum / len(recent_data))
+            return activity_level
+            
+        except Exception as e:
+            logger.error(f"❌ 活動水平計算失敗: {e}")
+            return 0.5
+    
+    def calculate_fall_risk_score(self, user_id: str, time_window: int = 3600) -> float:
+        """
+        計算跌倒風險評分
+        
+        Args:
+            user_id: 用戶ID
+            time_window: 時間窗口（秒），默認1小時
+            
+        Returns:
+            風險評分 (0.0-1.0)
+        """
+        try:
+            current_time = time.time()
+            
+            # 獲取時間窗口內的數據
+            recent_data = [data for data in self.posture_history 
+                          if data.user_id == user_id and 
+                          current_time - data.timestamp <= time_window]
+            
+            if not recent_data:
+                return 0.5  # 無數據時返回中等風險
+            
+            # 計算各項指標的平均值
+            avg_balance = np.mean([data.balance_score for data in recent_data])
+            avg_stability = np.mean([data.stability_score for data in recent_data])
+            avg_deviation = np.mean([data.posture_deviation for data in recent_data])
+            avg_activity = np.mean([data.activity_level for data in recent_data])
+            
+            # 計算變異性（不穩定性指標）
+            balance_var = np.var([data.balance_score for data in recent_data])
+            stability_var = np.var([data.stability_score for data in recent_data])
+            
+            # 風險評分計算
+            risk_factors = {
+                'low_balance': max(0, 0.8 - avg_balance),  # 平衡差 -> 風險高
+                'low_stability': max(0, 0.8 - avg_stability),  # 穩定性差 -> 風險高
+                'high_deviation': min(1.0, avg_deviation),  # 姿態偏差大 -> 風險高
+                'low_activity': max(0, 0.3 - avg_activity),  # 活動太少 -> 風險高
+                'high_activity': max(0, avg_activity - 0.9),  # 活動過多 -> 風險高
+                'balance_instability': min(1.0, balance_var * 10),  # 平衡變異大 -> 風險高
+                'stability_instability': min(1.0, stability_var * 10)  # 穩定性變異大 -> 風險高
+            }
+            
+            # 加權計算總風險
+            weights = {
+                'low_balance': 0.25,
+                'low_stability': 0.25,
+                'high_deviation': 0.15,
+                'low_activity': 0.10,
+                'high_activity': 0.10,
+                'balance_instability': 0.10,
+                'stability_instability': 0.05
+            }
+            
+            total_risk = sum(risk_factors[factor] * weights[factor] 
+                           for factor in risk_factors)
+            
+            # 時間趨勢分析
+            if len(recent_data) >= 10:
+                recent_half = recent_data[len(recent_data)//2:]
+                earlier_half = recent_data[:len(recent_data)//2]
+                
+                recent_avg_balance = np.mean([data.balance_score for data in recent_half])
+                earlier_avg_balance = np.mean([data.balance_score for data in earlier_half])
+                
+                if recent_avg_balance < earlier_avg_balance - 0.1:
+                    total_risk += 0.1  # 平衡能力下降趨勢
+            
+            return min(1.0, total_risk)
+            
+        except Exception as e:
+            logger.error(f"❌ 風險評分計算失敗: {e}")
+            return 0.5
+    
+    def get_user_dashboard_data(self, user_id: str) -> Dict[str, Any]:
+        """獲取用戶儀表板數據"""
+        try:
+            # 基本信息
+            user_info = self.user_profiles.get(user_id, {})
+            
+            # 當前風險評分
+            current_risk = self.calculate_fall_risk_score(user_id)
+            
+            # 最近活動
+            recent_data = [data for data in self.posture_history 
+                          if data.user_id == user_id and 
+                          time.time() - data.timestamp <= 3600]  # 最近1小時
+            
+            return {
+                'user_info': user_info,
+                'current_risk_score': current_risk,
+                'recent_activity_count': len(recent_data),
+                'last_seen': user_info.get('last_seen'),
+                'monitoring_status': 'active' if recent_data else 'inactive'
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ 儀表板數據獲取失敗: {e}")
+            return {'status': 'error', 'message': str(e)}
+
+
+# 示例使用代碼
+if __name__ == "__main__":
+    # 初始化系統
+    predictor = ElderlyBehaviorPredictor()
+    
+    # 示例：註冊用戶
+    # predictor.register_user("elderly_001", "張奶奶", "user_photos/zhang_grandma.jpg", 
+    #                        {"age": 75, "medical_conditions": ["高血壓"]})
+    
+    # 示例：即時監測
+    cap = cv2.VideoCapture(0)
+    
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 識別用戶
+            user_id = predictor.identify_user(frame)
+            
+            if user_id:
+                # 處理用戶互動
+                result = predictor.process_user_interaction(user_id, frame)
+                
+                # 顯示結果
+                cv2.putText(frame, f"User: {user_id}", (10, 30), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f"Risk: {result.get('risk_assessment', {}).get('score', 0):.2f}", 
+                           (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            
+            cv2.imshow('Elderly Behavior Predictor', frame)
+            
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+                
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()

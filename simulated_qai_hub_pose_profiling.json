@@ -1,0 +1,27 @@
+{
+  "job_id": "job_417fab6e8834",
+  "model_name": "MediaPipe Pose Estimation",
+  "target_device": "Samsung Galaxy S23",
+  "status": "COMPLETED",
+  "submitted_at": "2025-08-11T10:56:18.640618",
+  "completed_at": "2025-08-11T10:56:18.640621",
+  "performance_metrics": {
+    "inference_time_ms": 18.7,
+    "peak_memory_mb": 156.3,
+    "avg_cpu_usage_percent": 42.1,
+    "avg_gpu_usage_percent": 73.5,
+    "energy_consumption_mj": 234.8,
+    "throughput_fps": 53.5,
+    "accuracy_metrics": {
+      "pck_0.2": 0.982,
+      "pck_0.5": 0.997,
+      "keypoint_accuracy": 0.976
+    }
+  },
+  "hardware_info": {
+    "chipset": "Snapdragon 8 Gen 2",
+    "cpu": "Kryo 685",
+    "gpu": "Adreno 740",
+    "npu": "Hexagon DSP"
+  }
+}

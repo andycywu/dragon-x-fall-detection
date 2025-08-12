@@ -1,0 +1,10 @@
+{
+  "system": "Real QAI Hub + ONNX Runtime",
+  "timestamp": 1754891112.70092,
+  "qai_hub_jobs": {},
+  "onnx_models": [],
+  "target_device": "Snapdragon X Elite CRD",
+  "onnx_providers": [
+    "CPUExecutionProvider"
+  ]
+}
