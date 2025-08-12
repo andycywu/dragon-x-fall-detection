@@ -58,6 +58,16 @@ echo.
 echo %BLUE%2) 創建 client.ini 文件...%RESET%
 echo [DEFAULT] > "%CLIENT_INI%"
 echo api_key = %API_TOKEN% >> "%CLIENT_INI%"
+echo. >> "%CLIENT_INI%"
+echo [default] >> "%CLIENT_INI%"
+echo api_token = %API_TOKEN% >> "%CLIENT_INI%"
+echo api_key = %API_TOKEN% >> "%CLIENT_INI%"
+echo organization = >> "%CLIENT_INI%"
+echo base_api_url = https://api.aihub.qualcomm.com >> "%CLIENT_INI%"
+echo web_url = https://app.aihub.qualcomm.com >> "%CLIENT_INI%"
+echo profile = default >> "%CLIENT_INI%"
+echo device_group = default >> "%CLIENT_INI%"
+echo model_path = models >> "%CLIENT_INI%"
 
 REM 設置環境變量 - 多種方式
 echo.
@@ -158,6 +168,12 @@ echo 2) 檢查您的用戶帳戶是否有寫入 %USERPROFILE% 目錄的權限
 echo 3) 手動創建 %USERPROFILE%\.qai_hub\client.ini 文件，內容如下:
 echo    [DEFAULT]
 echo    api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+echo    [default]
+echo    api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+echo    api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+echo    organization = 
+echo    base_api_url = https://api.aihub.qualcomm.com
+echo    web_url = https://app.aihub.qualcomm.com
 echo 4) 檢查防病毒軟件是否阻止了此操作
 
 :end
