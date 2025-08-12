@@ -29,6 +29,24 @@ if %ERRORLEVEL% NEQ 0 (
     echo !ESC![93m警告: 可能不是 Python 3。QAI Hub 需要 Python 3.6 或更高版本。!ESC![0m
 )
 
+REM 檢查 Windows 長路徑支援
+echo !ESC![36m檢查 Windows 長路徑支援...!ESC![0m
+reg query "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled 2>nul | find "0x1" >nul
+if %ERRORLEVEL% NEQ 0 (
+    echo !ESC![93m警告: Windows 長路徑支援未啟用!ESC![0m
+    echo !ESC![93m安裝某些 Python 套件時可能會遇到路徑過長錯誤!ESC![0m
+    echo !ESC![36m要啟用長路徑支援，請以管理員身份執行以下命令:!ESC![0m
+    echo !ESC![92m   reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f!ESC![0m
+    echo !ESC![36m然後重新啟動電腦!ESC![0m
+    echo.
+    echo !ESC![36m或者可以使用短路徑的虛擬環境:!ESC![0m
+    echo !ESC![92m   python -m venv C:\qai_env!ESC![0m
+    echo !ESC![92m   C:\qai_env\Scripts\activate!ESC![0m
+    echo.
+) else (
+    echo !ESC![92mWindows 長路徑支援已啟用!ESC![0m
+)
+
 echo !ESC![36m檢測到 Python，準備更新 QAI Hub 配置...!ESC![0m
 echo.
 

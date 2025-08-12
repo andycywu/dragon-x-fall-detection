@@ -73,6 +73,43 @@ base_api_url = https://api.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
 ```
 
+#### 3. Windows 長路徑問題
+
+在 Windows 上安裝 QAI Hub 相關套件時，可能會遇到 "ERROR: Could not install packages due to an OSError: [WinError 3] The system cannot find the path specified:" 錯誤，伴隨 "This system does not have Windows Long Path support enabled" 提示。
+
+解決方法：
+
+1. **啟用 Windows 長路徑支援**：
+   - 以管理員身份開啟 PowerShell
+   
+   ```powershell
+   # 啟用長路徑支援
+   Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -Type DWord
+   ```
+   
+   - 重新啟動電腦
+
+2. **使用虛擬環境安裝**：
+   
+   ```batch
+   # 建立虛擬環境（路徑短）
+   python -m venv C:\qai_env
+
+   # 啟用虛擬環境
+   C:\qai_env\Scripts\activate
+
+   # 安裝套件
+   pip install -U qai-hub qai-hub-models
+   ```
+
+3. **使用管理員權限安裝**：
+   - 以管理員身份開啟命令提示字元
+   - 執行安裝命令
+   
+   ```batch
+   pip install -U qai-hub qai-hub-models
+   ```
+
 ### 3. 網絡連接問題
 
 如果您遇到網絡連接問題，可以嘗試以下步驟：
