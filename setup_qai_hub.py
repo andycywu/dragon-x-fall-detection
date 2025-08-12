@@ -144,16 +144,11 @@ def setup_qai_hub_credentials(api_token=None, force=False, verbose=True):
     # 方法 1: 使用 configparser
     try:
         config = configparser.ConfigParser()
-        config['DEFAULT'] = {'api_key': api_token}
         config['default'] = {
             'api_token': api_token,
             'api_key': api_token,
-            'organization': '',
-            'base_api_url': 'https://api.aihub.qualcomm.com',
-            'web_url': 'https://app.aihub.qualcomm.com',
-            'profile': 'default',
-            'device_group': 'default',
-            'model_path': 'models'
+            'base_api_url': 'https://api.qai-hub.qualcomm.com',
+            'web_url': 'https://app.aihub.qualcomm.com'
         }
         
         with open(config_file, 'w') as f:
@@ -168,17 +163,11 @@ def setup_qai_hub_credentials(api_token=None, force=False, verbose=True):
         # 方法 2: 直接寫入文件
         try:
             with open(config_file, 'w') as f:
-                f.write("[DEFAULT]\n")
-                f.write(f"api_key = {api_token}\n\n")
                 f.write("[default]\n")
                 f.write(f"api_token = {api_token}\n")
                 f.write(f"api_key = {api_token}\n")
-                f.write("organization = \n")
-                f.write("base_api_url = https://api.aihub.qualcomm.com\n")
+                f.write("base_api_url = https://api.qai-hub.qualcomm.com\n")
                 f.write("web_url = https://app.aihub.qualcomm.com\n")
-                f.write("profile = default\n")
-                f.write("device_group = default\n")
-                f.write("model_path = models\n")
             
             if verbose:
                 print_success("使用直接寫入方式成功創建配置文件")
