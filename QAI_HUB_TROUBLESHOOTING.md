@@ -1,121 +1,240 @@
-# QAI Hub 連接故障排除指南
+# QAI Hub 連接問題排解指南
 
-## QAI Hub 連接失敗問題
+## 問題摘要
 
-如果您在執行 `unified_ai_detector.py` 時看到以下錯誤：
+在使用不同作業系統時，`QAI Hub` 連接問題通常與以下幾個方面有關：
 
-```
-ERROR:__main__:❌ QAI Hub初始化失敗: Failed to load client configuration file.
+1. **配置文件格式不正確** - `client.ini` 文件格式需要特別注意
+2. **網絡連接問題** - 無法連接到 Qualcomm 的 API 服務器
+3. **API 令牌認證失敗** - 令牌無效或格式不正確
+4. **相依性衝突** - 例如 `protobuf` 版本不兼容
 
-┌────────────────────────────────────────────────────────────────────┐
-| ~/.qai_hub/client.ini not found. Please request access at          |
-| https://aihub.qualcomm.com/. If you have access, please refer to   |
-| https://app.aihub.qualcomm.com/docs for instructions on            |
-| configuring the API key.                                           |
-└────────────────────────────────────────────────────────────────────┘
-```
+## 修復步驟
 
-這表示系統找不到 QAI Hub 的客戶端設定檔案 `~/.qai_hub/client.ini`。
+### macOS 環境
 
-## 解決方法
+#### 1. 執行全面修復腳本
 
-### 1. 使用我們的設置工具
-
-我們提供了一個專用工具來設置 QAI Hub 認證：
+我們已經創建了一個專門針對 macOS 的修復腳本，它會嘗試多種方法修復問題：
 
 ```bash
-# Windows
-python setup_qai_hub.py
+# 給腳本添加執行權限
+chmod +x fix_qai_hub_macos.sh
 
-# Linux/macOS
-python3 setup_qai_hub.py
+# 執行腳本
+./fix_qai_hub_macos.sh
 ```
 
-如果您有 API 令牌，工具會提示您輸入。如果沒有，請參考步驟 2。
+#### 2. 配置文件格式問題
 
-### 2. 獲取 QAI Hub API 令牌
+QAI Hub 的配置文件格式需要非常精確。以下是正確的格式：
 
-如果您沒有 QAI Hub API 令牌：
+```ini
+[default]
+api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+base_api_url = https://api.aihub.qualcomm.com
+web_url = https://app.aihub.qualcomm.com
+```
 
-1. 訪問 [Qualcomm AI Hub](https://aihub.qualcomm.com/)
-2. 點擊 "Request Access" 或註冊/登錄
-3. 按照指示獲取 API 令牌
-4. 獲取令牌後，運行我們的設置工具：
+如果修復腳本無法解決問題，請手動編輯配置文件：
 
 ```bash
-python setup_qai_hub.py --token YOUR_API_TOKEN
+# 打開配置文件
+nano ~/.qai_hub/client.ini
 ```
 
-### 3. 手動設置
+### Windows 環境
 
-如果自動工具不起作用，您可以手動設置：
+#### 1. 執行修復批處理腳本
 
-1. 創建目錄：
-   ```bash
-   # Windows
-   mkdir %USERPROFILE%\.qai_hub
+我們提供了一個針對 Windows 的修復批處理檔案：
+
+```bat
+# 執行修復腳本
+fix_qai_hub_client.bat
+```
+
+#### 2. 配置文件路徑和格式
+
+在 Windows 上，配置文件位於：
+
+```
+%USERPROFILE%\.qai_hub\client.ini
+```
+
+正確的格式是：
+
+```ini
+[default]
+api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+base_api_url = https://api.aihub.qualcomm.com
+web_url = https://app.aihub.qualcomm.com
+```
+
+### 3. 網絡連接問題
+
+如果您遇到網絡連接問題，可以嘗試以下步驟：
+
+```bash
+# 測試連接到 API 服務器
+ping -c 3 api.aihub.qualcomm.com
+
+# 或使用我們的診斷工具
+python test_qai_hub_api.py
+```
+
+如果您無法連接，請檢查：
+
+- 網絡連接是否正常
+- 防火牆設置
+- DNS 設置
+- 是否在使用公司/學校網絡（可能有限制）
+
+### 4. 相依性問題
+
+QAI Hub 需要特定版本的 `protobuf`：
+
+```bash
+# 安裝正確版本的 protobuf
+pip install protobuf==4.25.3
+
+# 升級 QAI Hub SDK
+pip install -U qai-hub qai-hub-models
+
+# 配置 API 令牌
+qai-hub configure --api_token <您的令牌>
+```
+
+### 5. 環境變數設置
+
+確保環境變數正確設置：
+
+```bash
+# 設置環境變數
+export QAI_HUB_API_TOKEN=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+export QAI_API_KEY=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
+
+# 檢查環境變數
+echo $QAI_HUB_API_TOKEN
+```
+
+## 特定平台注意事項
+
+### Windows on ARM (Snapdragon X) 環境
+
+如果您在 Windows on ARM (如 Snapdragon X) 設備上使用 QAI Hub，請注意：
+
+1. **必須使用 x64 版本的 Python 3.10**
+   - 原生 ARM Python 暫不支援 AI Hub 客戶端
+   - 請從 Python 官網下載 x64 版本的 Python 3.10
+
+2. **設置步驟**：
+
+   ```batch
+   # 使用 x64 版 Python 安裝 QAI Hub
+   pip install -U qai-hub qai-hub-models
    
-   # Linux/macOS
-   mkdir -p ~/.qai_hub
+   # 配置 API 令牌
+   qai-hub configure --api_token <您的令牌>
    ```
 
-2. 創建配置文件：
+3. **驗證配置**：
+
+   ```python
+   # 驗證配置是否成功
+   import qai_hub as hub
+   print(hub.get_devices())
+   ```
+
+   能列出裝置就表示配置成功。
+
+## 診斷工具
+
+我們提供了多個診斷工具來幫助您排查問題：
+
+### macOS 診斷工具
+
+1. **基本配置修復**：
+
    ```bash
-   # Windows - 使用記事本
-   notepad %USERPROFILE%\.qai_hub\client.ini
-   
-   # Linux/macOS
-   nano ~/.qai_hub/client.ini
+   python fix_client_ini_macos.py
    ```
 
-3. 添加以下內容（替換 YOUR_API_KEY）：
-   ```ini
-   [DEFAULT]
-   api_key = YOUR_API_KEY
+2. **API 連接測試**：
+
+   ```bash
+   python test_qai_hub_api.py
    ```
 
-4. 保存文件
+3. **QAI Hub 狀態檢查**：
 
-### 4. 測試連接
+   ```bash
+   python check_qai_hub_status.py
+   ```
 
-設置完成後，您可以測試連接：
+### Windows 診斷工具
+
+1. **基本配置修復**：
+
+   ```batch
+   python fix_client_ini_windows.py
+   ```
+
+2. **API 連接測試**：
+
+   ```batch
+   python test_qai_hub_api_windows.py
+   ```
+
+3. **QAI Hub 狀態檢查**：
+
+   ```batch
+   python check_qai_hub_status.py
+   ```
+
+## 如果所有方法都失敗
+
+如果您嘗試了所有方法但仍然無法連接到 QAI Hub API，我們提供了一個離線演示模式：
 
 ```bash
-# Windows
-python test_qai_hub_connection.py
-
-# Linux/macOS
-python3 test_qai_hub_connection.py
+# macOS/Linux
+python qai_hub_demo_offline.py
 ```
 
-如果測試成功，您應該能夠看到可用的 QAI Hub 設備和模型列表。
-
-### 5. 環境變量
-
-您也可以通過設置環境變量來提供 API 令牌：
-
-```bash
+```batch
 # Windows
-set QAI_HUB_API_TOKEN=YOUR_API_TOKEN
-
-# Linux/macOS
-export QAI_HUB_API_TOKEN=YOUR_API_TOKEN
+python qai_hub_demo_offline.py
 ```
 
-## 常見問題
+這將模擬 QAI Hub 的功能，讓您仍然可以展示系統的主要功能。
 
-### Q: 我已經設置了令牌，但仍然收到錯誤
+## 常見錯誤訊息解析
 
-確保：
-- 令牌格式正確（沒有多餘的空格或引號）
-- 配置文件位於正確的位置
-- 您有正確的網絡連接
-- 您的令牌未過期或被撤銷
+1. **Failed to load configuration file**
+   - 原因：找不到配置文件或格式不正確
+   - 解決方案：運行對應作業系統的修復工具
 
-### Q: 我沒有 QAI Hub 訪問權限
+2. **API key validation failed**
+   - 原因：API 令牌無效或過期
+   - 解決方案：確認使用正確的 API 令牌
 
-您需要在 [Qualcomm AI Hub](https://aihub.qualcomm.com/) 請求訪問權限。如果您正在參加 Qualcomm 黑客松或其他活動，請聯繫組織者獲取臨時令牌。
+3. **Connection refused**
+   - 原因：網絡連接問題
+   - 解決方案：檢查網絡設置和防火牆
 
-### Q: 我可以在沒有 QAI Hub 的情況下運行系統嗎？
+4. **No module named 'qai_hub'**
+   - 原因：QAI Hub SDK 未安裝
+   - 解決方案：`pip install qai-hub==0.31.0`
 
-是的，系統會自動回退到 MediaPipe 和 ONNX Runtime CPU 後端。但是，您將無法使用 Qualcomm 加速器和預訓練模型。
+## 聯絡支持
+
+如果您仍然遇到問題，請嘗試以下資源：
+
+- 訪問 [QAI Hub 文檔](https://app.aihub.qualcomm.com/docs)
+- 聯絡 Qualcomm AI Hub 支持團隊
+
+---
+
+希望這份指南能幫助您解決 QAI Hub 的連接問題。如有任何疑問，請隨時聯絡我們。

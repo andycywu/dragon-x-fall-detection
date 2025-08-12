@@ -32,7 +32,7 @@ def ensure_qai_hub_config():
     config_content = """[default]
 api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
 api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d
-base_api_url = https://api.qai-hub.qualcomm.com
+base_api_url = https://api.aihub.qualcomm.com
 web_url = https://app.aihub.qualcomm.com
 accelerator = hexagon_npu
 optimization_level = performance
