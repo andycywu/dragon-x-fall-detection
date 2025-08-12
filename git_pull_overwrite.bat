@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 > nul
 REM 在 Qualcomm Snapdragon X Elite 設備上強制 git pull 並覆蓋本地更改
 REM 使用方法: git_pull_overwrite.bat
 
