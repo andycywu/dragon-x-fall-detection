@@ -10,7 +10,7 @@
 
 我們提供了以下工具來幫助您正確設置 QAI Hub：
 
-### Windows 用戶
+### Windows 用戶工具
 
 1. **`qai_hub_fix.bat`** - 最新的簡易修復工具
    - 自動設置正確的 API URL
@@ -19,11 +19,21 @@
    - 檢查 Windows 長路徑支持
    - 驗證配置是否正確
 
-2. **`qai_hub_url_switcher.bat`** - API URL 切換工具
-   - 測試並自動設置正確的 URL
+2. **`qai_hub_url_switcher.bat`** - API URL 設定工具
+   - 設置正確的 URL
    - 提供配置驗證
 
-### macOS/Linux 用戶
+3. **`qai_hub_fixer_zh.bat`** - 完整中文版修復工具
+   - 中文介面，適合中文用戶
+   - 完整的互動式設置流程
+   - 支持自定義 API 令牌
+
+4. **`simple_fix_qai_hub_zh.bat`** - 簡易中文版修復工具
+   - 中文介面，適合中文用戶
+   - 簡單快速的配置修復
+   - 自動設置 API URL 和令牌
+
+### macOS/Linux 用戶工具
 
 1. **`qai_hub_fix.py`** - 跨平台 Python 修復工具
    - 支持自定義 API 令牌

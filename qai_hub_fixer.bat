@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 echo =========================================================
 echo           QAI Hub API URL and Token Fixer
 echo =========================================================
@@ -52,99 +53,14 @@ if "%user_token%"=="" (
 )
 
 echo.
-echo Step 4: Select API URL to use:
-echo 1. New API URL (api.aihub.qualcomm.com) - for newer versions
-echo 2. Old API URL (api.qai-hub.qualcomm.com) - for older versions
-echo 3. Test both and use the working one (Recommended)
+echo Step 4: Setting up correct API URL...
 echo.
-set /p url_choice=Enter choice (1, 2, or 3): 
-
-if "%url_choice%"=="1" (
-    echo.
-    echo Using new API URL (api.aihub.qualcomm.com)
-    echo.
-    echo [default]> "%config_file%"
-    echo api_token=%api_token%>> "%config_file%"
-    echo api_key=%api_token%>> "%config_file%"
-    echo base_api_url=https://api.aihub.qualcomm.com>> "%config_file%"
-    echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
-) else if "%url_choice%"=="2" (
-    echo.
-    echo Using old API URL (api.qai-hub.qualcomm.com)
-    echo.
-    echo [default]> "%config_file%"
-    echo api_token=%api_token%>> "%config_file%"
-    echo api_key=%api_token%>> "%config_file%"
-    echo base_api_url=https://api.qai-hub.qualcomm.com>> "%config_file%"
-    echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
-) else (
-    echo.
-    echo Testing both API URLs...
-    echo.
-    
-    echo Setting up temporary test files...
-    echo import qai_hub> test_old_url.py
-    echo print("Old URL test successful")>> test_old_url.py
-    
-    echo import qai_hub> test_new_url.py
-    echo print("New URL test successful")>> test_new_url.py
-    
-    echo Testing new API URL (api.aihub.qualcomm.com)...
-    echo [default]> "%config_file%"
-    echo api_token=%api_token%>> "%config_file%"
-    echo api_key=%api_token%>> "%config_file%"
-    echo base_api_url=https://api.aihub.qualcomm.com>> "%config_file%"
-    echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
-    
-    timeout /t 2 /nobreak >nul
-    python test_new_url.py >nul 2>&1
-    set new_url_result=%ERRORLEVEL%
-    
-    if %new_url_result% EQU 0 (
-        echo New API URL works!
-        set working_url=new
-    ) else (
-        echo New API URL not working, trying old URL...
-        
-        echo Testing old API URL (api.qai-hub.qualcomm.com)...
-        echo [default]> "%config_file%"
-        echo api_token=%api_token%>> "%config_file%"
-        echo api_key=%api_token%>> "%config_file%"
-        echo base_api_url=https://api.qai-hub.qualcomm.com>> "%config_file%"
-        echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
-        
-        timeout /t 2 /nobreak >nul
-        python test_old_url.py >nul 2>&1
-        set old_url_result=%ERRORLEVEL%
-        
-        if %old_url_result% EQU 0 (
-            echo Old API URL works!
-            set working_url=old
-        ) else (
-            echo Old API URL not working either.
-            set working_url=none
-        )
-    )
-    
-    echo.
-    echo Cleaning up test files...
-    del test_old_url.py test_new_url.py >nul 2>&1
-    
-    if "%working_url%"=="new" (
-        echo Using new API URL (api.aihub.qualcomm.com)
-        echo This is the recommended URL for newer versions of QAI Hub.
-    ) else if "%working_url%"=="old" (
-        echo Using old API URL (api.qai-hub.qualcomm.com)
-        echo This URL is compatible with older versions of QAI Hub.
-    ) else (
-        echo No working API URL found. Will use new API URL by default.
-        echo [default]> "%config_file%"
-        echo api_token=%api_token%>> "%config_file%"
-        echo api_key=%api_token%>> "%config_file%"
-        echo base_api_url=https://api.aihub.qualcomm.com>> "%config_file%"
-        echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
-    )
-)
+echo [default]> "%config_file%"
+echo api_token=%api_token%>> "%config_file%"
+echo api_key=%api_token%>> "%config_file%"
+echo base_api_url=https://app.aihub.qualcomm.com>> "%config_file%"
+echo web_url=https://app.aihub.qualcomm.com>> "%config_file%"
+echo Using official URL: https://app.aihub.qualcomm.com
 
 echo.
 echo Step 5: Checking Windows long path support...

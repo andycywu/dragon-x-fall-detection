@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM QAI Hub 環境檢查與修復彙總批處理腳本
 REM 此腳本執行所有診斷工具，提供全面的狀態報告
 
