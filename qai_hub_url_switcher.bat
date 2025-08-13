@@ -1,10 +1,11 @@
 @echo off
+chcp 65001 >nul
 echo =========================================================
-echo           QAI Hub URL Switcher Tool
+echo           QAI Hub URL 設定工具
 echo =========================================================
 echo.
 
-echo This tool will test both API URLs and use the one that works.
+echo 此工具將設定 QAI Hub 使用正確的 URL
 echo.
 
 set config_dir=%USERPROFILE%\.qai_hub
@@ -12,20 +13,14 @@ set config_file=%config_dir%\client.ini
 
 if not exist %config_dir% (
     mkdir %config_dir%
-    echo Created configuration directory.
+    echo 已創建配置目錄。
 )
 
-echo Testing both QAI Hub API URLs...
-echo.
+echo 正在設置臨時測試文件...
+echo import qai_hub> test_url.py
+echo print("URL 測試成功")>> test_url.py
 
-echo Setting up temporary test files...
-echo import qai_hub> test_old_url.py
-echo print("Old URL test successful")>> test_old_url.py
-
-echo import qai_hub> test_new_url.py
-echo print("New URL test successful")>> test_new_url.py
-
-echo Step 1: Setting up QAI Hub configuration...
+echo 步驟 1: 設定 QAI Hub 配置...
 echo [default]> %config_file%
 echo api_token=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
 echo api_key=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
@@ -33,85 +28,44 @@ echo base_api_url=https://app.aihub.qualcomm.com>> %config_file%
 echo web_url=https://app.aihub.qualcomm.com>> %config_file%
 
 timeout /t 2 /nobreak >nul
-python test_new_url.py >nul 2>&1
-set new_url_result=%ERRORLEVEL%
-
-if %new_url_result% EQU 0 (
-    echo New API URL works!
-    set working_url=new
-) else (
-    echo New API URL not working, trying old URL...
-    
-    echo Step 2: Checking if QAI Hub is installed correctly...
-    echo [default]> %config_file%
-    echo api_token=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo api_key=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo base_api_url=https://app.aihub.qualcomm.com>> %config_file%
-    echo web_url=https://app.aihub.qualcomm.com>> %config_file%
-    
-    timeout /t 2 /nobreak >nul
-    python test_old_url.py >nul 2>&1
-    set old_url_result=%ERRORLEVEL%
-    
-    if %old_url_result% EQU 0 (
-        echo Old API URL works!
-        set working_url=old
-    ) else (
-        echo Old API URL not working either.
-        set working_url=none
-    )
-)
+python test_url.py >nul 2>&1
+set url_test_result=%ERRORLEVEL%
 
 echo.
-echo Cleaning up test files...
-del test_old_url.py test_new_url.py >nul 2>&1
+echo 清理臨時文件...
+del test_url.py >nul 2>&1
 
 echo.
-if %new_url_result% EQU 0 (
-    echo Configuration successful!
-    
-    echo [default]> %config_file%
-    echo api_token=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo api_key=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo base_api_url=https://app.aihub.qualcomm.com>> %config_file%
-    echo web_url=https://app.aihub.qualcomm.com>> %config_file%
+if %url_test_result% EQU 0 (
+    echo 配置成功！
 ) else (
-    echo QAI Hub configuration may need additional setup.
-    
-    echo [default]> %config_file%
-    echo api_token=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo api_key=pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d>> %config_file%
-    echo base_api_url=https://app.aihub.qualcomm.com>> %config_file%
-    echo web_url=https://app.aihub.qualcomm.com>> %config_file%
-) else (
-    echo No working API URL found.
-    echo Please check your internet connection and QAI Hub installation.
+    echo QAI Hub 配置可能需要額外設置。
     echo.
-    echo Would you like to update your QAI Hub installation? (Y/N)
+    echo 是否要更新您的 QAI Hub 安裝？ (Y/N)
     set /p update_choice=
     if /i "%update_choice%"=="Y" (
-        echo Updating QAI Hub...
-        pip install -U qai-hub qai-hub-models
-        echo QAI Hub update complete.
+        echo 正在更新 QAI Hub...
+        pip install qai-hub==0.31.0 qai-hub-models==0.31.0
+        echo QAI Hub 更新完成。
     )
 )
 
 echo.
-echo Configuration saved to: %config_file%
+echo 配置已保存到: %config_file%
 echo.
 
-echo Running a simple test to verify configuration...
+echo 運行簡單測試以驗證配置...
 echo import qai_hub as hub> verify_test.py
-echo print("QAI Hub version:", hub.__version__)>> verify_test.py
+echo print("QAI Hub 版本:", hub.__version__)>> verify_test.py
 echo try:>> verify_test.py
 echo     devices = hub.get_devices()>> verify_test.py
-echo     print("Available devices:", devices)>> verify_test.py
-echo     print("QAI Hub configuration is working!")>> verify_test.py
+echo     print("可用設備:", devices)>> verify_test.py
+echo     print("QAI Hub 配置正常工作！")>> verify_test.py
 echo except Exception as e:>> verify_test.py
-echo     print("Error testing QAI Hub:", e)>> verify_test.py
+echo     print("測試 QAI Hub 時出錯:", e)>> verify_test.py
 
 echo.
-echo Test results:
+echo 測試結果:
 echo =========================================================
 python verify_test.py
 echo =========================================================
@@ -120,17 +74,17 @@ echo.
 del verify_test.py >nul 2>&1
 
 echo =========================================================
-echo                       Next Steps
+echo                       後續步驟
 echo =========================================================
 echo.
-echo 1. If the test shows "QAI Hub configuration is working!", you're all set!
-echo 2. If errors persist, consider:
-echo    - Updating your QAI Hub installation:
+echo 1. 如果測試顯示「QAI Hub 配置正常工作！」，則設定成功！
+echo 2. 如果仍有錯誤，請考慮：
+echo    - 更新您的 QAI Hub 安裝：
 echo      pip install -U qai-hub qai-hub-models
-echo    - Trying a specific version compatible with your project:
+echo    - 嘗試與您的項目相容的特定版本：
 echo      pip install qai-hub==0.31.0 qai-hub-models==0.31.0
-echo    - Check the troubleshooting guide (QAI_HUB_TROUBLESHOOTING.md)
+echo    - 查看故障排除指南 (QAI_HUB_TROUBLESHOOTING.md)
 echo.
 
-echo Press any key to exit...
+echo 按任意鍵退出...
 pause >nul
