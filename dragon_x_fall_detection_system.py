@@ -166,6 +166,8 @@ class DragonXFallDetectionSystem:
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 256, 256), "float32")},
                         device=self.target_device,
+                        # 指定目標產出為 Qualcomm AI Engine Direct DLC, 以便後續 link
+                        options="--target_runtime qnn_dlc"
                     )
                     
                     logger.info(f"✅ 姿態檢測Dragon X編譯Job: {compile_job.job_id}")
@@ -203,6 +205,7 @@ class DragonXFallDetectionSystem:
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 256, 256), "float32")},
                         device=self.target_device,
+                        options="--target_runtime qnn_dlc"
                     )
                     
                     logger.info(f"✅ 人臉檢測Dragon X編譯Job: {compile_job.job_id}")
@@ -240,6 +243,7 @@ class DragonXFallDetectionSystem:
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 224, 224), "float32")},
                         device=self.target_device,
+                        options="--target_runtime qnn_dlc"
                     )
                     
                     logger.info(f"✅ 手部檢測Dragon X編譯Job: {compile_job.job_id}")
@@ -570,6 +574,53 @@ class DragonXFallDetectionSystem:
                 logger.warning(f"⚠️ 下載模型失敗 ({model_label}): {e}")
             logger.info(f"================ {model_label} DONE ==================")
 
+        # 若使用者要求 Python link (多模型打包) 可在完成後執行
+        if getattr(self, 'python_link_requested', False):
+            self._link_all_models_python()
+
+    def _link_all_models_python(self):
+        """使用官方 API hub.submit_link_job 將多個已編譯的 target_models 進行 link。
+
+        注意: 官方範例是同一模型不同輸入尺寸以共享權重; 這裡是不同任務模型 (pose/face/hand),
+        仍可嘗試產出一個 context binary, 但權重共享收益有限。
+        條件: 需為 Qualcomm AI Engine Direct (qnn_dlc) 輸出; 已在 compile 時加上 --target_runtime qnn_dlc。
+        """
+        if not self.target_device:
+            logger.warning("⚠️ 無目標設備, 無法執行 Python link")
+            return
+        # 確保 target_models 都已取得
+        for job_key, compile_job in self.compiled_models.items():
+            label = job_key.replace('_job', '')
+            if label not in self.target_models:
+                try:
+                    self._wait_for_single_job(compile_job, f"compile:{label}")
+                    self.target_models[label] = compile_job.get_target_model()
+                except Exception as e:
+                    logger.warning(f"⚠️ 無法取得 target_model ({label}): {e}，跳過該模型的 link")
+        models_to_link = [m for m in self.target_models.values() if m is not None]
+        if len(models_to_link) < 2:
+            logger.warning("⚠️ 可用 target_models 少於2, 跳過 link")
+            return
+        try:
+            logger.info(f"🔗 (Python API) submit_link_job: {len(models_to_link)} 個模型 -> 單一 context")
+            link_job = hub.submit_link_job(models_to_link, device=self.target_device, name="DragonX MultiModel Context")
+            self.link_jobs['dragonx_python_link'] = {
+                'job_id': link_job.job_id,
+                'status': 'submitted',
+                'dashboard_url': f'https://app.aihub.qualcomm.com/jobs/{link_job.job_id}'
+            }
+            # 等待完成 (限制時間避免阻塞過久)
+            self._wait_for_single_job(link_job, 'link:dragonx_python', timeout=1800, poll=15)
+            try:
+                linked_model = link_job.get_target_model()
+                if hasattr(linked_model, 'download'):
+                    linked_model.download('dragonx_linked_context.bin')
+                    logger.info("💾 已下載 linked context -> dragonx_linked_context.bin")
+            except Exception as e:
+                logger.warning(f"⚠️ 取得/下載 linked model 失敗: {e}")
+        except Exception as e:
+            logger.error(f"❌ Python link_job 失敗: {e}")
+
     def _attempt_link_jobs_cli(self):
         """透過 CLI 嘗試提交 link job（若 SDK 無 Python API）。"""
         cli = shutil.which('qai-hub')
@@ -816,6 +867,7 @@ def main():
     parser.add_argument('--poll-interval', type=int, default=15, help='Job 輪詢秒數 (default:15)')
     parser.add_argument('--export-status', action='store_true', help='額外輸出 pipeline 狀態 JSON')
     parser.add_argument('--debug-link', action='store_true', help='輸出 link job 除錯資訊並保存 log 檔')
+    parser.add_argument('--link-python', action='store_true', help='使用 Python API submit_link_job 對已編譯模型進行 link')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -825,6 +877,10 @@ def main():
     
     try:
         dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval, debug_link=args.debug_link)
+
+        # 若要求 Python link (需在官方步驟後) 設定旗標
+        if args.link_python:
+            dragon_system.python_link_requested = True
 
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
