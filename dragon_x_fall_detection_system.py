@@ -97,6 +97,12 @@ class DragonXFallDetectionSystem:
         self.simulate_fall = simulate_fall
         self.demo_pose = demo_pose
         self.summarize_edge = summarize_edge
+        # 自動設定: 直接優先使用 original ONNX 並匯出所有模型
+        self.prefer_original = True
+        self.export_all_onnx = True
+        self.qnn_backend_path = None  # 可選: 指定 QNN backend path
+        self._edge_sessions_initialized = False
+        self._benchmark_runs = 0
 
         # -------- 狀態 --------
         self._pose_session = None
@@ -120,6 +126,13 @@ class DragonXFallDetectionSystem:
             except Exception as e:
                 logger.warning(f"⚠️ 匯出原始 ONNX 失敗: {e}")
 
+        # 自動匯出 face/hand 原始 ONNX (供後續統一推論)
+        if not self.offline and self.export_all_onnx:
+            try:
+                self._export_all_original_onnx()
+            except Exception as e:
+                logger.warning(f"⚠️ 匯出全部模型 ONNX 失敗: {e}")
+
         if not self.offline and self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
             self._run_full_official_steps_for_all_models()
@@ -134,9 +147,12 @@ class DragonXFallDetectionSystem:
 
         if not self.offline and self.download_compiled:
             self._download_all_target_models()
+            if self.summarize_edge:
+                self._summarize_edge_models()
 
         if self.realtime:
             self.run_realtime_inference()
+    # Benchmark 可能在外部 main 解析參數後再設定屬性再呼叫
     
     def _find_dragon_x_devices(self):
         """尋找並選擇Dragon X設備"""
@@ -436,6 +452,13 @@ class DragonXFallDetectionSystem:
             "qai_hub_jobs": {},
             "edge_models": self._gather_edge_model_summary()
         }
+
+        # 確保 edge sessions 建立一次 (含 original ONNX)
+        if not self._edge_sessions_initialized:
+            try:
+                self._ensure_edge_sessions()
+            finally:
+                self._edge_sessions_initialized = True
         
         # 姿態檢測（核心）- 減少日誌重複
         if 'pose_fall_detection' in self.qai_hub_models:
@@ -467,6 +490,14 @@ class DragonXFallDetectionSystem:
                 fall_analysis = self.analyze_fall_risk(real_pose["keypoints"])
                 results["fall_prevention_analysis"] = fall_analysis
                 results["detections"]["pose"] = real_pose
+
+        # Face / Hand 簡單 Edge 推論 (只提供 shape/preview)
+        face_edge = self._edge_infer_generic('face_elderly_id', image)
+        if face_edge:
+            results['detections']['face'] = face_edge
+        hand_edge = self._edge_infer_generic('hand_emergency_gesture', image)
+        if hand_edge:
+            results['detections']['hand'] = hand_edge
         
         # 記錄Dragon X編譯Job資訊
         for job_name, job in self.compiled_models.items():
