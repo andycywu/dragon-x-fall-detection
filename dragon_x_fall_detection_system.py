@@ -1510,8 +1510,21 @@ def main():
                     print(f"      Dashboard: {info['dashboard_url']}")
 
         print("\n🧪 測試跌倒預防檢測 (本地/Edge)...")
+        # Auto realtime: 若使用者顯然在做 edge/QNN 動作但沒加 --realtime，直接幫忙開啟 (一次性)
+        auto_started_realtime = False
         if (args.download_compiled or args.use_qnn or args.edge_only) and not args.realtime:
-            print("💡 尚未啟動攝影機即時推論。若要開啟鏡頭請加 --realtime (可搭配 --max-frames 120)。")
+            try:
+                print("🤖 自動啟動即時推論 (--realtime 未指定但偵測到 edge/QNN 相關旗標)...")
+                dragon_system.realtime = True
+                # 預設最大影格可設定較小以避免阻塞 (可用 --max-frames 自行控制)
+                if dragon_system.max_frames is None:
+                    dragon_system.max_frames = 120
+                dragon_system.run_realtime_inference()
+                auto_started_realtime = True
+            except Exception as e:
+                print(f"⚠️ 自動即時推論啟動失敗: {e} (可手動加上 --realtime 重試)")
+        if (args.download_compiled or args.use_qnn or args.edge_only) and not auto_started_realtime and not args.realtime:
+            print("💡 若要啟動攝影機即時推論請加 --realtime (可搭配 --max-frames 120)。")
             print("   範例: python dragon_x_fall_detection_system.py --edge-only --realtime --use-qnn --max-frames 200")
         if args.image and os.path.exists(args.image):
             img = cv2.imread(args.image)
@@ -1522,6 +1535,7 @@ def main():
             if args.image:
                 print(f"⚠️ 指定影像不存在: {args.image}，改用隨機圖像")
             img = np.random.randint(0,255,(480,640,3),dtype=np.uint8)
+        # 若已自動跑過即時推論，仍保留一次靜態影像分析報告 (不碰攝影機)
         detection_results = dragon_system.comprehensive_fall_prevention_detection(img)
 
         print("✅ 跌倒預防分析結果:")
