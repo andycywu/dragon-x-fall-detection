@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import shutil
+import zipfile
 import qai_hub as hub
 import numpy as np
 import cv2
@@ -43,11 +44,26 @@ __DRAGON_X_SYSTEM_VERSION__ = "2025-08-14.1"
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統 (含 Edge 部署選項)"""
 
-    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15,
-                 debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False,
-                 wait_compile_only: bool = False, download_compiled: bool = False,
-                 realtime: bool = False, camera_index: int = 0, max_frames: Optional[int] = None,
-                 edge_only: bool = False, no_qnn_dlc: bool = False, offline: bool = False):
+    def __init__(self,
+                 full_pipeline: bool = False,
+                 wait: bool = False,
+                 poll_interval: int = 15,
+                 debug_link: bool = False,
+                 link_python: bool = False,
+                 export_local_onnx: bool = False,
+                 wait_compile_only: bool = False,
+                 download_compiled: bool = False,
+                 realtime: bool = False,
+                 camera_index: int = 0,
+                 max_frames: Optional[int] = None,
+                 edge_only: bool = False,
+                 no_qnn_dlc: bool = False,
+                 offline: bool = False,
+                 use_qnn: bool = False,
+                 force_qnn: bool = False,
+                 simulate_fall: bool = False,
+                 demo_pose: bool = False,
+                 summarize_edge: bool = False):
         """初始化Dragon X檢測系統"""
         # -------- 基本屬性與工作追蹤結構 --------
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
@@ -74,8 +90,13 @@ class DragonXFallDetectionSystem:
         self.camera_index = camera_index
         self.max_frames = max_frames
         self.edge_only = edge_only
-        self.no_qnn_dlc = no_qnn_dlc  # 不使用 qnn_dlc 產出純 ONNX
-        self.offline = offline  # 離線模式: 跳過裝置搜尋與模型初始化
+        self.no_qnn_dlc = no_qnn_dlc
+        self.offline = offline
+        self.use_qnn = use_qnn
+        self.force_qnn = force_qnn
+        self.simulate_fall = simulate_fall
+        self.demo_pose = demo_pose
+        self.summarize_edge = summarize_edge
 
         # -------- 狀態 --------
         self._pose_session = None
@@ -113,6 +134,8 @@ class DragonXFallDetectionSystem:
 
         if not self.offline and self.download_compiled:
             self._download_all_target_models()
+            if self.summarize_edge:
+                self._summarize_edge_models()
 
         if self.realtime:
             self.run_realtime_inference()
@@ -305,6 +328,16 @@ class DragonXFallDetectionSystem:
     
     def analyze_fall_risk(self, pose_keypoints: List[Dict]) -> Dict[str, Any]:
         """分析跌倒風險"""
+        # 模擬模式 (直接輸出高風險或隨機風險用於Demo)
+        if self.simulate_fall:
+            return {
+                "fall_risk": "high",
+                "risk_score": 0.85,
+                "confidence": 0.95,
+                "message": "⚠️ 模擬: 高跌倒風險",
+                "indicators": ["模擬跌倒情境"],
+                "recommendation": self._get_safety_recommendation("high")
+            }
         if not pose_keypoints:
             return {"fall_risk": "unknown", "confidence": 0.0, "reasons": []}
         
@@ -402,12 +435,22 @@ class DragonXFallDetectionSystem:
             "dragon_x_device": self.target_device.name if self.target_device else None,
             "fall_prevention_analysis": {},
             "detections": {},
-            "qai_hub_jobs": {}
+            "qai_hub_jobs": {},
+            "edge_models": self._gather_edge_model_summary()
         }
         
         # 姿態檢測（核心）- 減少日誌重複
         if 'pose_fall_detection' in self.qai_hub_models:
-            real_pose = self._run_pose_inference_local(image)
+            if self.demo_pose:
+                # 產生示範姿態資料 (週期性改變風險觸發指標)
+                kpts = []
+                for i in range(17):
+                    kpts.append({"x": float(0.5 + 0.15*np.sin(time.time()+i)),
+                                 "y": float(0.5 + 0.15*np.cos(time.time()+i)),
+                                 "confidence": 0.9})
+                real_pose = {"keypoints": [{"keypoints": kpts}], "provider": ["demo"], "output_names": ["demo_output"]}
+            else:
+                real_pose = self._run_pose_inference_local(image)
             if real_pose is None:
                 # fallback 模擬
                 mock_pose_results = {
@@ -534,12 +577,13 @@ class DragonXFallDetectionSystem:
 
         try:
             if self._pose_session is None:
-                providers = ort.get_available_providers()
-                preferred = [p for p in ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider'] if p in providers]
-                if not preferred:
-                    preferred = providers
-                highlight = '✅' if any(p.startswith('QNN') for p in preferred) else '⚠️'
-                logger.info(f"🧩 ONNX Providers 可用: {providers} -> 使用: {preferred} {highlight}{' (含QNN)' if highlight=='✅' else ' (未啟用QNN)'}")
+                providers, preferred, qnn_active = self._get_preferred_providers()
+                highlight = '✅' if qnn_active else '⚠️'
+                logger.info(f"🧩 ONNX Providers 可用: {providers} -> 使用: {preferred} {highlight}{' (含QNN)' if qnn_active else ' (未啟用QNN)'}")
+                if self.force_qnn and not qnn_active:
+                    logger.error("❌ (--force-qnn) 要求 QNN 但未找到 QNNExecutionProvider，請安裝 Qualcomm ONNX Runtime/QNN SDK。")
+                    logger.error("   指引: 1) 安裝/設定 QNN SDK 2) 確認 onnxruntime QNN EP 已包含 3) 設定環境變數 LD_LIBRARY_PATH 或 PATH")
+                    return None
                 # 先快速驗證 ONNX (若 onnx 套件存在)
                 if onnx is not None:
                     try:
@@ -633,23 +677,23 @@ class DragonXFallDetectionSystem:
                 self._wait_for_single_job(cjob, f"compile:{label}", timeout=900, poll=15)
                 tm = cjob.get_target_model()
                 if hasattr(tm, 'download'):
-                    tm.download(filename)
+                    # 避免雙 .onnx.onnx.zip, 先以不帶 .onnx 作為基底名稱
+                    base_name = f"compiled_{label}"
+                    tmp_download_name = base_name + "_raw_download"
+                    try:
+                        tm.download(tmp_download_name)
+                    except Exception:
+                        # 回退舊行為
+                        tm.download(filename)
                     # 可能實際下載成 .onnx.dlc
-                    dlc_variant = filename + '.dlc'
-                    if os.path.exists(dlc_variant) and not os.path.exists(filename):
-                        try:
-                            shutil.copyfile(dlc_variant, filename)
-                            logger.info(f"🔁 正規化 DLC -> ONNX: {dlc_variant} -> {filename}")
-                        except Exception as e:
-                            logger.warning(f"⚠️ DLC 正規化失敗 {dlc_variant}: {e}")
-                    if os.path.exists(filename):
-                        logger.info(f"✅ 已下載 {filename}")
-                    else:
-                        logger.warning(f"⚠️ 未找到 {filename}，可能只存在 DLC: {dlc_variant if os.path.exists(dlc_variant) else '無'}")
+                    self._normalize_and_extract_download(label)
                 else:
                     logger.warning(f"⚠️ target_model 無 download 方法: {label}")
             except Exception as e:
                 logger.warning(f"⚠️ 下載 {label} 失敗: {e}")
+        # 下載完成後輸出總結 (若 flag)
+        if self.summarize_edge:
+            self._summarize_edge_models()
 
     # ===== Edge Session 建立 =====
     def _ensure_edge_sessions(self):
@@ -659,14 +703,10 @@ class DragonXFallDetectionSystem:
             ('face_elderly_id', (256, 256)),
             ('hand_emergency_gesture', (224, 224)),
         ]
-        providers_available = ort.get_available_providers()
-        preferred = []
-        for cand in ['QNNExecutionProvider','QNN','CUDAExecutionProvider','DmlExecutionProvider','CPUExecutionProvider']:
-            if cand in providers_available and cand not in preferred:
-                preferred.append(cand)
-        if not preferred:
-            preferred = providers_available
-        qnn_flag = any(p.startswith('QNN') for p in preferred)
+        providers_available, preferred, qnn_flag = self._get_preferred_providers()
+        if self.force_qnn and not qnn_flag:
+            logger.error("❌ (--force-qnn) 要求 QNN 但未找到 QNNExecutionProvider，跳過 Edge session 建立。")
+            return
         for label, shape in models:
             onnx_name = f"compiled_{label}.onnx"
             if label in self.onnx_sessions:
@@ -1215,6 +1255,118 @@ class DragonXFallDetectionSystem:
             json.dump(report, f, indent=2, default=str)
         logger.info(f"📝 Pipeline 狀態已輸出: {path}")
 
+    # ================== 新增: 下載檔案正規化與摘要工具 ==================
+    def _normalize_and_extract_download(self, label: str):
+        """處理可能的下載壓縮檔與雙重副檔名, 產出 compiled_{label}.onnx / .onnx.dlc。
+
+        規則:
+        1. 搜尋可能的 zip: compiled_{label}*, *_raw_download*
+        2. 若 zip 內含 .onnx 或 .dlc, 解壓並放到工作目錄
+        3. 若只得 .dlc, 建立 compiled_{label}.onnx.dlc 並嘗試複製為 compiled_{label}.onnx (供 ORT 嘗試)
+        4. 清理暫存檔
+        """
+        base_prefix = f"compiled_{label}"
+        target_onnx = f"{base_prefix}.onnx"
+        # 先檢查現成 .onnx
+        if os.path.exists(target_onnx):
+            return
+        # 搜尋 zip candidates
+        candidates = [f for f in os.listdir('.') if f.startswith(base_prefix) and f.endswith('.zip')]
+        for zip_name in candidates:
+            try:
+                with zipfile.ZipFile(zip_name, 'r') as zf:
+                    members = zf.namelist()
+                    extract_dir = f"_extract_{base_prefix}"
+                    if os.path.exists(extract_dir):
+                        shutil.rmtree(extract_dir, ignore_errors=True)
+                    zf.extractall(extract_dir)
+                    picked = None
+                    for m in members:
+                        low = m.lower()
+                        if low.endswith('.onnx') or low.endswith('.dlc'):
+                            picked = m
+                            break
+                    if not picked:
+                        logger.warning(f"⚠️ {zip_name} 未找到 .onnx/.dlc")
+                        continue
+                    src_path = os.path.join(extract_dir, picked)
+                    # 決定目的檔名
+                    if picked.lower().endswith('.dlc'):
+                        dlc_out = target_onnx + '.dlc'
+                        shutil.copyfile(src_path, dlc_out)
+                        logger.info(f"📦 已解壓 DLC -> {dlc_out}")
+                        # 嘗試複製為 .onnx 以便 ORT 測試 (某些情況可能仍為 ONNX)
+                        if not os.path.exists(target_onnx):
+                            try:
+                                shutil.copyfile(src_path, target_onnx)
+                                logger.info(f"🔁 DLC 複製為 {target_onnx} 供 ORT 嘗試 (若非合法 ONNX 會再隔離)")
+                            except Exception:
+                                pass
+                    else:
+                        shutil.copyfile(src_path, target_onnx)
+                        logger.info(f"📦 已解壓 ONNX -> {target_onnx}")
+            except zipfile.BadZipFile:
+                logger.warning(f"⚠️ 壓縮檔損壞: {zip_name}")
+            except Exception as e:
+                logger.warning(f"⚠️ 解壓 {zip_name} 失敗: {e}")
+        # 清理暫存 extract 目錄
+        for d in os.listdir('.'):
+            if d.startswith(f"_extract_{base_prefix}") and os.path.isdir(d):
+                shutil.rmtree(d, ignore_errors=True)
+
+    def _validate_onnx_file(self, path: str) -> bool:
+        if not os.path.exists(path):
+            return False
+        if onnx is None:
+            return True  # 無法驗證, 視為存在
+        try:
+            onnx.load(path)
+            return True
+        except Exception:
+            return False
+
+    def _gather_edge_model_summary(self) -> Dict[str, Any]:
+        summary: Dict[str, Any] = {}
+        for f in os.listdir('.'):
+            if f.startswith('compiled_') and (f.endswith('.onnx') or f.endswith('.onnx.dlc')):
+                info = {
+                    'size': os.path.getsize(f),
+                    'valid_onnx': f.endswith('.onnx') and self._validate_onnx_file(f),
+                }
+                summary[f] = info
+        return summary
+
+    def _summarize_edge_models(self):
+        summary = self._gather_edge_model_summary()
+        if not summary:
+            logger.info("ℹ️ 尚無 Edge 模型檔案 (compiled_*.onnx)")
+            return
+        logger.info("🧾 Edge 模型摘要:")
+        for name, info in summary.items():
+            vflag = '✅' if info['valid_onnx'] else '⚠️'
+            logger.info(f"   {name} ({info['size']} bytes) {vflag}{' (合法ONNX)' if info['valid_onnx'] else ''}")
+        # 如果沒有任何 valid ONNX 但有 dlc, 提示使用者
+        if all(not i['valid_onnx'] for i in summary.values()):
+            logger.warning("⚠️ 未偵測到可驗證 ONNX; 可能僅有 DLC. 若要啟用 QNN EP, 請確認已在 Snapdragon 環境並安裝 QNN runtime。")
+
+    def _get_preferred_providers(self):
+        providers = ort.get_available_providers()
+        # 預設優先順序
+        order = ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider']
+        preferred = []
+        for p in order:
+            if p in providers and p not in preferred:
+                preferred.append(p)
+        # 增強: 若使用者未要求 QNN, 仍保持順序; 若要求 QNN 但 QNN 不存在, 仍可 fallback (除非 force_qnn)
+        if not preferred:
+            preferred = providers
+        qnn_active = any(p.startswith('QNN') for p in preferred if p in providers)
+        if self.use_qnn and not qnn_active and 'QNNExecutionProvider' in providers:
+            # 插入 QNNExecutionProvider 到最前
+            preferred = ['QNNExecutionProvider'] + [p for p in preferred if p != 'QNNExecutionProvider']
+            qnn_active = True
+        return providers, preferred, qnn_active
+
 def main():
     """主函數：Dragon X老人跌倒預防檢測系統測試 / Pipeline / Edge"""
     parser = argparse.ArgumentParser(description='Dragon X 跌倒預防系統')
@@ -1236,6 +1388,14 @@ def main():
     parser.add_argument('--no-qnn-dlc', action='store_true', help='編譯時不加入 --target_runtime qnn_dlc (產出純 ONNX target model)')
     parser.add_argument('--offline', action='store_true', help='離線模式：跳過 QAI Hub 裝置搜尋與模型雲端操作，僅測試本地流程')
     parser.add_argument('--version', action='store_true', help='顯示系統版本後離開')
+    # QNN / NPU 相關
+    parser.add_argument('--use-qnn', action='store_true', help='若可用則優先使用 QNNExecutionProvider/NPU')
+    parser.add_argument('--force-qnn', action='store_true', help='強制要求 QNNExecutionProvider，否則報錯 (用於檢查環境)')
+    # Demo / 風險模擬
+    parser.add_argument('--simulate-fall', action='store_true', help='模擬高跌倒風險 (不依實際模型輸出)')
+    parser.add_argument('--demo-pose', action='store_true', help='使用動態生成的 demo pose 資料 (無須實際模型)')
+    # Edge 模型摘要
+    parser.add_argument('--summarize-edge', action='store_true', help='下載後列出編譯模型檔案摘要')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1252,7 +1412,10 @@ def main():
             debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx,
             wait_compile_only=args.wait_compile, download_compiled=args.download_compiled,
             realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames,
-            edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc, offline=args.offline
+            edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc, offline=args.offline,
+            use_qnn=args.use_qnn, force_qnn=args.force_qnn,
+            simulate_fall=args.simulate_fall, demo_pose=args.demo_pose,
+            summarize_edge=args.summarize_edge
         )
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
