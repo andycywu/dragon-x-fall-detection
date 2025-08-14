@@ -64,7 +64,8 @@ class DragonXFallDetectionSystem:
                  prefer_directml: bool = False,
                  simulate_fall: bool = False,
                  demo_pose: bool = False,
-                 summarize_edge: bool = False):
+                 summarize_edge: bool = False,
+                 qnn_backend_path: Optional[str] = None):
         """初始化Dragon X檢測系統"""
         # -------- 基本屬性與工作追蹤結構 --------
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
@@ -102,7 +103,7 @@ class DragonXFallDetectionSystem:
         # 自動設定: 直接優先使用 original ONNX 並匯出所有模型
         self.prefer_original = True
         self.export_all_onnx = True
-        self.qnn_backend_path = None  # 可選: 指定 QNN backend path
+        self.qnn_backend_path = qnn_backend_path  # 可選: 指定 QNN backend path (DLL / so)
         self._edge_sessions_initialized = False
         self._benchmark_runs = 0
 
@@ -643,7 +644,17 @@ class DragonXFallDetectionSystem:
                         return None
                 # 若未提前返回則建立 session
                 if self._pose_session is None:
-                    self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
+                    if self.qnn_backend_path and any(p.startswith('QNN') for p in preferred):
+                        provider_options = []
+                        for p in preferred:
+                            if p.startswith('QNN'):
+                                provider_options.append({'backend_path': self.qnn_backend_path})
+                            else:
+                                provider_options.append({})
+                        self._pose_session = ort.InferenceSession(onnx_path, providers=preferred, provider_options=provider_options)
+                        logger.info(f"🔧 使用自訂 QNN backend_path: {self.qnn_backend_path}")
+                    else:
+                        self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
             sess = self._pose_session
             if sess is False:
                 return None
@@ -769,7 +780,17 @@ class DragonXFallDetectionSystem:
                 if loaded:
                     break
                 try:
-                    sess = ort.InferenceSession(path, providers=preferred)
+                    if self.qnn_backend_path and any(p.startswith('QNN') for p in preferred):
+                        provider_options = []
+                        for p in preferred:
+                            if p.startswith('QNN'):
+                                provider_options.append({'backend_path': self.qnn_backend_path})
+                            else:
+                                provider_options.append({})
+                        sess = ort.InferenceSession(path, providers=preferred, provider_options=provider_options)
+                        logger.info(f"🔧 (edge) 使用自訂 QNN backend_path: {self.qnn_backend_path}")
+                    else:
+                        sess = ort.InferenceSession(path, providers=preferred)
                     self.onnx_sessions[label] = (sess, shape)
                     origin = 'compiled' if path.startswith('compiled_') else 'original'
                     logger.info(f"🧩 載入 {label} ({origin}) 成功 providers={sess.get_providers()} {'✅含QNN' if qnn_flag else ''}")
@@ -779,8 +800,17 @@ class DragonXFallDetectionSystem:
                     if 'model.data' in msg.lower() and path.startswith('compiled_') and path.endswith('.onnx'):
                         quarantine = path + '.invalid'
                         try:
-                            os.rename(path, quarantine)
-                            logger.warning(f"⚠️ {path} 缺 external model.data 已隔離為 {quarantine}")
+                            if os.path.exists(quarantine):
+                                # 已隔離過，避免 WinError 183
+                                logger.warning(f"⚠️ {path} 缺 external model.data (已存在 {quarantine})，跳過重複隔離")
+                                try:
+                                    # 嘗試刪除原 compiled_ 殘留，避免再次嘗試
+                                    os.remove(path)
+                                except Exception:
+                                    pass
+                            else:
+                                os.rename(path, quarantine)
+                                logger.warning(f"⚠️ {path} 缺 external model.data 已隔離為 {quarantine}")
                         except Exception as re:
                             logger.warning(f"⚠️ 隔離 {path} 失敗: {re}")
                         continue
@@ -798,6 +828,17 @@ class DragonXFallDetectionSystem:
             providers = ort.get_available_providers()
             logger.info(f"🔍 ORT版本: {ver}")
             logger.info(f"🔌 Providers: {providers}")
+            # 架構檢查: Snapdragon X Elite 原生應為 ARM64，若顯示 AMD64 代表目前 Python 為 x64 模擬層
+            try:
+                import platform
+                arch = platform.machine().lower()
+                logger.info(f"🧬 系統架構(platform.machine): {arch}")
+                if arch in ('amd64','x86_64'):
+                    logger.warning("⚠️ 偵測到目前 Python 為 x64 (AMD64) 模式。QNN 原生加速需要 ARM64 Python + ARM64 QNN SDK。請安裝 ARM64 版 Python 後重建虛擬環境，否則僅能使用 CPU / DirectML (若安裝)。")
+                elif arch not in ('arm64','aarch64'):
+                    logger.warning("⚠️ 未知架構: " + arch)
+            except Exception:
+                pass
             try:
                 import onnx
                 from onnx import helper, TensorProto
@@ -808,7 +849,17 @@ class DragonXFallDetectionSystem:
                 model = helper.make_model(graph, opset_imports=[helper.make_opsetid('',17)])
                 name = '_ort_diag_identity.onnx'
                 onnx.save(model, name)
-                sess = ort.InferenceSession(name, providers=providers if providers else None)
+                if self.qnn_backend_path and providers and any(p.startswith('QNN') for p in providers):
+                    provider_options = []
+                    for p in providers:
+                        if p.startswith('QNN'):
+                            provider_options.append({'backend_path': self.qnn_backend_path})
+                        else:
+                            provider_options.append({})
+                    sess = ort.InferenceSession(name, providers=providers, provider_options=provider_options)
+                    logger.info(f"🔧 (diagnose) 使用自訂 QNN backend_path: {self.qnn_backend_path}")
+                else:
+                    sess = ort.InferenceSession(name, providers=providers if providers else None)
                 outv = sess.run(None, {sess.get_inputs()[0].name: np.array([[3.0]], dtype=np.float32)})
                 logger.info(f"✅ Identity 自測輸出: {outv[0].tolist()}")
                 try: os.remove(name)
@@ -842,6 +893,63 @@ class DragonXFallDetectionSystem:
         except Exception as e:
             logger.debug(f"edge inference {label} error: {e}")
         return None
+
+    def run_benchmarks(self):
+        """執行 Edge 模型 (pose/face/hand) 延遲基準測試，輸出 dragon_x_benchmark.json"""
+        try:
+            import numpy as _np
+        except Exception:
+            logger.error("❌ 需要 numpy 才能執行 benchmark")
+            return
+        self._ensure_edge_sessions()
+        targets = []
+        for label in ['pose_fall_detection','face_elderly_id','hand_emergency_gesture']:
+            entry = self.onnx_sessions.get(label)
+            if entry:
+                targets.append((label,)+entry)
+        if not targets:
+            logger.warning("⚠️ 尚無任何 Edge session 可供 benchmark (請先 --download-compiled 或確保 *_original.onnx 存在)")
+            return
+        runs = getattr(self,'benchmark_runs',30) or 30
+        runs = max(5, runs)
+        results = { 'runs': runs, 'timestamp': time.time(), 'models': {} }
+        logger.info(f"🚀 Benchmark 開始 (warmup 3 + 正式 {runs}) ...")
+        for label, sess, (tw, th) in targets:
+            shape = (1,3,th,tw)
+            data = _np.random.rand(*shape).astype(_np.float32)
+            input_name = sess.get_inputs()[0].name
+            # warmup
+            for _ in range(3):
+                try: sess.run(None, {input_name: data})
+                except Exception as e: logger.warning(f"⚠️ warmup {label} 失敗: {e}")
+            lat = []
+            t_all0 = time.time()
+            for _ in range(runs):
+                t0 = time.time()
+                sess.run(None, {input_name: data})
+                lat.append( (time.time()-t0)*1000.0 )
+            t_all = time.time() - t_all0
+            arr = _np.array(lat)
+            stats = {
+                'provider_chain': sess.get_providers(),
+                'avg_ms': float(arr.mean()),
+                'p50_ms': float(_np.percentile(arr,50)),
+                'p90_ms': float(_np.percentile(arr,90)),
+                'p95_ms': float(_np.percentile(arr,95)),
+                'p99_ms': float(_np.percentile(arr,99)),
+                'min_ms': float(arr.min()),
+                'max_ms': float(arr.max()),
+                'throughput_fps': float(runs / t_all) if t_all>0 else 0.0,
+                'input_shape': list(shape)
+            }
+            results['models'][label] = stats
+            logger.info(f"📊 {label} avg={stats['avg_ms']:.2f}ms p95={stats['p95_ms']:.2f}ms providers={stats['provider_chain']}")
+        try:
+            with open('dragon_x_benchmark.json','w') as f:
+                json.dump(results,f,indent=2)
+            logger.info("💾 Benchmark 結果已保存: dragon_x_benchmark.json")
+        except Exception as e:
+            logger.warning(f"⚠️ 寫入 benchmark 檔案失敗: {e}")
 
     def run_realtime_inference(self):
         """啟動攝影機即時推論 (僅使用姿態模型做風險分析)。"""
@@ -1550,12 +1658,15 @@ def main():
     parser.add_argument('--use-qnn', action='store_true', help='若可用則優先使用 QNNExecutionProvider/NPU')
     parser.add_argument('--force-qnn', action='store_true', help='強制要求 QNNExecutionProvider，否則報錯 (用於檢查環境)')
     parser.add_argument('--prefer-directml', action='store_true', help='優先使用 DmlExecutionProvider (Windows GPU/DirectML) 進行推論，稍後可再切回 QNN')
+    parser.add_argument('--qnn-backend-path', type=str, help='指定 QNN backend 執行檔路徑 (例如 QnnHtp.dll 或 libQnnHtp.so)')
     # Demo / 風險模擬
     parser.add_argument('--simulate-fall', action='store_true', help='模擬高跌倒風險 (不依實際模型輸出)')
     parser.add_argument('--demo-pose', action='store_true', help='使用動態生成的 demo pose 資料 (無須實際模型)')
     # Edge 模型摘要
     parser.add_argument('--summarize-edge', action='store_true', help='下載後列出編譯模型檔案摘要')
     parser.add_argument('--ort-diagnose', action='store_true', help='輸出 ONNX Runtime 版本 / Providers / 自測')
+    parser.add_argument('--benchmark', action='store_true', help='執行 Edge 模型推論基準測試 (需已建立 sessions)')
+    parser.add_argument('--benchmark-runs', type=int, default=30, help='Benchmark 正式次數 (不含 warmup, >=5)')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1575,11 +1686,15 @@ def main():
             edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc, offline=args.offline,
             use_qnn=args.use_qnn, force_qnn=args.force_qnn,
             prefer_directml=args.prefer_directml,
+            qnn_backend_path=args.qnn_backend_path,
             simulate_fall=args.simulate_fall, demo_pose=args.demo_pose,
             summarize_edge=args.summarize_edge
         )
         if args.ort_diagnose:
             dragon_system.diagnose_onnxruntime()
+        if args.benchmark:
+            dragon_system.benchmark_runs = max(5, args.benchmark_runs)
+            dragon_system.run_benchmarks()
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")

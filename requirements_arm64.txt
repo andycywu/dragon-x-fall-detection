@@ -1,0 +1,8 @@
+numpy
+protobuf==4.25.3
+onnxruntime
+onnxruntime-directml
+opencv-python
+qai-hub
+qai-hub-models
+python-dotenv
