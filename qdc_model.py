@@ -7,7 +7,7 @@ from PIL import Image
 so = ort.SessionOptions()
 so.add_session_config_entry("session.disable_cpu_ep_fallback", "1")
 sess = ort.InferenceSession(
-    "model.qdq.onnx",
+    "model.onnx",
     sess_options=so,
     providers=["QNNExecutionProvider"],
     provider_options=[{"backend_path": "QnnHtp.dll"}],
