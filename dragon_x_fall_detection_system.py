@@ -728,40 +728,99 @@ class DragonXFallDetectionSystem:
 
     # ===== Edge Session 建立 =====
     def _ensure_edge_sessions(self):
-        """建立或快取 pose / face / hand 的 ONNX Runtime session (若有 compiled 模型檔)."""
+        """建立/快取 pose/face/hand ORT sessions，含 fallback 與隔離:
+        1. 優先 compiled_*.onnx (若缺 external model.data 則隔離為 .invalid)
+        2. 支援 compiled_*.onnx.dlc -> 複製為 .onnx
+        3. fallback *_original.onnx (三種模型)
+        4. 每種錯誤只提示一次
+        """
         models = [
-            ('pose_fall_detection', (256, 256)),
-            ('face_elderly_id', (256, 256)),
-            ('hand_emergency_gesture', (224, 224)),
+            ('pose_fall_detection', (256, 256), 'pose_fall_detection_original.onnx'),
+            ('face_elderly_id', (256, 256), 'face_elderly_id_original.onnx'),
+            ('hand_emergency_gesture', (224, 224), 'hand_emergency_gesture_original.onnx'),
         ]
-        providers_available, preferred, qnn_flag = self._get_preferred_providers()
+        _, preferred, qnn_flag = self._get_preferred_providers()
         if self.force_qnn and not qnn_flag:
             logger.error("❌ (--force-qnn) 要求 QNN 但未找到 QNNExecutionProvider，跳過 Edge session 建立。")
             return
-        for label, shape in models:
-            onnx_name = f"compiled_{label}.onnx"
+        if not hasattr(self, '_edge_error_cache'):
+            self._edge_error_cache = {}
+        for label, shape, original in models:
             if label in self.onnx_sessions:
                 continue
-            if not os.path.exists(onnx_name):
-                alt = onnx_name + '.dlc'
-                if os.path.exists(alt):
-                    try:
-                        shutil.copyfile(alt, onnx_name)
-                        logger.info(f"🔁 DLC -> ONNX 複製: {alt} -> {onnx_name}")
-                    except Exception as e:
-                        logger.warning(f"⚠️ 複製 {alt} 失敗: {e}")
-                if not os.path.exists(onnx_name):
-                    # 專門對 pose 嘗試原始匯出 ONNX
-                    if label == 'pose_fall_detection' and os.path.exists('pose_fall_detection_original.onnx'):
-                        onnx_name = 'pose_fall_detection_original.onnx'
-                    else:
+            compiled = f"compiled_{label}.onnx"
+            candidates: List[str] = []
+            if os.path.exists(compiled):
+                candidates.append(compiled)
+            dlc = compiled + '.dlc'
+            if not os.path.exists(compiled) and os.path.exists(dlc):
+                try:
+                    shutil.copyfile(dlc, compiled)
+                    logger.info(f"🔁 DLC -> ONNX 複製: {dlc} -> {compiled}")
+                    candidates.append(compiled)
+                except Exception as e:
+                    logger.warning(f"⚠️ 複製 {dlc} 失敗: {e}")
+            if os.path.exists(original):
+                candidates.append(original)
+            if not candidates:
+                continue
+            loaded = False
+            for path in list(candidates):
+                if loaded:
+                    break
+                try:
+                    sess = ort.InferenceSession(path, providers=preferred)
+                    self.onnx_sessions[label] = (sess, shape)
+                    origin = 'compiled' if path.startswith('compiled_') else 'original'
+                    logger.info(f"🧩 載入 {label} ({origin}) 成功 providers={sess.get_providers()} {'✅含QNN' if qnn_flag else ''}")
+                    loaded = True
+                except Exception as e:
+                    msg = str(e)
+                    if 'model.data' in msg.lower() and path.startswith('compiled_') and path.endswith('.onnx'):
+                        quarantine = path + '.invalid'
+                        try:
+                            os.rename(path, quarantine)
+                            logger.warning(f"⚠️ {path} 缺 external model.data 已隔離為 {quarantine}")
+                        except Exception as re:
+                            logger.warning(f"⚠️ 隔離 {path} 失敗: {re}")
                         continue
+                    key = f"{label}:{path}:{msg.splitlines()[0]}"
+                    if key not in self._edge_error_cache:
+                        logger.warning(f"⚠️ 建立 {label} session 失敗 ({path}): {msg}")
+                        self._edge_error_cache[key] = True
+            if not loaded:
+                logger.warning(f"❌ 無法為 {label} 建立任何 session (candidates={candidates})")
+
+    def diagnose_onnxruntime(self):
+        """輸出 ORT 版本 / Providers / 極簡 Identity 自測"""
+        try:
+            ver = getattr(ort, '__version__', 'unknown')
+            providers = ort.get_available_providers()
+            logger.info(f"🔍 ORT版本: {ver}")
+            logger.info(f"🔌 Providers: {providers}")
             try:
-                sess = ort.InferenceSession(onnx_name, providers=preferred)
-                self.onnx_sessions[label] = (sess, shape)
-                logger.info(f"🧩 载入 {label} ONNX Session (providers={sess.get_providers()}) {'✅含QNN' if qnn_flag else '⚠️無QNN'}")
+                import onnx
+                from onnx import helper, TensorProto
+                inp = helper.make_tensor_value_info('x', TensorProto.FLOAT, [1,1])
+                out = helper.make_tensor_value_info('y', TensorProto.FLOAT, [1,1])
+                node = helper.make_node('Identity', ['x'], ['y'])
+                graph = helper.make_graph([node], 'G', [inp], [out])
+                model = helper.make_model(graph, opset_imports=[helper.make_opsetid('',17)])
+                name = '_ort_diag_identity.onnx'
+                onnx.save(model, name)
+                sess = ort.InferenceSession(name, providers=providers if providers else None)
+                outv = sess.run(None, {sess.get_inputs()[0].name: np.array([[3.0]], dtype=np.float32)})
+                logger.info(f"✅ Identity 自測輸出: {outv[0].tolist()}")
+                try: os.remove(name)
+                except Exception: pass
             except Exception as e:
-                logger.warning(f"⚠️ 建立 {label} session 失敗: {e}")
+                logger.warning(f"⚠️ Identity 自測失敗: {e}")
+            if self.prefer_directml and 'DmlExecutionProvider' not in providers:
+                logger.warning("⚠️ --prefer-directml 指定但未偵測到 DmlExecutionProvider (Windows: pip install onnxruntime-directml)")
+            if self.use_qnn and not any(p.startswith('QNN') for p in providers):
+                logger.warning("⚠️ --use-qnn 指定但未找到 QNN provider (需 QNN 版 onnxruntime 或環境路徑設定)")
+        except Exception as e:
+            logger.error(f"❌ ORT 診斷失敗: {e}")
 
     def _edge_infer_generic(self, label: str, frame: np.ndarray):
         entry = self.onnx_sessions.get(label)
@@ -1496,6 +1555,7 @@ def main():
     parser.add_argument('--demo-pose', action='store_true', help='使用動態生成的 demo pose 資料 (無須實際模型)')
     # Edge 模型摘要
     parser.add_argument('--summarize-edge', action='store_true', help='下載後列出編譯模型檔案摘要')
+    parser.add_argument('--ort-diagnose', action='store_true', help='輸出 ONNX Runtime 版本 / Providers / 自測')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1518,6 +1578,8 @@ def main():
             simulate_fall=args.simulate_fall, demo_pose=args.demo_pose,
             summarize_edge=args.summarize_edge
         )
+        if args.ort_diagnose:
+            dragon_system.diagnose_onnxruntime()
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")
