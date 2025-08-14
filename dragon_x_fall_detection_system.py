@@ -43,7 +43,7 @@ class DragonXFallDetectionSystem:
                  debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False,
                  wait_compile_only: bool = False, download_compiled: bool = False,
                  realtime: bool = False, camera_index: int = 0, max_frames: Optional[int] = None,
-                 edge_only: bool = False, no_qnn_dlc: bool = False):
+                 edge_only: bool = False, no_qnn_dlc: bool = False, offline: bool = False):
         """初始化Dragon X檢測系統"""
         # -------- 基本屬性與工作追蹤結構 --------
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
@@ -71,27 +71,31 @@ class DragonXFallDetectionSystem:
         self.max_frames = max_frames
         self.edge_only = edge_only
         self.no_qnn_dlc = no_qnn_dlc  # 不使用 qnn_dlc 產出純 ONNX
+        self.offline = offline  # 離線模式: 跳過裝置搜尋與模型初始化
 
         # -------- 狀態 --------
         self._pose_session = None
         self._invalid_onnx_cache = {}
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
-        self._find_dragon_x_devices()
+        if not self.offline:
+            self._find_dragon_x_devices()
+        else:
+            logger.info("🌐 Offline 模式: 跳過 QAI Hub 裝置搜尋與模型載入 (可用於語法/流程測試)")
 
         # edge-only: 只在需要原始 ONNX 匯出時才載入模型 (避免重新 compile)
-        if self.edge_only and not self.export_local_onnx:
+        if not self.offline and self.edge_only and not self.export_local_onnx:
             logger.info("🧊 (--edge-only) 跳過模型雲端編譯提交，僅使用本地 compiled_*.onnx / 原始 ONNX")
-        else:
+        elif not self.offline:
             self._initialize_fall_detection_models()
 
-        if self.export_local_onnx:
+        if not self.offline and self.export_local_onnx:
             try:
                 self._export_original_pose_onnx()
             except Exception as e:
                 logger.warning(f"⚠️ 匯出原始 ONNX 失敗: {e}")
 
-        if self.full_pipeline:
+        if not self.offline and self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
             self._run_full_official_steps_for_all_models()
             if self.python_link_requested:
@@ -99,11 +103,11 @@ class DragonXFallDetectionSystem:
             else:
                 self._attempt_link_jobs_cli()
 
-        if self.wait_compile_only and not self.full_pipeline:
+        if not self.offline and self.wait_compile_only and not self.full_pipeline:
             logger.info("⏳ (--wait-compile) 等待現有編譯/Profiling Jobs 完成")
             self.wait_for_all_jobs()
 
-        if self.download_compiled:
+        if not self.offline and self.download_compiled:
             self._download_all_target_models()
 
         if self.realtime:
@@ -397,9 +401,8 @@ class DragonXFallDetectionSystem:
             "qai_hub_jobs": {}
         }
         
-        # 姿態檢測（核心）
+        # 姿態檢測（核心）- 減少日誌重複
         if 'pose_fall_detection' in self.qai_hub_models:
-            logger.info("🚶‍♂️ 執行姿態檢測 (跌倒預防核心)...")
             real_pose = self._run_pose_inference_local(image)
             if real_pose is None:
                 # fallback 模擬
@@ -494,6 +497,16 @@ class DragonXFallDetectionSystem:
         失敗則回傳 None。
         """
         onnx_path = 'compiled_pose_fall_detection.onnx'
+        
+        # 檢查是否曾標記為無效，若是則直接跳過 (避免狂刷)
+        if onnx_path in self._invalid_onnx_cache:
+            # 嘗試使用原始匯出 ONNX 作為 fallback
+            orig_path = 'pose_fall_detection_original.onnx'
+            if os.path.exists(orig_path):
+                onnx_path = orig_path
+            else:
+                return None
+        
         if not os.path.exists(onnx_path):
             # 嘗試接受 CLI 下載的 .onnx.dlc 檔案並複製為 .onnx 供 ORT 使用
             alt_path = 'compiled_pose_fall_detection.onnx.dlc'
@@ -504,6 +517,7 @@ class DragonXFallDetectionSystem:
                     logger.info("🔁 已將 .onnx.dlc 複製為 compiled_pose_fall_detection.onnx 供本地推論嘗試")
                 except Exception as e:
                     logger.warning(f"⚠️ 複製 DLC -> ONNX 失敗: {e}")
+            
             if not os.path.exists(onnx_path):
                 # 改嘗試使用原始匯出 ONNX (若存在)
                 orig = 'pose_fall_detection_original.onnx'
@@ -513,9 +527,6 @@ class DragonXFallDetectionSystem:
                 else:
                     logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled 或 original)，使用模擬資料")
                     return None
-        # 檢查是否曾標記為無效，若是則直接跳過 (避免狂刷)
-        if onnx_path in self._invalid_onnx_cache:
-            return None
 
         try:
             if self._pose_session is None:
@@ -1210,6 +1221,7 @@ def main():
     parser.add_argument('--max-frames', type=int, default=None, help='即時推論最大影格 (測試用)')
     parser.add_argument('--edge-only', action='store_true', help='僅使用已存在的 compiled_*.onnx / 原始ONNX，不重新提交雲端編譯')
     parser.add_argument('--no-qnn-dlc', action='store_true', help='編譯時不加入 --target_runtime qnn_dlc (產出純 ONNX target model)')
+    parser.add_argument('--offline', action='store_true', help='離線模式：跳過 QAI Hub 裝置搜尋與模型雲端操作，僅測試本地流程')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1218,11 +1230,13 @@ def main():
     print()
     
     try:
-        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval,
-                               debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx,
-                               wait_compile_only=args.wait_compile, download_compiled=args.download_compiled,
-                               realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames,
-                               edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc)
+        dragon_system = DragonXFallDetectionSystem(
+            full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval,
+            debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx,
+            wait_compile_only=args.wait_compile, download_compiled=args.download_compiled,
+            realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames,
+            edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc, offline=args.offline
+        )
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")
