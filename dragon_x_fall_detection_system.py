@@ -23,6 +23,7 @@ from typing import Dict, Any, List, Optional
 import time
 import json
 import argparse
+import re
 
 # 載入環境變數
 load_dotenv()
@@ -456,14 +457,30 @@ class DragonXFallDetectionSystem:
                 elif 'hand' in model_label:
                     component_key = 'hand_emergency_gesture'
                 component = self.qai_hub_models.get(component_key)
-                sample_inputs = {"image": np.random.rand(1,3,256,256).astype('float32')}
-                if component_key == 'hand_emergency_gesture':
-                    sample_inputs = {"image": np.random.rand(1,3,224,224).astype('float32')}
-                profile_job = hub.submit_profile_job(
-                    model=compile_job.model,  # compile_job retains model reference
-                    input_data=sample_inputs,
-                    device=self.target_device
-                )
+                # 準備樣本輸入（僅當 API 支援相關參數時才使用）
+                sample_inputs_256 = {"image": np.random.rand(1,3,256,256).astype('float32')}
+                sample_inputs_224 = {"image": np.random.rand(1,3,224,224).astype('float32')}
+                sample_inputs = sample_inputs_224 if component_key == 'hand_emergency_gesture' else sample_inputs_256
+
+                profile_job = None
+                # 1. 嘗試最簡 API 形式（新版 SDK 可能只接受必要參數）
+                try:
+                    profile_job = hub.submit_profile_job(model=compile_job.model, device=self.target_device)
+                except TypeError as te1:
+                    # 2. 嘗試參數名稱 'inputs'
+                    try:
+                        profile_job = hub.submit_profile_job(model=compile_job.model, device=self.target_device, inputs=sample_inputs)
+                    except TypeError as te2:
+                        # 3. 嘗試舊版可能的 positional 調用
+                        try:
+                            profile_job = hub.submit_profile_job(compile_job.model, self.target_device)
+                        except Exception as te3:
+                            raise RuntimeError(f"submit_profile_job 多重呼叫形式均失敗: {te1}; {te2}; {te3}")
+                except Exception as e_any:
+                    raise RuntimeError(f"submit_profile_job 呼叫失敗: {e_any}")
+
+                if profile_job is None:
+                    raise RuntimeError("submit_profile_job 返回 None，可能 API 已變更")
                 self.profile_jobs[model_label + '_profile'] = profile_job
                 logger.info(f"📈 提交Profiling: {model_label} -> {profile_job.job_id}")
                 logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{profile_job.job_id}")
@@ -489,34 +506,59 @@ class DragonXFallDetectionSystem:
             model_id = getattr(getattr(compile_job, 'model', None), 'model_id', None)
             if not model_id:
                 continue
-            cmd = [cli, 'submit-link-job', '--model-id', model_id, '--device', device_name]
+            base_cmd = [cli, 'submit-link-job', '--model-id', model_id, '--device', device_name]
             if device_os:
-                cmd += ['--device-os', str(device_os)]
-            try:
-                logger.info(f"🔗 提交 Link Job (CLI) {model_label} ...")
-                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-                stdout = proc.stdout.strip()
-                job_id = None
-                for token in stdout.split():
-                    if token.startswith('j') and len(token) >= 8:
-                        job_id = token.strip('.,:')
+                base_cmd += ['--device-os', str(device_os)]
+
+            # 優先嘗試 JSON 輸出（如果 CLI 支援）
+            variants = [base_cmd + ['--output', 'json'], base_cmd]
+            submitted = False
+            for cmd in variants:
+                try:
+                    logger.info(f"🔗 提交 Link Job (CLI) {model_label} ... 命令: {' '.join(cmd)}")
+                    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+                    stdout = proc.stdout.strip()
+                    stderr = proc.stderr.strip()
+                    job_id = None
+                    raw_capture = (stdout + '\n' + stderr)[:2000]
+                    # 嘗試 JSON 解析
+                    if '--output' in cmd and 'json' in cmd:
+                        try:
+                            parsed = json.loads(stdout or '{}')
+                            job_id = parsed.get('job_id') or parsed.get('id') or parsed.get('jobId')
+                        except Exception:
+                            pass
+                    # Regex fallback e.g. Scheduled link job (jxxxxxxx)
+                    if not job_id:
+                        m = re.search(r'\(j[a-z0-9]{6,}\)', stdout, re.IGNORECASE)
+                        if m:
+                            job_id = m.group(0).strip('()')
+                    # Generic token scan fallback
+                    if not job_id:
+                        for token in stdout.split():
+                            if re.fullmatch(r'j[a-z0-9]{6,}', token.lower()):
+                                job_id = token.strip('.,:')
+                                break
+                    if job_id:
+                        self.link_jobs[model_label + '_link'] = {
+                            'job_id': job_id,
+                            'status': 'submitted',
+                            'dashboard_url': f'https://app.aihub.qualcomm.com/jobs/{job_id}'
+                        }
+                        logger.info(f"✅ Link Job 提交成功: {job_id}")
+                        submitted = True
                         break
-                if job_id:
-                    self.link_jobs[model_label + '_link'] = {
-                        'job_id': job_id,
-                        'status': 'submitted',
-                        'dashboard_url': f'https://app.aihub.qualcomm.com/jobs/{job_id}'
-                    }
-                    logger.info(f"✅ Link Job 提交成功: {job_id}")
-                else:
-                    self.link_jobs[model_label + '_link'] = {
-                        'job_id': None,
-                        'status': 'parse_failed',
-                        'raw_output': stdout[:500]
-                    }
-                    logger.warning(f"⚠️ 無法解析 Link Job ID ({model_label})")
-            except Exception as e:
-                logger.error(f"❌ Link Job 提交失敗 {model_label}: {e}")
+                    else:
+                        logger.warning(f"⚠️ Link Job 輸出未解析到 ID (嘗試下一種): {raw_capture[:300]}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Link Job 命令失敗 (嘗試下一種): {e}")
+            if not submitted:
+                self.link_jobs[model_label + '_link'] = {
+                    'job_id': None,
+                    'status': 'parse_failed',
+                    'raw_output': raw_capture[:500] if 'raw_capture' in locals() else 'no_output'
+                }
+                logger.warning(f"⚠️ 無法解析 Link Job ID ({model_label}) - 已記錄 raw_output")
 
     def wait_for_all_jobs(self):
         """等待所有 compile / profile job 完成（link 為 CLI 暫不輪詢）。"""
