@@ -34,9 +34,17 @@ logger = logging.getLogger(__name__)
 
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統"""
-    
-    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15, debug_link: bool = False):
-        """初始化Dragon X檢測系統"""
+
+    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15, debug_link: bool = False, link_python: bool = False):
+        """初始化Dragon X檢測系統
+
+        Args:
+            full_pipeline: 是否執行 Compile→Profile→Inference (官方示例步驟)
+            wait: 是否等待所有 Job 完成
+            poll_interval: 輪詢秒數
+            debug_link: 是否輸出 link job 除錯資訊
+            link_python: 是否使用 Python API submit_link_job 進行多模型 link (否則僅嘗試 CLI)
+        """
         # 基本屬性
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
         self.target_device = None
@@ -54,6 +62,7 @@ class DragonXFallDetectionSystem:
         self.wait_for_jobs = wait
         self.poll_interval = poll_interval
         self.debug_link = debug_link  # 是否輸出 link job 除錯資訊
+        self.python_link_requested = link_python
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
@@ -62,8 +71,11 @@ class DragonXFallDetectionSystem:
         if self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
             self._run_full_official_steps_for_all_models()
-            # Link (可選) 放在官方 Step 後面
-            self._attempt_link_jobs_cli()
+            # 如果使用 Python link 先執行 (官方 API)；否則嘗試 CLI；若兩者都想要可自行再呼叫
+            if self.python_link_requested:
+                self._link_all_models_python()
+            else:
+                self._attempt_link_jobs_cli()
     
     def _find_dragon_x_devices(self):
         """尋找並選擇Dragon X設備"""
@@ -364,23 +376,25 @@ class DragonXFallDetectionSystem:
         # 姿態檢測（核心）
         if 'pose_fall_detection' in self.qai_hub_models:
             logger.info("🚶‍♂️ 執行姿態檢測 (跌倒預防核心)...")
-            # 這裡會在ONNX Runtime實現後進行實際檢測
-            # 目前返回模擬結果用於展示
-            mock_pose_results = {
-                "keypoints": [{
-                    "keypoints": [
-                        {"x": 0.5, "y": 0.3, "confidence": 0.8},  # 頭部
-                        {"x": 0.45, "y": 0.5, "confidence": 0.9},  # 左肩
-                        {"x": 0.55, "y": 0.5, "confidence": 0.9},  # 右肩
-                        # ... 其他關鍵點
-                    ]
-                }]
-            }
-            
-            # 分析跌倒風險
-            fall_analysis = self.analyze_fall_risk(mock_pose_results["keypoints"])
-            results["fall_prevention_analysis"] = fall_analysis
-            results["detections"]["pose"] = mock_pose_results
+            real_pose = self._run_pose_inference_local(image)
+            if real_pose is None:
+                # fallback 模擬
+                mock_pose_results = {
+                    "keypoints": [{
+                        "keypoints": [
+                            {"x": 0.5, "y": 0.3, "confidence": 0.8},
+                            {"x": 0.45, "y": 0.5, "confidence": 0.9},
+                            {"x": 0.55, "y": 0.5, "confidence": 0.9},
+                        ]
+                    }]
+                }
+                fall_analysis = self.analyze_fall_risk(mock_pose_results["keypoints"])
+                results["fall_prevention_analysis"] = fall_analysis
+                results["detections"]["pose"] = mock_pose_results
+            else:
+                fall_analysis = self.analyze_fall_risk(real_pose["keypoints"])
+                results["fall_prevention_analysis"] = fall_analysis
+                results["detections"]["pose"] = real_pose
         
         # 記錄Dragon X編譯Job資訊
         for job_name, job in self.compiled_models.items():
@@ -446,6 +460,78 @@ class DragonXFallDetectionSystem:
             report["link_jobs"][name] = info
         
         return report
+
+    # ================= 實際執行本地推論 (姿態) =================
+    def _run_pose_inference_local(self, image: np.ndarray) -> Optional[Dict[str, Any]]:
+        """嘗試使用已下載的 compiled_pose_fall_detection.onnx 執行本地推論。
+
+        目標: 優先使用 QNN / QNNExecutionProvider (若環境支援) 以觸發 NPU。
+        回傳格式: {"keypoints": [{"keypoints": [{x,y,confidence}, ...]}]}
+        失敗則回傳 None。
+        """
+        onnx_path = 'compiled_pose_fall_detection.onnx'
+        if not os.path.exists(onnx_path):
+            logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled_pose_fall_detection.onnx)，使用模擬資料")
+            return None
+        try:
+            providers = ort.get_available_providers()
+            preferred = []
+            # 常見可能名稱（依平台調整）
+            for cand in ['QNNExecutionProvider', 'QNN', 'CPUExecutionProvider']:
+                if cand in providers and cand not in preferred:
+                    preferred.append(cand)
+            if not preferred:
+                preferred = providers
+            logger.info(f"🧩 ONNX Runtime Providers 可用: {providers} -> 使用順序: {preferred}")
+            sess = ort.InferenceSession(onnx_path, providers=preferred)
+
+            # 前處理: BGR->RGB, resize 256, normalize 0..1
+            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            img_resized = cv2.resize(img, (256, 256), interpolation=cv2.INTER_LINEAR)
+            tensor = img_resized.astype('float32') / 255.0
+            tensor = np.transpose(tensor, (2, 0, 1))  # CHW
+            tensor = np.expand_dims(tensor, 0)  # NCHW
+
+            input_name = sess.get_inputs()[0].name
+            outputs = sess.run(None, {input_name: tensor})
+            output_meta = sess.get_outputs()
+
+            # 嘗試從第一個輸出推測 keypoints (假設形狀 [1, K, 3] 或 [1, 3, K])
+            keypoints_list = []
+            if outputs:
+                arr = outputs[0]
+                arr_np = np.array(arr)
+                kpts = []
+                try:
+                    if arr_np.ndim == 3:  # 例如 (1, K, C) or (1, C, K)
+                        if arr_np.shape[2] == 3:  # (1, K, 3)
+                            for i in range(min(arr_np.shape[1], 25)):
+                                x, y, c = arr_np[0, i]
+                                kpts.append({"x": float(x), "y": float(y), "confidence": float(c)})
+                        elif arr_np.shape[1] == 3:  # (1, 3, K)
+                            for i in range(min(arr_np.shape[2], 25)):
+                                x = arr_np[0, 0, i]
+                                y = arr_np[0, 1, i]
+                                c = arr_np[0, 2, i] if arr_np.shape[1] > 2 else 0.9
+                                kpts.append({"x": float(x), "y": float(y), "confidence": float(c)})
+                    elif arr_np.ndim == 2 and arr_np.shape[0] == 1:  # (1, N) 攤平
+                        flat = arr_np[0]
+                        for i in range(0, min(len(flat), 75), 3):
+                            if i + 2 < len(flat):
+                                kpts.append({"x": float(flat[i]), "y": float(flat[i+1]), "confidence": float(flat[i+2])})
+                    else:
+                        logger.warning(f"⚠️ 無法解析姿態輸出 shape={arr_np.shape}，使用模擬 fallback")
+                except Exception as e:
+                    logger.warning(f"⚠️ 解析姿態輸出失敗:{e}，使用模擬 fallback")
+                    return None
+                if kpts:
+                    keypoints_list.append({"keypoints": kpts})
+            if not keypoints_list:
+                return None
+            return {"keypoints": keypoints_list, "provider": sess.get_providers(), "output_names": [o.name for o in output_meta]}
+        except Exception as e:
+            logger.warning(f"⚠️ 本地姿態推論失敗 (改用模擬): {e}")
+            return None
 
     # ===================== 新增：完整Pipeline支援 =====================
     def _submit_profile_jobs_for_all(self):
@@ -868,6 +954,7 @@ def main():
     parser.add_argument('--export-status', action='store_true', help='額外輸出 pipeline 狀態 JSON')
     parser.add_argument('--debug-link', action='store_true', help='輸出 link job 除錯資訊並保存 log 檔')
     parser.add_argument('--link-python', action='store_true', help='使用 Python API submit_link_job 對已編譯模型進行 link')
+    parser.add_argument('--image', type=str, help='提供本地影像路徑以進行實際本地推論 (姿態)')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -876,11 +963,7 @@ def main():
     print()
     
     try:
-        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval, debug_link=args.debug_link)
-
-        # 若要求 Python link (需在官方步驟後) 設定旗標
-        if args.link_python:
-            dragon_system.python_link_requested = True
+        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval, debug_link=args.debug_link, link_python=args.link_python)
 
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
@@ -909,8 +992,16 @@ def main():
                     print(f"      Dashboard: {info['dashboard_url']}")
 
         print("\n🧪 測試跌倒預防檢測 (本地模擬)...")
-        mock_image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
-        detection_results = dragon_system.comprehensive_fall_prevention_detection(mock_image)
+        if args.image and os.path.exists(args.image):
+            img = cv2.imread(args.image)
+            if img is None:
+                print(f"⚠️ 無法讀取影像 {args.image}，改用隨機圖像")
+                img = np.random.randint(0,255,(480,640,3),dtype=np.uint8)
+        else:
+            if args.image:
+                print(f"⚠️ 指定影像不存在: {args.image}，改用隨機圖像")
+            img = np.random.randint(0,255,(480,640,3),dtype=np.uint8)
+        detection_results = dragon_system.comprehensive_fall_prevention_detection(img)
 
         print("✅ 跌倒預防分析結果:")
         fall_analysis = detection_results.get('fall_prevention_analysis', {})
