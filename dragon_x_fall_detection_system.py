@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統"""
     
-    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15):
+    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15, debug_link: bool = False):
         """初始化Dragon X檢測系統"""
         # 基本屬性
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
@@ -53,6 +53,7 @@ class DragonXFallDetectionSystem:
         self.full_pipeline = full_pipeline
         self.wait_for_jobs = wait
         self.poll_interval = poll_interval
+        self.debug_link = debug_link  # 是否輸出 link job 除錯資訊
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
@@ -579,62 +580,128 @@ class DragonXFallDetectionSystem:
             logger.warning("⚠️ 無目標設備，跳過 link job")
             return
         device_name = self.target_device.name
-        # 嘗試從 device 取得 OS 資訊（容錯）
         device_os = getattr(self.target_device, 'os_version', None) or getattr(self.target_device, 'os', None)
+
+        # 1. 取得 help 輸出以動態偵測可用旗標
+        help_flags: List[str] = []
+        try:
+            help_proc = subprocess.run([cli, 'submit-link-job', '-h'], capture_output=True, text=True, timeout=30)
+            help_text = (help_proc.stdout + '\n' + help_proc.stderr)
+            for line in help_text.splitlines():
+                line = line.strip()
+                if line.startswith('--'):
+                    # 擷取旗標名稱 (空白或=前)
+                    flag = line.split()[0]
+                    # 移除描述中逗號分隔的其他 alias
+                    for part in flag.split(','):
+                        if part.startswith('--'):
+                            help_flags.append(part.strip())
+            logger.info(f"🔍 Link CLI 可用旗標: {help_flags}")
+            if self.debug_link:
+                with open('qai_hub_submit_link_job_help.txt', 'w') as f:
+                    f.write(help_text)
+                logger.info("💾 已儲存 submit-link-job help 到 qai_hub_submit_link_job_help.txt")
+        except Exception as e:
+            logger.warning(f"⚠️ 無法取得 submit-link-job help: {e} (採用保守猜測)")
+
+        # 可能的模型旗標 (依優先順序)
+        candidate_model_flags = [f for f in ['--model', '--model-id', '--model_id'] if f in help_flags]
+        # 可能的 compile job 旗標
+        candidate_compile_flags = [f for f in ['--compile-job-id', '--compile_job_id', '--job-id', '--job_id'] if f in help_flags]
+        # 裝置旗標
+        candidate_device_flags = [f for f in ['--device', '--target-device', '--target_device'] if f in help_flags]
+        # OS 旗標
+        candidate_device_os_flags = [f for f in ['--device-os', '--device_os', '--os-version'] if f in help_flags]
+
         for key, compile_job in self.compiled_models.items():
             model_label = key.replace('_job', '')
             if model_label in self.link_jobs:
                 continue
-            # 優先使用 compile job id (多旗標嘗試)；若失敗再回退 model id
+
             model_id = getattr(getattr(compile_job, 'model', None), 'model_id', None)
             compile_job_id = getattr(compile_job, 'job_id', None)
-            variant_cmds = []
-            # 嘗試可能的旗標組合 (依序)：--compile-job-id, --job-id, --model, --model-id
-            if compile_job_id:
-                variant_cmds.append([cli, 'submit-link-job', '--compile-job-id', compile_job_id, '--device', device_name])
-                variant_cmds.append([cli, 'submit-link-job', '--job-id', compile_job_id, '--device', device_name])
-            if model_id:
-                variant_cmds.append([cli, 'submit-link-job', '--model', model_id, '--device', device_name])
-                variant_cmds.append([cli, 'submit-link-job', '--model-id', model_id, '--device', device_name])
-            # 加上 device-os
-            enriched = []
-            for c in variant_cmds:
-                if device_os:
-                    enriched.append(c + ['--device-os', str(device_os)])
-                enriched.append(c)
-            variant_cmds = enriched
 
-            # 每個 variant 再試一次 JSON 輸出
-            variants = []
-            for c in variant_cmds:
-                variants.append(c + ['--output', 'json'])
-                variants.append(c)
-            submitted = False
-            for cmd in variants:
+            # 建立初始命令 (保守: 只加我們確定存在的旗標)
+            base_cmd = [cli, 'submit-link-job']
+
+            # 優先使用 compile job id (若 CLI 支援)
+            if compile_job_id and candidate_compile_flags:
+                base_cmd += [candidate_compile_flags[0], compile_job_id]
+            elif model_id and candidate_model_flags:
+                base_cmd += [candidate_model_flags[0], model_id]
+            elif model_id:
+                # 嘗試 positional model id (無旗標)
+                base_cmd.append(model_id)
+
+            # Device
+            if candidate_device_flags:
+                base_cmd += [candidate_device_flags[0], device_name]
+            else:
+                # 嘗試推測 --device (即便 help 未列出, 最常見)
+                base_cmd += ['--device', device_name]
+
+            # Device OS (僅在旗標存在才加)
+            if device_os and candidate_device_os_flags:
+                base_cmd += [candidate_device_os_flags[0], str(device_os)]
+
+            # 一些 CLI 沒有 --output json, 故僅在 help 有列出時才加入
+            if '--output' in help_flags or '--format' in help_flags:
+                if '--output' in help_flags:
+                    base_cmd += ['--output', 'json']
+                else:
+                    base_cmd += ['--format', 'json']
+
+            if self.debug_link:
+                base_cmd.append('--verbose') if '--verbose' in help_flags else None
+            logger.info(f"🔗 嘗試提交 Link Job (初始): {' '.join(base_cmd)}")
+
+            # 迭代嘗試, 若出現 unrecognized arguments, 動態移除
+            attempt_cmd = list(base_cmd)
+            raw_capture = ''
+            success = False
+            attempt_logs: List[str] = []
+            for attempt in range(6):
                 try:
-                    logger.info(f"🔗 提交 Link Job (CLI) {model_label} ... 命令: {' '.join(cmd)}")
-                    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+                    proc = subprocess.run(attempt_cmd, capture_output=True, text=True, timeout=180)
                     stdout = proc.stdout.strip()
                     stderr = proc.stderr.strip()
+                    raw_capture = (stdout + '\n' + stderr)
+                    if self.debug_link:
+                        attempt_logs.append(f"Attempt {attempt+1} CMD: {' '.join(attempt_cmd)}\n--- STDOUT ---\n{stdout}\n--- STDERR ---\n{stderr}\n")
+
+                    # 偵測未支援旗標並移除
+                    m = re.search(r'unrecognized arguments?: (.+)', raw_capture)
+                    if m:
+                        unknown_parts = m.group(1).split()
+                        # 嘗試移除出現於命令列的旗標 (與其後值)
+                        removed_any = False
+                        for up in unknown_parts:
+                            token = up.strip(',')
+                            if token in attempt_cmd:
+                                idx = attempt_cmd.index(token)
+                                # 同時移除後一個值 (若存在且非以--開頭)
+                                removal = [attempt_cmd[idx]]
+                                if idx + 1 < len(attempt_cmd) and not attempt_cmd[idx+1].startswith('--'):
+                                    removal.append(attempt_cmd[idx+1])
+                                for r in removal:
+                                    attempt_cmd.remove(r)
+                                removed_any = True
+                        if removed_any:
+                            logger.warning(f"⚠️ 移除未支援旗標後重試: {' '.join(attempt_cmd)}")
+                            continue  # 重跑下一輪
+
+                    # 解析 job id
                     job_id = None
-                    raw_capture = (stdout + '\n' + stderr)[:2000]
-                    # 嘗試 JSON 解析
-                    if '--output' in cmd and 'json' in cmd:
-                        try:
-                            parsed = json.loads(stdout or '{}')
-                            job_id = parsed.get('job_id') or parsed.get('id') or parsed.get('jobId')
-                        except Exception:
-                            pass
-                    # Regex fallback e.g. Scheduled link job (jxxxxxxx)
+                    # Regex 1: 括號形式 (jxxxxxxx)
+                    m2 = re.search(r'\(j[a-z0-9]{6,}\)', raw_capture, re.IGNORECASE)
+                    if m2:
+                        job_id = m2.group(0).strip('()')
                     if not job_id:
-                        m = re.search(r'\(j[a-z0-9]{6,}\)', stdout, re.IGNORECASE)
-                        if m:
-                            job_id = m.group(0).strip('()')
-                    # Generic token scan fallback
-                    if not job_id:
-                        for token in stdout.split():
-                            if re.fullmatch(r'j[a-z0-9]{6,}', token.lower()):
-                                job_id = token.strip('.,:')
+                        # 直接 token 掃描
+                        for token in raw_capture.split():
+                            t = token.strip('(),.\r\n')
+                            if re.fullmatch(r'j[a-z0-9]{6,}', t.lower()):
+                                job_id = t
                                 break
                     if job_id:
                         self.link_jobs[model_label + '_link'] = {
@@ -643,19 +710,47 @@ class DragonXFallDetectionSystem:
                             'dashboard_url': f'https://app.aihub.qualcomm.com/jobs/{job_id}'
                         }
                         logger.info(f"✅ Link Job 提交成功: {job_id}")
-                        submitted = True
+                        success = True
                         break
                     else:
-                        logger.warning(f"⚠️ Link Job 輸出未解析到 ID (嘗試下一種): {raw_capture[:300]}")
+                        # 若沒有 unrecognized 而也沒 job id, 可能需要換 model / compile id 旗標策略
+                        if attempt == 0 and model_id and compile_job_id and candidate_model_flags and candidate_compile_flags:
+                            # 交替使用另一種類旗標
+                            if candidate_model_flags[0] in attempt_cmd:
+                                # 換成 compile 旗標
+                                for f in candidate_model_flags:
+                                    if f in attempt_cmd:
+                                        idx = attempt_cmd.index(f)
+                                        # 刪除旗標與其值
+                                        del attempt_cmd[idx:idx+2]
+                                attempt_cmd += [candidate_compile_flags[0], compile_job_id]
+                            else:
+                                for f in candidate_compile_flags:
+                                    if f in attempt_cmd:
+                                        idx = attempt_cmd.index(f)
+                                        del attempt_cmd[idx:idx+2]
+                                attempt_cmd += [candidate_model_flags[0], model_id]
+                            logger.warning(f"⚠️ 切換旗標策略重試: {' '.join(attempt_cmd)}")
+                            continue
+                        logger.warning(f"⚠️ 未解析到 Link Job ID (嘗試次數 {attempt+1})")
                 except Exception as e:
-                    logger.warning(f"⚠️ Link Job 命令失敗 (嘗試下一種): {e}")
-            if not submitted:
+                    logger.warning(f"⚠️ Link Job 執行錯誤 (重試 {attempt+1}): {e}")
+                    time.sleep(1)
+            if not success:
                 self.link_jobs[model_label + '_link'] = {
                     'job_id': None,
                     'status': 'parse_failed',
-                    'raw_output': raw_capture[:500] if 'raw_capture' in locals() else 'no_output'
+                    'raw_output': raw_capture[:800] if raw_capture else 'no_output'
                 }
                 logger.warning(f"⚠️ 無法解析 Link Job ID ({model_label}) - 已記錄 raw_output")
+            if self.debug_link:
+                log_path = f'link_attempt_{model_label}.log'
+                try:
+                    with open(log_path, 'w') as f:
+                        f.write('\n'.join(attempt_logs) or raw_capture or 'no output captured')
+                    logger.info(f"💾 已儲存 link 除錯紀錄: {log_path}")
+                except Exception as e:
+                    logger.warning(f"⚠️ 無法寫入除錯檔 {log_path}: {e}")
 
     def _wait_for_single_job(self, job_obj, label: str, timeout: int = 1800, poll: int = 10):
         """輪詢等待單一 job 完成。timeout 秒後放棄 (標記為 still_running)。"""
@@ -720,6 +815,7 @@ def main():
     parser.add_argument('--wait', action='store_true', help='等待所有雲端 Jobs 完成')
     parser.add_argument('--poll-interval', type=int, default=15, help='Job 輪詢秒數 (default:15)')
     parser.add_argument('--export-status', action='store_true', help='額外輸出 pipeline 狀態 JSON')
+    parser.add_argument('--debug-link', action='store_true', help='輸出 link job 除錯資訊並保存 log 檔')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -728,7 +824,7 @@ def main():
     print()
     
     try:
-        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval)
+        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval, debug_link=args.debug_link)
 
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
