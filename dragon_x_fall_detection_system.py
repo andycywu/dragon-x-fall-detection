@@ -36,6 +36,10 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ===== 版本資訊 (用於跨機器同步檢查) =====
+__DRAGON_X_SYSTEM_VERSION__ = "2025-08-14.1"
+
+
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統 (含 Edge 部署選項)"""
 
@@ -1231,12 +1235,16 @@ def main():
     parser.add_argument('--edge-only', action='store_true', help='僅使用已存在的 compiled_*.onnx / 原始ONNX，不重新提交雲端編譯')
     parser.add_argument('--no-qnn-dlc', action='store_true', help='編譯時不加入 --target_runtime qnn_dlc (產出純 ONNX target model)')
     parser.add_argument('--offline', action='store_true', help='離線模式：跳過 QAI Hub 裝置搜尋與模型雲端操作，僅測試本地流程')
+    parser.add_argument('--version', action='store_true', help='顯示系統版本後離開')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
     print("=" * 60)
     print("🎯 專為黑客松打造的Snapdragon X Elite平台解決方案")
     print()
+    if args.version:
+        print(f"Dragon X System Version: {__DRAGON_X_SYSTEM_VERSION__}")
+        return
     
     try:
         dragon_system = DragonXFallDetectionSystem(
