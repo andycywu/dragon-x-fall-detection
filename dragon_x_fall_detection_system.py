@@ -33,10 +33,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DragonXFallDetectionSystem:
-    """Dragon X專用老人跌倒預防檢測系統"""
+    """Dragon X專用老人跌倒預防檢測系統 (含 Edge 部署選項)"""
 
     def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15,
-                 debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False):
+                 debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False,
+                 wait_compile_only: bool = False, download_compiled: bool = False,
+                 realtime: bool = False, camera_index: int = 0, max_frames: Optional[int] = None):
         """初始化Dragon X檢測系統
 
         Args:
@@ -65,6 +67,13 @@ class DragonXFallDetectionSystem:
         self.debug_link = debug_link  # 是否輸出 link job 除錯資訊
         self.python_link_requested = link_python
         self.export_local_onnx = export_local_onnx
+        # Edge 部署參數
+        self.wait_compile_only = wait_compile_only
+        self.download_compiled = download_compiled
+        self.realtime = realtime
+        self.camera_index = camera_index
+        self.max_frames = max_frames
+        self._pose_session = None  # 快取姿態 ONNX session (edge)
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
@@ -83,6 +92,16 @@ class DragonXFallDetectionSystem:
                 self._link_all_models_python()
             else:
                 self._attempt_link_jobs_cli()
+        # 僅等待既有 compile / profile (若未啟 full pipeline 但使用者希望等待)
+        if self.wait_compile_only and not self.full_pipeline:
+            logger.info("⏳ (--wait-compile) 等待現有編譯/Profiling Jobs 完成")
+            self.wait_for_all_jobs()
+        # 下載已編譯 target models 供 Edge
+        if self.download_compiled:
+            self._download_all_target_models()
+        # 即時推論模式
+        if self.realtime:
+            self.run_realtime_inference()
     
     def _find_dragon_x_devices(self):
         """尋找並選擇Dragon X設備"""
@@ -481,16 +500,17 @@ class DragonXFallDetectionSystem:
             logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled_pose_fall_detection.onnx)，使用模擬資料")
             return None
         try:
-            providers = ort.get_available_providers()
-            preferred = []
-            # 常見可能名稱（依平台調整）
-            for cand in ['QNNExecutionProvider', 'QNN', 'CPUExecutionProvider']:
-                if cand in providers and cand not in preferred:
-                    preferred.append(cand)
-            if not preferred:
-                preferred = providers
-            logger.info(f"🧩 ONNX Runtime Providers 可用: {providers} -> 使用順序: {preferred}")
-            sess = ort.InferenceSession(onnx_path, providers=preferred)
+            if self._pose_session is None:
+                providers = ort.get_available_providers()
+                preferred = []
+                for cand in ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider']:
+                    if cand in providers and cand not in preferred:
+                        preferred.append(cand)
+                if not preferred:
+                    preferred = providers
+                logger.info(f"🧩 ONNX Providers: {providers} -> 使用: {preferred}")
+                self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
+            sess = self._pose_session
 
             # 前處理: BGR->RGB, resize 256, normalize 0..1
             img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -539,6 +559,65 @@ class DragonXFallDetectionSystem:
         except Exception as e:
             logger.warning(f"⚠️ 本地姿態推論失敗 (改用模擬): {e}")
             return None
+
+    # ===== Edge 部署輔助 =====
+    def _download_all_target_models(self):
+        """嘗試對每個 compile job 取得 target model 並下載 compiled_{label}.onnx (若尚未存在)。"""
+        for job_key, cjob in self.compiled_models.items():
+            label = job_key.replace('_job', '')
+            filename = f"compiled_{label}.onnx"
+            if os.path.exists(filename):
+                continue
+            try:
+                logger.info(f"💾 嘗試下載 target model: {label}")
+                # 確保編譯完成
+                self._wait_for_single_job(cjob, f"compile:{label}", timeout=900, poll=15)
+                tm = cjob.get_target_model()
+                if hasattr(tm, 'download'):
+                    tm.download(filename)
+                    logger.info(f"✅ 已下載 {filename}")
+                else:
+                    logger.warning(f"⚠️ target_model 無 download 方法: {label}")
+            except Exception as e:
+                logger.warning(f"⚠️ 下載 {label} 失敗: {e}")
+
+    def run_realtime_inference(self):
+        """啟動攝影機即時推論 (僅使用姿態模型做風險分析)。"""
+        if not os.path.exists('compiled_pose_fall_detection.onnx') and not self._pose_session:
+            logger.warning("⚠️ 無姿態 compiled ONNX，請先使用 --download-compiled 或 --full-pipeline")
+            return
+        logger.info("🎥 啟動即時推論 (按 q 結束)")
+        cap = cv2.VideoCapture(self.camera_index)
+        if not cap.isOpened():
+            logger.error("❌ 無法開啟攝影機")
+            return
+        frame_id = 0
+        fps = 0.0
+        t_last = time.time()
+        try:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    logger.warning("⚠️ 讀取影格失敗")
+                    break
+                result = self.comprehensive_fall_prevention_detection(frame)
+                frame_id += 1
+                if frame_id % 15 == 0:
+                    now = time.time(); fps = 15.0 / (now - t_last); t_last = now
+                overlay = frame.copy()
+                fa = result.get('fall_prevention_analysis', {})
+                status = fa.get('message', 'N/A')
+                cv2.putText(overlay, f"FPS:{fps:.1f}", (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,255),2)
+                cv2.putText(overlay, status, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,0),2)
+                cv2.imshow('DragonX Edge Realtime', overlay)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    logger.info("👋 使用者結束即時推論")
+                    break
+                if self.max_frames and frame_id >= self.max_frames:
+                    logger.info("🛑 達最大影格數，結束即時推論")
+                    break
+        finally:
+            cap.release(); cv2.destroyAllWindows()
 
     # ===================== 新增：完整Pipeline支援 =====================
     def _submit_profile_jobs_for_all(self):
@@ -990,7 +1069,7 @@ class DragonXFallDetectionSystem:
         logger.info(f"📝 Pipeline 狀態已輸出: {path}")
 
 def main():
-    """主函數：Dragon X老人跌倒預防檢測系統測試 / Pipeline"""
+    """主函數：Dragon X老人跌倒預防檢測系統測試 / Pipeline / Edge"""
     parser = argparse.ArgumentParser(description='Dragon X 跌倒預防系統')
     parser.add_argument('--full-pipeline', action='store_true', help='執行 Compile→Profile→(Link) 完整流程並輸出狀態')
     parser.add_argument('--wait', action='store_true', help='等待所有雲端 Jobs 完成')
@@ -1000,6 +1079,12 @@ def main():
     parser.add_argument('--link-python', action='store_true', help='使用 Python API submit_link_job 對已編譯模型進行 link')
     parser.add_argument('--image', type=str, help='提供本地影像路徑以進行實際本地推論 (姿態)')
     parser.add_argument('--export-local-onnx', action='store_true', help='啟動後將原始姿態模型匯出為 ONNX 供本地推論')
+    # Edge flags
+    parser.add_argument('--wait-compile', action='store_true', help='僅等待既有 compile/profile jobs 完成 (不自動執行 full pipeline)')
+    parser.add_argument('--download-compiled', action='store_true', help='下載 compiled_{model}.onnx 供 edge 推論')
+    parser.add_argument('--realtime', action='store_true', help='建立本地 ONNX 即時攝影機推論')
+    parser.add_argument('--camera-index', type=int, default=0, help='攝影機索引 (realtime)')
+    parser.add_argument('--max-frames', type=int, default=None, help='即時推論最大影格 (測試用)')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1009,8 +1094,9 @@ def main():
     
     try:
         dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval,
-                                                   debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx)
-
+                               debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx,
+                               wait_compile_only=args.wait_compile, download_compiled=args.download_compiled,
+                               realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames)
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")
@@ -1019,6 +1105,7 @@ def main():
         print(f"   ⚡ Compile Jobs: {len(status_report['qai_hub_jobs'])}")
         print(f"   📈 Profile Jobs: {len(status_report['profile_jobs'])}")
         print(f"   🔗 Link Jobs: {len(status_report['link_jobs'])}")
+        print(f"   💾 已下載 Edge 模型: {[f for f in os.listdir('.') if f.startswith('compiled_') and f.endswith('.onnx')]}")
         print()
 
         print("🔗 Compile Jobs:")
@@ -1037,7 +1124,7 @@ def main():
                 if 'dashboard_url' in info:
                     print(f"      Dashboard: {info['dashboard_url']}")
 
-        print("\n🧪 測試跌倒預防檢測 (本地模擬)...")
+        print("\n🧪 測試跌倒預防檢測 (本地/Edge)...")
         if args.image and os.path.exists(args.image):
             img = cv2.imread(args.image)
             if img is None:
@@ -1073,6 +1160,12 @@ def main():
             print("🏁 完整Pipeline已執行 (Compile→Profile→Link[嘗試])")
         else:
             print("ℹ️ 使用 --full-pipeline 可執行完整流程")
+        if args.wait_compile:
+            print("⏳ 已等待 compile/profile jobs 完成")
+        if args.download_compiled:
+            print("💾 已嘗試下載 compiled_{model}.onnx")
+        if args.realtime:
+            print("🎥 已啟動/結束即時推論")
         print("💡 使用 --wait 可等待雲端Jobs完成, --export-status 輸出JSON狀態")
 
     except Exception as e:
