@@ -207,6 +207,37 @@ else
     echo -e "${GREEN}✅ 檢測到用戶主目錄: $USER_HOME_DIR${NC}"
 fi
 
+# === 自動上傳本地 test_images 目錄到 QDC (若存在) ===
+LOCAL_TEST_IMAGES_DIR="$SCRIPT_DIR/test_images"
+if [ -d "$LOCAL_TEST_IMAGES_DIR" ]; then
+    echo -e "${YELLOW}📤 發現本地 test_images 目錄，準備上傳到 QDC...${NC}"
+    # 統計檔案數
+    FILE_COUNT=$(find "$LOCAL_TEST_IMAGES_DIR" -type f | wc -l | tr -d ' ')
+    DIR_COUNT=$(find "$LOCAL_TEST_IMAGES_DIR" -type d | wc -l | tr -d ' ')
+    echo -e "${BLUE}ℹ️ 目錄統計: $DIR_COUNT 個子目錄, $FILE_COUNT 個檔案${NC}"
+    # 使用 -r 遞迴複製整個資料夾到使用者主目錄下 (保留目錄名稱)
+    scp -r -i "$SSH_KEY_PATH" -P $LOCAL_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$LOCAL_TEST_IMAGES_DIR" "$USERNAME@localhost:$USER_HOME_DIR" 2>&1
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ test_images 已上傳到 $USER_HOME_DIR/${NC}"
+        # 驗證遠端是否存在 (使用平台差異指令)
+        if [ $WINDOWS_OS -eq 1 ]; then
+            REMOTE_CHECK=$(ssh_exec "if exist \"$USER_HOME_DIR\\test_images\" (echo EXISTS) else (echo MISSING)")
+        else
+            REMOTE_CHECK=$(ssh_exec "[ -d '$USER_HOME_DIR/test_images' ] && echo EXISTS || echo MISSING")
+        fi
+        if [[ "$REMOTE_CHECK" == *"EXISTS"* ]]; then
+            echo -e "${GREEN}📂 遠端 test_images 驗證成功${NC}"
+        else
+            echo -e "${YELLOW}⚠️ 遠端似乎未找到 test_images，請稍後手動檢查${NC}"
+        fi
+    else
+        echo -e "${RED}❌ 上傳 test_images 失敗 (可稍後手動執行)${NC}"
+        echo -e "${BLUE}手動指令範例:${NC} scp -r -i $SSH_KEY_PATH -P $LOCAL_PORT test_images $USERNAME@localhost:$USER_HOME_DIR" 
+    fi
+else
+    echo -e "${CYAN}ℹ️ 未找到本地 test_images 目錄，跳過自動上傳${NC}"
+fi
+
 # 準備設置指南
 echo -e "${YELLOW}📦 準備連接到 QDC...${NC}"
 
