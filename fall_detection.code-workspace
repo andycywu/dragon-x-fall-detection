@@ -2,6 +2,9 @@
     "folders": [
         {
             "path": "."
+        },
+        {
+            "path": "../Downloads/model.onnx"
         }
     ],
     "settings": {
