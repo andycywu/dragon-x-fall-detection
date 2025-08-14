@@ -793,7 +793,7 @@ class DragonXFallDetectionSystem:
             self._pose_session is not None
         )
         if not pose_ok:
-            logger.warning("⚠️ 無姿態 compiled ONNX(.dlc)，請先使用 --download-compiled 或 --full-pipeline")
+            logger.warning("⚠️ 無任何可用姿態 ONNX，請先使用 --download-compiled 或 --full-pipeline (或確認 *_original.onnx 已匯出)")
             return
         logger.info("🎥 啟動即時推論 (按 q 結束) - 會嘗試使用 pose/face/hand Edge 模型")
         cap = cv2.VideoCapture(self.camera_index)
@@ -803,13 +803,19 @@ class DragonXFallDetectionSystem:
         frame_id = 0
         fps = 0.0
         t_last = time.time()
+        if 'pose_fall_detection' not in self.onnx_sessions:
+            logger.warning("⚠️ 尚未成功建立 pose session (可能是 compiled ONNX/DLC 無效且未匯出 original)。僅顯示攝影機畫面。")
         try:
             while True:
                 ret, frame = cap.read()
                 if not ret:
                     logger.warning("⚠️ 讀取影格失敗")
                     break
-                result = self.comprehensive_fall_prevention_detection(frame)
+                if 'pose_fall_detection' in self.onnx_sessions:
+                    result = self.comprehensive_fall_prevention_detection(frame)
+                else:
+                    # 簡單佔位結果
+                    result = {"fall_prevention_analysis": {"message": "(no pose session)", "risk_score": 0.0}}
                 # 額外 edge 推論 (face / hand)
                 face_info = self._edge_infer_generic('face_elderly_id', frame)
                 hand_info = self._edge_infer_generic('hand_emergency_gesture', frame)
