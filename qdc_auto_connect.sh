@@ -25,6 +25,22 @@ USERNAME="hcktest"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH_KEY_PATH="${SCRIPT_DIR}/qdc_id_2025-8-11_62.pem"
 WINDOWS_OS=0 # 默認非 Windows 環境
+LOCAL_ENV_FILE="${SCRIPT_DIR}/.env"
+LOCAL_API_TOKEN=""
+POST_INSTALL_CONFIG=0  # 預設不需安裝後再 configure，若初次失敗會設為1
+CONFIG_DIR_NAME=".qai_hub"  # QAI Hub CLI 實際使用的設定資料夾 (注意是底線 _ )
+
+# 嘗試從本地 .env 讀取 QAI_HUB_API_TOKEN
+if [ -f "$LOCAL_ENV_FILE" ]; then
+    LOCAL_API_TOKEN=$(grep -E '^QAI_HUB_API_TOKEN=' "$LOCAL_ENV_FILE" | head -n1 | cut -d'=' -f2- | tr -d '"' | tr -d '\r')
+    if [ ! -z "$LOCAL_API_TOKEN" ]; then
+        echo -e "${GREEN}✅ 從本地 .env 讀取到 QAI_HUB_API_TOKEN${NC}"
+    else
+        echo -e "${YELLOW}⚠️ 本地 .env 存在但未找到 QAI_HUB_API_TOKEN 變數${NC}"
+    fi
+else
+    echo -e "${YELLOW}ℹ️ 未找到本地 .env，可稍後手動提供 API Token${NC}"
+fi
 
 # 存儲最近的主機名到配置文件
 QDC_CONFIG_FILE="${SCRIPT_DIR}/.qdc_config"
@@ -53,6 +69,14 @@ QDC_DEVICE_HOST=${INPUT_QDC_DEVICE_HOST:-$DEFAULT_QDC_DEVICE_HOST}
 echo "QDC_DEVICE_HOST=$QDC_DEVICE_HOST" > "$QDC_CONFIG_FILE"
 
 echo -e "${GREEN}✅ 使用QDC主機名: $QDC_DEVICE_HOST${NC}"
+
+# 若本地無 token 則詢問輸入（可直接 Enter 跳過）
+if [ -z "$LOCAL_API_TOKEN" ]; then
+    read -p "輸入 QAI_HUB_API_TOKEN (可留空稍後再設): " INPUT_TOKEN
+    if [ ! -z "$INPUT_TOKEN" ]; then
+        LOCAL_API_TOKEN="$INPUT_TOKEN"
+    fi
+fi
 
 # 檢查SSH密鑰
 if [ ! -f "$SSH_KEY_PATH" ]; then
@@ -235,9 +259,24 @@ if [ $WINDOWS_OS -eq 1 ]; then
     
     if [ $PYTHON_INSTALLED -eq 1 ]; then
         echo -e "${BLUE}ℹ️ 使用 Python 命令: $PYTHON_CMD${NC}"
+
+        echo -e "${YELLOW}🔍 檢查 python-dotenv 是否已安裝...${NC}"
+        DOTENV_CHECK=$(ssh_exec "$PYTHON_CMD -c \"import dotenv; print('OK')\" 2>nul")
+        if [[ "$DOTENV_CHECK" == *"OK"* ]]; then
+            echo -e "${GREEN}✅ python-dotenv 已存在${NC}"
+        else
+            echo -e "${BLUE}ℹ️ 安裝 python-dotenv...(強制安裝單一套件)${NC}"
+            ssh_exec "\"$PYTHON_CMD\" -m pip install --quiet --no-cache-dir python-dotenv"
+            DOTENV_CHECK2=$(ssh_exec "$PYTHON_CMD -c \"import dotenv; print('OK')\" 2>nul")
+            if [[ "$DOTENV_CHECK2" == *"OK"* ]]; then
+                echo -e "${GREEN}✅ python-dotenv 安裝成功${NC}"
+            else
+                echo -e "${RED}❌ python-dotenv 安裝失敗 (稍後可手動執行: pip install python-dotenv)${NC}"
+            fi
+        fi
     fi
     
-    # 創建批處理文件 - 使用更簡單、更穩定的方法
+    # 創建批處理文件 - 使用更簡單、更穩定的方法 (不再直接寫 client.ini, 改為 CLI configure)
     echo -e "${YELLOW}📝 創建批處理文件...${NC}"
     
     # 創建一個本地臨時批處理文件 - 使用超簡化版本
@@ -294,16 +333,7 @@ if exist C:\dragon-x-fall-detection (
   git clone https://github.com/andycywu/dragon-x-fall-detection.git
 )
 
-echo Creating QAI Hub configuration...
-if not exist "%USERPROFILE%\qai_hub" mkdir "%USERPROFILE%\qai_hub"
-
-echo [default] > "%USERPROFILE%\qai_hub\client.ini"
-echo api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d >> "%USERPROFILE%\qai_hub\client.ini"
-echo api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d >> "%USERPROFILE%\qai_hub\client.ini"
-echo base_api_url = https://app.aihub.qualcomm.com >> "%USERPROFILE%\qai_hub\client.ini"
-echo web_url = https://app.aihub.qualcomm.com >> "%USERPROFILE%\qai_hub\client.ini"
-
-echo QAI Hub configuration created
+echo Skipping manual client.ini creation in batch (將於主腳本用 CLI 配置)
 
 echo Setup completed successfully!
 EOL
@@ -384,20 +414,28 @@ EOL
         fi
     fi
     
-    # 確保 QAI Hub 配置 - 避免使用反斜線
-    echo -e "${YELLOW}🔍 確保 QAI Hub 配置...${NC}"
-    
-    # 創建目錄 - 簡化路徑，避免使用反斜線
-    ssh_exec "if not exist \"%USERPROFILE%\\qai_hub\" mkdir \"%USERPROFILE%\\qai_hub\""
-    
-    # 逐行創建配置文件
-    ssh_exec "echo [default] > \"%USERPROFILE%\\qai_hub\\client.ini\""
-    ssh_exec "echo api_token = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d >> \"%USERPROFILE%\\qai_hub\\client.ini\""
-    ssh_exec "echo api_key = pcu8nz63e4j3nzqgy7tjzvr2dmpc01cocltahr0d >> \"%USERPROFILE%\\qai_hub\\client.ini\""
-    ssh_exec "echo base_api_url = https://app.aihub.qualcomm.com >> \"%USERPROFILE%\\qai_hub\\client.ini\""
-    ssh_exec "echo web_url = https://app.aihub.qualcomm.com >> \"%USERPROFILE%\\qai_hub\\client.ini\""
-    
-    echo -e "${GREEN}✅ QAI Hub 配置設置完成${NC}"
+    # 上傳本地 .env（若存在）到 QDC 使用者主目錄與倉庫（若已存在）
+    if [ -f "$LOCAL_ENV_FILE" ]; then
+        echo -e "${YELLOW}� 上傳本地 .env 到 QDC...${NC}"
+        scp_transfer "$LOCAL_ENV_FILE" "$USER_HOME_DIR/.env"
+        scp_transfer "$LOCAL_ENV_FILE" "$USER_HOME_DIR/dragon-x-fall-detection/.env" 2>/dev/null || true
+    fi
+
+    # 使用 qai-hub CLI 建立 client.ini (如果有 token)
+    if [ ! -z "$LOCAL_API_TOKEN" ]; then
+        echo -e "${YELLOW}🔧 執行 QAI Hub CLI configure...${NC}"
+        # 先確保安裝核心套件後再嘗試 configure（可能稍後才安裝, 先嘗試一次, 失敗再延後）
+        CONFIG_RESULT=$(ssh_exec "qai-hub configure --api_token $LOCAL_API_TOKEN" 2>&1)
+        if [[ "$CONFIG_RESULT" == *"Successfully configured"* ]] || [[ "$CONFIG_RESULT" == *"success"* ]]; then
+            echo -e "${GREEN}✅ QAI Hub CLI 已建立 client.ini${NC}"
+        else
+            echo -e "${YELLOW}⚠️ 初次 configure 可能失敗，稍後在套件安裝後再嘗試${NC}"
+            POST_INSTALL_CONFIG=1
+        fi
+    else
+        echo -e "${YELLOW}⚠️ 未提供 API Token，將跳過自動 configure（可稍後手動執行 qai-hub configure）${NC}"
+        POST_INSTALL_CONFIG=0
+    fi
     
     # 檢查是否需要安裝 Python 套件
     if [ $PYTHON_INSTALLED -eq 1 ]; then
@@ -429,12 +467,30 @@ EOL
                 echo -e "${BLUE}ℹ️ 安裝 onnxruntime...${NC}"
                 ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install onnxruntime"
                 
-                echo -e "${BLUE}ℹ️ 安裝 qai-hub 套件...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install -U qai-hub qai-hub-models"
+                echo -e "${BLUE}ℹ️ 安裝 qai-hub 套件與 python-dotenv...${NC}"
+                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install -U python-dotenv qai-hub qai-hub-models"
+
+                # 再次確保 python-dotenv 存在
+                DOTENV_CHECK_POST=$(ssh_exec "$PYTHON_CMD -c \"import dotenv; print('OK')\" 2>nul")
+                if [[ "$DOTENV_CHECK_POST" != *"OK"* ]]; then
+                    echo -e "${YELLOW}⚠️ 再嘗試單獨安裝 python-dotenv...${NC}"
+                    ssh_exec "\"$PYTHON_CMD\" -m pip install python-dotenv"
+                fi
                 
                 echo -e "${BLUE}ℹ️ 安裝 protobuf...${NC}"
                 ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install \"protobuf>=4.25.3\""
                 
+                # 若先前 configure 失敗且有 token，安裝後再嘗試一次
+                if [ ! -z "$LOCAL_API_TOKEN" ] && [ "$POST_INSTALL_CONFIG" = "1" ]; then
+                    echo -e "${BLUE}ℹ️ 安裝後重試 QAI Hub configure...${NC}"
+                    CONFIG_RESULT2=$(ssh_exec "qai-hub configure --api_token $LOCAL_API_TOKEN" 2>&1)
+                    if [[ "$CONFIG_RESULT2" == *"Successfully"* ]] || [[ "$CONFIG_RESULT2" == *"success"* ]]; then
+                        echo -e "${GREEN}✅ 第二次 configure 成功${NC}"
+                    else
+                        echo -e "${RED}❌ 仍無法 configure，請手動在 QDC 執行: qai-hub configure --api_token YOUR_TOKEN${NC}"
+                    fi
+                fi
+
                 # 再次檢查 numpy 是否已安裝
                 NUMPY_CHECK=$(ssh_exec "\"$PYTHON_CMD\" -c \"import numpy; print('OK')\" 2>nul")
                 
@@ -447,6 +503,57 @@ EOL
                 echo -e "${BLUE}ℹ️ 跳過 Python 套件安裝${NC}"
             fi
         fi
+    fi
+
+    # ===== 驗證 client.ini 是否真正存在並自動重試 =====
+    if [ ! -z "$LOCAL_API_TOKEN" ]; then
+        echo -e "${YELLOW}🔍 驗證 client.ini 是否已建立...${NC}"
+        CONFIG_PATH_WIN="$USER_HOME_DIR\\$CONFIG_DIR_NAME\\client.ini"
+        MAX_CHECK_ATTEMPTS=3
+        ATTEMPT=1
+        CLIENT_INI_FOUND=0
+        MASKED_TOKEN="${LOCAL_API_TOKEN:0:6}****${LOCAL_API_TOKEN: -4}"
+        while [ $ATTEMPT -le $MAX_CHECK_ATTEMPTS ]; do
+            # 強制使用 cmd /c 以避免 PowerShell 語法差異
+            INI_CHECK=$(ssh_exec "cmd /c if exist \"$CONFIG_PATH_WIN\" (echo FOUND) else (echo MISSING)")
+            if [[ "$INI_CHECK" == *"FOUND"* ]]; then
+                echo -e "${GREEN}✅ 已找到 client.ini: $CONFIG_PATH_WIN${NC}"
+                CLIENT_INI_FOUND=1
+                break
+            else
+                echo -e "${YELLOW}⚠️ 第 $ATTEMPT 次未找到 client.ini，重新執行 configure...${NC}"
+                RECONF_OUTPUT=$(ssh_exec "qai-hub configure --api_token $LOCAL_API_TOKEN" 2>&1)
+                echo -e "${BLUE}ℹ️ configure 輸出 (前幾行):${NC}"
+                echo "$RECONF_OUTPUT" | sed -e 's/'"$LOCAL_API_TOKEN"'/"$MASKED_TOKEN"/g' | head -n 6
+                # 額外列出隱藏資料夾內容輔助除錯
+                PARENT_LIST=$(ssh_exec "cmd /c if exist \"$USER_HOME_DIR\\$CONFIG_DIR_NAME\" (dir \"$USER_HOME_DIR\\$CONFIG_DIR_NAME\") else (echo <CONFIG_DIR_NOT_CREATED>)")
+                echo -e "${BLUE}📂 當前設定目錄列表 (截斷):${NC}"
+                echo "$PARENT_LIST" | head -n 8
+                sleep 2
+            fi
+            ATTEMPT=$((ATTEMPT+1))
+        done
+        if [ $CLIENT_INI_FOUND -eq 0 ]; then
+            # PowerShell fallback
+            PS_CHECK=$(ssh_exec "powershell -NoProfile -Command \"if (Test-Path '$CONFIG_PATH_WIN') { Write-Output FOUND } else { Write-Output MISSING }\"")
+            if [[ "$PS_CHECK" == *"FOUND"* ]]; then
+                echo -e "${GREEN}✅ 已找到 client.ini (PowerShell 檢測): $CONFIG_PATH_WIN${NC}"
+                CLIENT_INI_FOUND=1
+            fi
+        fi
+        if [ $CLIENT_INI_FOUND -eq 1 ]; then
+            echo -e "${YELLOW}📄 顯示 client.ini 前 5 行:${NC}"
+            HEAD_CONTENT=$(ssh_exec "powershell -NoProfile -Command \"Get-Content -Path '$CONFIG_PATH_WIN' | Select-Object -First 5\"")
+            # 遮罩 token
+            echo "$HEAD_CONTENT" | sed -e 's/'"$LOCAL_API_TOKEN"'/"$MASKED_TOKEN"/g'
+        else
+            echo -e "${RED}❌ 多次重試後仍未生成 client.ini${NC}"
+            echo -e "${YELLOW}👉 請手動在 QDC 內執行 (token 已遮罩):${NC}"
+            echo "qai-hub configure --api_token $MASKED_TOKEN"
+            echo -e "${YELLOW}🔎 之後檢查 (CMD): if exist %USERPROFILE%\\$CONFIG_DIR_NAME\\client.ini (echo OK) else (echo NO)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}ℹ️ 無 API Token，略過 client.ini 驗證${NC}"
     fi
 else
     # Unix/Linux環境 - 提供基本說明
