@@ -37,22 +37,23 @@ class DragonXFallDetectionSystem:
     
     def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15):
         """初始化Dragon X檢測系統"""
+        # 基本屬性
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
         self.target_device = None
-        self.qai_hub_models = {}
-        self.compiled_models = {}
-        self.onnx_sessions = {}
+        # 模型與工作追蹤
+        self.qai_hub_models: Dict[str, Any] = {}
+        self.compiled_models: Dict[str, Any] = {}
+        self.onnx_sessions: Dict[str, Any] = {}
         self.profile_jobs: Dict[str, Any] = {}
         self.link_jobs: Dict[str, Any] = {}
-    # 官方流程新增的追蹤字典
-    self.target_models: Dict[str, Any] = {}
-    self.inference_jobs: Dict[str, Any] = {}
-    self.inference_outputs: Dict[str, Any] = {}
-    # 參數控制
-    self.full_pipeline = full_pipeline
-    self.wait_for_jobs = wait
-    self.poll_interval = poll_interval
-        
+        self.target_models: Dict[str, Any] = {}
+        self.inference_jobs: Dict[str, Any] = {}
+        self.inference_outputs: Dict[str, Any] = {}
+        # 執行參數
+        self.full_pipeline = full_pipeline
+        self.wait_for_jobs = wait
+        self.poll_interval = poll_interval
+
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
         self._initialize_fall_detection_models()
@@ -60,7 +61,7 @@ class DragonXFallDetectionSystem:
         if self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
             self._run_full_official_steps_for_all_models()
-            # Link 可選，仍保留（在官方步驟後）
+            # Link (可選) 放在官方 Step 後面
             self._attempt_link_jobs_cli()
     
     def _find_dragon_x_devices(self):
