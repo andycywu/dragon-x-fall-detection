@@ -614,6 +614,15 @@ class DragonXFallDetectionSystem:
             self._invalid_onnx_cache[onnx_path] = str(e)
             logger.warning(f"⚠️ 本地姿態推論失敗 (只提示一次，後續將靜默): {e}")
             return None
+
+    # ===== Edge 部署輔助 =====
+    def _download_all_target_models(self):
+        """嘗試對每個 compile job 取得 target model 並下載 compiled_{label}.onnx (若尚未存在)。"""
+        for job_key, cjob in self.compiled_models.items():
+            label = job_key.replace('_job', '')
+            filename = f"compiled_{label}.onnx"
+            if os.path.exists(filename):
+                continue
             try:
                 logger.info(f"💾 嘗試下載 target model: {label}")
                 # 確保編譯完成
