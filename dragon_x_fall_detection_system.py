@@ -134,8 +134,6 @@ class DragonXFallDetectionSystem:
 
         if not self.offline and self.download_compiled:
             self._download_all_target_models()
-            if self.summarize_edge:
-                self._summarize_edge_models()
 
         if self.realtime:
             self.run_realtime_inference()
@@ -1292,16 +1290,9 @@ class DragonXFallDetectionSystem:
                     src_path = os.path.join(extract_dir, picked)
                     # 決定目的檔名
                     if picked.lower().endswith('.dlc'):
-                        dlc_out = target_onnx + '.dlc'
+                        dlc_out = f"compiled_{label}.dlc"
                         shutil.copyfile(src_path, dlc_out)
                         logger.info(f"📦 已解壓 DLC -> {dlc_out}")
-                        # 嘗試複製為 .onnx 以便 ORT 測試 (某些情況可能仍為 ONNX)
-                        if not os.path.exists(target_onnx):
-                            try:
-                                shutil.copyfile(src_path, target_onnx)
-                                logger.info(f"🔁 DLC 複製為 {target_onnx} 供 ORT 嘗試 (若非合法 ONNX 會再隔離)")
-                            except Exception:
-                                pass
                     else:
                         shutil.copyfile(src_path, target_onnx)
                         logger.info(f"📦 已解壓 ONNX -> {target_onnx}")
@@ -1328,11 +1319,20 @@ class DragonXFallDetectionSystem:
     def _gather_edge_model_summary(self) -> Dict[str, Any]:
         summary: Dict[str, Any] = {}
         for f in os.listdir('.'):
-            if f.startswith('compiled_') and (f.endswith('.onnx') or f.endswith('.onnx.dlc')):
+            if f.startswith('compiled_') and (f.endswith('.onnx') or f.endswith('.dlc')):
                 info = {
                     'size': os.path.getsize(f),
                     'valid_onnx': f.endswith('.onnx') and self._validate_onnx_file(f),
+                    'type': 'dlc' if f.endswith('.dlc') else 'onnx'
                 }
+                # 簡單 header 檢查 (避免誤判) - DLC 常非合法 ONNX magic
+                if f.endswith('.onnx') and not info['valid_onnx']:
+                    try:
+                        with open(f, 'rb') as rf:
+                            magic = rf.read(4)
+                        info['header'] = magic.hex()
+                    except Exception:
+                        pass
                 summary[f] = info
         return summary
 
@@ -1343,11 +1343,12 @@ class DragonXFallDetectionSystem:
             return
         logger.info("🧾 Edge 模型摘要:")
         for name, info in summary.items():
-            vflag = '✅' if info['valid_onnx'] else '⚠️'
-            logger.info(f"   {name} ({info['size']} bytes) {vflag}{' (合法ONNX)' if info['valid_onnx'] else ''}")
-        # 如果沒有任何 valid ONNX 但有 dlc, 提示使用者
-        if all(not i['valid_onnx'] for i in summary.values()):
-            logger.warning("⚠️ 未偵測到可驗證 ONNX; 可能僅有 DLC. 若要啟用 QNN EP, 請確認已在 Snapdragon 環境並安裝 QNN runtime。")
+            vflag = '✅' if info['valid_onnx'] else ('📦' if info['type']=='dlc' else '⚠️')
+            extra = ' (合法ONNX)' if info['valid_onnx'] else (' (DLC檔案)' if info['type']=='dlc' else '')
+            logger.info(f"   {name} ({info['size']} bytes) {vflag}{extra}")
+        # 如果沒有任何 valid ONNX 但有 dlc, 提示使用者 (避免重複 typo)
+        if all((not i['valid_onnx']) for i in summary.values()):
+            logger.warning("⚠️ 未偵測到可驗證 ONNX; 目前可能僅有 DLC. 本地 ORT+QNN EP 多半直接使用原始 ONNX 而非 DLC, 建議同時保留 pose_fall_detection_original.onnx。")
 
     def _get_preferred_providers(self):
         providers = ort.get_available_providers()
