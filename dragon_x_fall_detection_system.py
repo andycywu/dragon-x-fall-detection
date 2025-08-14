@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統"""
 
-    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15, debug_link: bool = False, link_python: bool = False):
+    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15,
+                 debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False):
         """初始化Dragon X檢測系統
 
         Args:
@@ -63,10 +64,16 @@ class DragonXFallDetectionSystem:
         self.poll_interval = poll_interval
         self.debug_link = debug_link  # 是否輸出 link job 除錯資訊
         self.python_link_requested = link_python
+        self.export_local_onnx = export_local_onnx
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
         self._initialize_fall_detection_models()
+        if self.export_local_onnx:
+            try:
+                self._export_original_pose_onnx()
+            except Exception as e:
+                logger.warning(f"⚠️ 匯出原始 ONNX 失敗: {e}")
 
         if self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
@@ -664,6 +671,43 @@ class DragonXFallDetectionSystem:
         if getattr(self, 'python_link_requested', False):
             self._link_all_models_python()
 
+    # ====== Link Job & ONNX 匯出輔助 ======
+    def _submit_link_job_resilient(self, models: List[Any], name: str):
+        """韌性呼叫 submit_link_job，嘗試多種參數組合以兼容不同 SDK 版本。"""
+        attempts = [
+            ("device", {"device": self.target_device, "name": name}),
+            ("target_device", {"target_device": self.target_device, "name": name}),
+            ("no_device", {"name": name}),
+        ]
+        errors = []
+        for label, kwargs in attempts:
+            try:
+                job = hub.submit_link_job(models, **kwargs)
+                logger.info(f"✅ submit_link_job 成功 ({label}) job_id={job.job_id}")
+                return job
+            except TypeError as te:
+                errors.append(f"{label}:{te}")
+            except Exception as e:
+                errors.append(f"{label}:{e}")
+        raise RuntimeError("所有 submit_link_job 呼叫失敗: " + ' | '.join(errors))
+
+    def _export_original_pose_onnx(self):
+        """將原始 pose 模型匯出為 ONNX (非 QNN DLC) 以供本地 ORT 使用。"""
+        if 'pose_fall_detection' not in self.qai_hub_models:
+            raise ValueError("pose_fall_detection 模型尚未載入")
+        out_path = 'pose_fall_detection_original.onnx'
+        if os.path.exists(out_path):
+            return
+        model = self.qai_hub_models['pose_fall_detection']
+        try:
+            import torch
+            dummy = torch.randn(1,3,256,256)
+            base = getattr(model, 'model', None) or model
+            torch.onnx.export(base, dummy, out_path, input_names=['image'], output_names=['output'], opset_version=17, do_constant_folding=True)
+            logger.info(f"💾 已匯出原始姿態 ONNX -> {out_path}")
+        except Exception as e:
+            logger.warning(f"⚠️ 匯出姿態 ONNX 失敗: {e}")
+
     def _link_all_models_python(self):
         """使用官方 API hub.submit_link_job 將多個已編譯的 target_models 進行 link。
 
@@ -689,7 +733,7 @@ class DragonXFallDetectionSystem:
             return
         try:
             logger.info(f"🔗 (Python API) submit_link_job: {len(models_to_link)} 個模型 -> 單一 context")
-            link_job = hub.submit_link_job(models_to_link, device=self.target_device, name="DragonX MultiModel Context")
+            link_job = self._submit_link_job_resilient(models_to_link, name="DragonX MultiModel Context")
             self.link_jobs['dragonx_python_link'] = {
                 'job_id': link_job.job_id,
                 'status': 'submitted',
@@ -955,6 +999,7 @@ def main():
     parser.add_argument('--debug-link', action='store_true', help='輸出 link job 除錯資訊並保存 log 檔')
     parser.add_argument('--link-python', action='store_true', help='使用 Python API submit_link_job 對已編譯模型進行 link')
     parser.add_argument('--image', type=str, help='提供本地影像路徑以進行實際本地推論 (姿態)')
+    parser.add_argument('--export-local-onnx', action='store_true', help='啟動後將原始姿態模型匯出為 ONNX 供本地推論')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -963,7 +1008,8 @@ def main():
     print()
     
     try:
-        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval, debug_link=args.debug_link, link_python=args.link_python)
+        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval,
+                                                   debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx)
 
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
