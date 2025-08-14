@@ -5,15 +5,19 @@
 """
 
 import os
+import sys
+import subprocess
+import shutil
 import qai_hub as hub
 import numpy as np
 import cv2
 import onnxruntime as ort
 import logging
 from dotenv import load_dotenv
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import time
 import json
+import argparse
 
 # 載入環境變數
 load_dotenv()
@@ -25,17 +29,29 @@ logger = logging.getLogger(__name__)
 class DragonXFallDetectionSystem:
     """Dragon X專用老人跌倒預防檢測系統"""
     
-    def __init__(self):
+    def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15):
         """初始化Dragon X檢測系統"""
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
         self.target_device = None
         self.qai_hub_models = {}
         self.compiled_models = {}
         self.onnx_sessions = {}
+        self.profile_jobs: Dict[str, Any] = {}
+        self.link_jobs: Dict[str, Any] = {}
+        self.full_pipeline = full_pipeline
+        self.wait_for_jobs = wait
+        self.poll_interval = poll_interval
         
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
         self._initialize_fall_detection_models()
+
+        if self.full_pipeline:
+            logger.info("🧪 啟動完整Pipeline (Compile → Profile → Link[可選])")
+            self._submit_profile_jobs_for_all()
+            self._attempt_link_jobs_cli()
+            if self.wait_for_jobs:
+                self.wait_for_all_jobs()
     
     def _find_dragon_x_devices(self):
         """尋找並選擇Dragon X設備"""
@@ -372,6 +388,8 @@ class DragonXFallDetectionSystem:
             },
             "models_status": {},
             "qai_hub_jobs": {},
+            "profile_jobs": {},
+            "link_jobs": {},
             "hackathon_readiness": True
         }
         
@@ -393,64 +411,220 @@ class DragonXFallDetectionSystem:
                 "status": status,
                 "dashboard_url": f"https://app.aihub.qualcomm.com/jobs/{job.job_id}"
             }
+
+        # Profile jobs
+        for name, job in self.profile_jobs.items():
+            try:
+                job.wait(timeout=1)
+                status = "completed"
+            except:
+                status = "running"
+            report["profile_jobs"][name] = {
+                "job_id": job.job_id,
+                "status": status,
+                "dashboard_url": f"https://app.aihub.qualcomm.com/jobs/{job.job_id}"
+            }
+
+        # Link jobs (CLI submissions only have ID string)
+        for name, info in self.link_jobs.items():
+            report["link_jobs"][name] = info
         
         return report
 
+    # ===================== 新增：完整Pipeline支援 =====================
+    def _submit_profile_jobs_for_all(self):
+        """為所有已提交的編譯模型提交 profiling job（近似 inference 性能測試）"""
+        if not self.target_device:
+            logger.warning("⚠️ 無目標設備，跳過 profiling 提交")
+            return
+        for key, compile_job in self.compiled_models.items():
+            model_label = key.replace('_job', '')
+            if model_label in self.profile_jobs:
+                continue
+            try:
+                # 嘗試從原始模型字典找到對應 component
+                component_key = None
+                if 'pose' in model_label:
+                    component_key = 'pose_fall_detection'
+                elif 'face' in model_label:
+                    component_key = 'face_elderly_id'
+                elif 'hand' in model_label:
+                    component_key = 'hand_emergency_gesture'
+                component = self.qai_hub_models.get(component_key)
+                sample_inputs = {"image": np.random.rand(1,3,256,256).astype('float32')}
+                if component_key == 'hand_emergency_gesture':
+                    sample_inputs = {"image": np.random.rand(1,3,224,224).astype('float32')}
+                profile_job = hub.submit_profile_job(
+                    model=compile_job.model,  # compile_job retains model reference
+                    input_data=sample_inputs,
+                    device=self.target_device
+                )
+                self.profile_jobs[model_label + '_profile'] = profile_job
+                logger.info(f"📈 提交Profiling: {model_label} -> {profile_job.job_id}")
+                logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{profile_job.job_id}")
+            except Exception as e:
+                logger.error(f"❌ Profiling 提交失敗 {model_label}: {e}")
+
+    def _attempt_link_jobs_cli(self):
+        """透過 CLI 嘗試提交 link job（若 SDK 無 Python API）。"""
+        cli = shutil.which('qai-hub')
+        if not cli:
+            logger.warning("⚠️ 未找到 qai-hub CLI，跳過 link job")
+            return
+        if not self.target_device:
+            logger.warning("⚠️ 無目標設備，跳過 link job")
+            return
+        device_name = self.target_device.name
+        # 嘗試從 device 取得 OS 資訊（容錯）
+        device_os = getattr(self.target_device, 'os_version', None) or getattr(self.target_device, 'os', None)
+        for key, compile_job in self.compiled_models.items():
+            model_label = key.replace('_job', '')
+            if model_label in self.link_jobs:
+                continue
+            model_id = getattr(getattr(compile_job, 'model', None), 'model_id', None)
+            if not model_id:
+                continue
+            cmd = [cli, 'submit-link-job', '--model-id', model_id, '--device', device_name]
+            if device_os:
+                cmd += ['--device-os', str(device_os)]
+            try:
+                logger.info(f"🔗 提交 Link Job (CLI) {model_label} ...")
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                stdout = proc.stdout.strip()
+                job_id = None
+                for token in stdout.split():
+                    if token.startswith('j') and len(token) >= 8:
+                        job_id = token.strip('.,:')
+                        break
+                if job_id:
+                    self.link_jobs[model_label + '_link'] = {
+                        'job_id': job_id,
+                        'status': 'submitted',
+                        'dashboard_url': f'https://app.aihub.qualcomm.com/jobs/{job_id}'
+                    }
+                    logger.info(f"✅ Link Job 提交成功: {job_id}")
+                else:
+                    self.link_jobs[model_label + '_link'] = {
+                        'job_id': None,
+                        'status': 'parse_failed',
+                        'raw_output': stdout[:500]
+                    }
+                    logger.warning(f"⚠️ 無法解析 Link Job ID ({model_label})")
+            except Exception as e:
+                logger.error(f"❌ Link Job 提交失敗 {model_label}: {e}")
+
+    def wait_for_all_jobs(self):
+        """等待所有 compile / profile job 完成（link 為 CLI 暫不輪詢）。"""
+        logger.info("⏳ 等待所有 QAI Hub Jobs 完成 (compile + profile)...")
+        unfinished = True
+        last_status_emit = 0
+        while unfinished:
+            unfinished = False
+            status_snapshot = {}
+            # Compile jobs
+            for name, job in self.compiled_models.items():
+                try:
+                    job.wait(timeout=1)
+                    status_snapshot[name] = 'completed'
+                except Exception:
+                    status_snapshot[name] = 'running'
+                    unfinished = True
+            # Profile jobs
+            for name, job in self.profile_jobs.items():
+                try:
+                    job.wait(timeout=1)
+                    status_snapshot[name] = 'completed'
+                except Exception:
+                    status_snapshot[name] = 'running'
+                    unfinished = True
+            now = time.time()
+            if now - last_status_emit > self.poll_interval:
+                last_status_emit = now
+                compiling = [k for k,v in status_snapshot.items() if v != 'completed']
+                logger.info(f"📊 Job 狀態: 完成 {len(status_snapshot)-len(compiling)}/{len(status_snapshot)}; 進行中: {', '.join(compiling) if compiling else '無'}")
+            if unfinished:
+                time.sleep(self.poll_interval)
+        logger.info("✅ 所有 compile / profile jobs 已完成")
+
+    def export_pipeline_status(self, path: str = 'dragon_x_pipeline_status.json'):
+        report = self.get_dragon_x_status_report()
+        with open(path, 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        logger.info(f"📝 Pipeline 狀態已輸出: {path}")
+
 def main():
-    """主函數：Dragon X老人跌倒預防檢測系統測試"""
+    """主函數：Dragon X老人跌倒預防檢測系統測試 / Pipeline"""
+    parser = argparse.ArgumentParser(description='Dragon X 跌倒預防系統')
+    parser.add_argument('--full-pipeline', action='store_true', help='執行 Compile→Profile→(Link) 完整流程並輸出狀態')
+    parser.add_argument('--wait', action='store_true', help='等待所有雲端 Jobs 完成')
+    parser.add_argument('--poll-interval', type=int, default=15, help='Job 輪詢秒數 (default:15)')
+    parser.add_argument('--export-status', action='store_true', help='額外輸出 pipeline 狀態 JSON')
+    args = parser.parse_args()
+
     print("🐉 Dragon X老人跌倒預防檢測系統")
     print("=" * 60)
     print("🎯 專為黑客松打造的Snapdragon X Elite平台解決方案")
     print()
     
     try:
-        # 初始化Dragon X系統
-        dragon_system = DragonXFallDetectionSystem()
-        
-        # 獲取系統狀態報告
+        dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval)
+
         status_report = dragon_system.get_dragon_x_status_report()
-        
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")
         print(f"   📱 設備狀態: {status_report['dragon_x_device']['status']}")
         print(f"   🧠 已載入模型: {len(status_report['models_status'])}")
-        print(f"   ⚡ QAI Hub Jobs: {len(status_report['qai_hub_jobs'])}")
+        print(f"   ⚡ Compile Jobs: {len(status_report['qai_hub_jobs'])}")
+        print(f"   📈 Profile Jobs: {len(status_report['profile_jobs'])}")
+        print(f"   🔗 Link Jobs: {len(status_report['link_jobs'])}")
         print()
-        
-        # 顯示QAI Hub Job資訊
-        print("🔗 Dragon X編譯Jobs:")
+
+        print("🔗 Compile Jobs:")
         for job_name, job_info in status_report['qai_hub_jobs'].items():
             print(f"   {job_name}: {job_info['job_id']} ({job_info['status']})")
             print(f"      Dashboard: {job_info['dashboard_url']}")
-        print()
-        
-        # 測試跌倒預防檢測
-        print("🧪 測試老人跌倒預防檢測...")
-        
-        # 模擬檢測（實際應用中會使用真實圖像）
+        if status_report['profile_jobs']:
+            print("\n📈 Profile Jobs:")
+            for name, info in status_report['profile_jobs'].items():
+                print(f"   {name}: {info['job_id']} ({info['status']})")
+                print(f"      Dashboard: {info['dashboard_url']}")
+        if status_report['link_jobs']:
+            print("\n🔗 Link Jobs:")
+            for name, info in status_report['link_jobs'].items():
+                print(f"   {name}: {info.get('job_id') or 'N/A'} ({info.get('status')})")
+                if 'dashboard_url' in info:
+                    print(f"      Dashboard: {info['dashboard_url']}")
+
+        print("\n🧪 測試跌倒預防檢測 (本地模擬)...")
         mock_image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
         detection_results = dragon_system.comprehensive_fall_prevention_detection(mock_image)
-        
+
         print("✅ 跌倒預防分析結果:")
         fall_analysis = detection_results.get('fall_prevention_analysis', {})
         print(f"   {fall_analysis.get('message', '未知狀態')}")
         print(f"   風險評分: {fall_analysis.get('risk_score', 0):.2f}")
         print(f"   建議: {fall_analysis.get('recommendation', '無建議')}")
-        
         if fall_analysis.get('indicators'):
             print(f"   風險指標: {', '.join(fall_analysis['indicators'])}")
-        
-        # 保存Dragon X報告
+
+        # 保存報告
         with open('dragon_x_fall_detection_report.json', 'w') as f:
             json.dump({
                 "status_report": status_report,
                 "detection_results": detection_results
             }, f, indent=2, default=str)
-        
-        print(f"\n📝 Dragon X報告已保存: dragon_x_fall_detection_report.json")
-        print("🎉 Dragon X老人跌倒預防檢測系統準備就緒!")
-        print("🏆 黑客松展示系統已完成!")
-        
+        print("\n📝 Dragon X報告已保存: dragon_x_fall_detection_report.json")
+
+        if args.export_status:
+            dragon_system.export_pipeline_status()
+
+        print("🎉 完成!")
+        if args.full_pipeline:
+            print("🏁 完整Pipeline已執行 (Compile→Profile→Link[嘗試])")
+        else:
+            print("ℹ️ 使用 --full-pipeline 可執行完整流程")
+        print("💡 使用 --wait 可等待雲端Jobs完成, --export-status 輸出JSON狀態")
+
     except Exception as e:
         print(f"❌ Dragon X系統初始化失敗: {e}")
         import traceback
