@@ -44,21 +44,24 @@ class DragonXFallDetectionSystem:
         self.onnx_sessions = {}
         self.profile_jobs: Dict[str, Any] = {}
         self.link_jobs: Dict[str, Any] = {}
-        self.full_pipeline = full_pipeline
-        self.wait_for_jobs = wait
-        self.poll_interval = poll_interval
+    # 官方流程新增的追蹤字典
+    self.target_models: Dict[str, Any] = {}
+    self.inference_jobs: Dict[str, Any] = {}
+    self.inference_outputs: Dict[str, Any] = {}
+    # 參數控制
+    self.full_pipeline = full_pipeline
+    self.wait_for_jobs = wait
+    self.poll_interval = poll_interval
         
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
         self._initialize_fall_detection_models()
 
         if self.full_pipeline:
-            logger.info("🧪 啟動完整Pipeline (Compile → Profile → Link[可選])")
-            # 先等待並依序提交 profile，再嘗試 link
-            self._submit_profile_jobs_for_all()
+            logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
+            self._run_full_official_steps_for_all_models()
+            # Link 可選，仍保留（在官方步驟後）
             self._attempt_link_jobs_cli()
-            if self.wait_for_jobs:
-                self.wait_for_all_jobs()
     
     def _find_dragon_x_devices(self):
         """尋找並選擇Dragon X設備"""
@@ -491,6 +494,79 @@ class DragonXFallDetectionSystem:
                 logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{profile_job.job_id}")
             except Exception as e:
                 logger.error(f"❌ Profiling 提交失敗 {model_label}: {e}")
+
+    # === 新增：官方 Step1~6 整合執行 ===
+    def _run_full_official_steps_for_all_models(self):
+        """依照官方教學步驟對每個模型執行:
+        Step1 準備/Trace(已於載入時完成 TorchScript 轉換)
+        Step2 Compile (已提交)
+        Step3 Profile (等待 compile 完成後，以 target_model 執行)
+        Step4 Inference (同樣使用 target_model)
+        Step5 Post-process (基本輸出形狀/統計)
+        Step6 Download target model (ONNX/TorchScript)
+        """
+        if not self.target_device:
+            logger.warning("⚠️ 無目標設備，跳過官方步驟")
+            return
+        for key, compile_job in list(self.compiled_models.items()):
+            model_label = key.replace('_job', '')
+            logger.info(f"================ {model_label} PIPELINE ================")
+            logger.info(f"🟦 Step 2: 等待 Compile 完成 -> {compile_job.job_id}")
+            self._wait_for_single_job(compile_job, f"compile:{model_label}")
+            # Step3: Profile 需 target model
+            try:
+                logger.info("🟩 取得 target_model (get_target_model)")
+                target_model = compile_job.get_target_model()
+                self.target_models[model_label] = target_model
+            except Exception as e:
+                logger.error(f"❌ 無法取得 target_model ({model_label}): {e}")
+                continue
+            # 提交 Profile
+            if model_label + '_profile' not in self.profile_jobs:
+                try:
+                    logger.info("🟨 Step 3: 提交 Profile Job")
+                    profile_job = hub.submit_profile_job(model=target_model, device=self.target_device)
+                    self.profile_jobs[model_label + '_profile'] = profile_job
+                    self._wait_for_single_job(profile_job, f"profile:{model_label}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Profile 失敗 ({model_label}): {e}")
+            # Inference
+            if model_label not in self.inference_jobs:
+                try:
+                    logger.info("🟥 Step 4: 提交 Inference Job")
+                    # 建立簡單隨機輸入 (依原始 input spec 尺寸)
+                    shape = (1, 3, 256, 256)
+                    if 'hand' in model_label:
+                        shape = (1, 3, 224, 224)
+                    dummy = np.random.rand(*shape).astype('float32')
+                    inf_job = hub.submit_inference_job(model=target_model, device=self.target_device, inputs={'image': [dummy]})
+                    self.inference_jobs[model_label + '_inference'] = inf_job
+                    self._wait_for_single_job(inf_job, f"inference:{model_label}")
+                    # Step5: Post-process (下載輸出資料)
+                    try:
+                        outputs = inf_job.download_output_data()
+                        self.inference_outputs[model_label] = {k: (np.array(v).shape if isinstance(v, list) else 'unknown') for k, v in outputs.items()}
+                        logger.info(f"🧪 Step 5: 輸出摘要: {self.inference_outputs[model_label]}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ 下載推論輸出失敗 ({model_label}): {e}")
+                except Exception as e:
+                    logger.error(f"❌ Inference Job 提交失敗 ({model_label}): {e}")
+            # Step6: 下載模型
+            if model_label not in self.target_models:
+                continue
+            try:
+                download_name = f"compiled_{model_label}.onnx"
+                logger.info(f"💾 Step 6: 下載 target model -> {download_name}")
+                # target_model 可能提供 download 方法
+                target_model = self.target_models[model_label]
+                if hasattr(target_model, 'download'):
+                    target_model.download(download_name)
+                    logger.info(f"✅ 已下載 {download_name}")
+                else:
+                    logger.warning(f"⚠️ target_model 無 download 方法，跳過下載 ({model_label})")
+            except Exception as e:
+                logger.warning(f"⚠️ 下載模型失敗 ({model_label}): {e}")
+            logger.info(f"================ {model_label} DONE ==================")
 
     def _attempt_link_jobs_cli(self):
         """透過 CLI 嘗試提交 link job（若 SDK 無 Python API）。"""
