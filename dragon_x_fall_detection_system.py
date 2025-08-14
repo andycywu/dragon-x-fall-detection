@@ -1510,6 +1510,9 @@ def main():
                     print(f"      Dashboard: {info['dashboard_url']}")
 
         print("\n🧪 測試跌倒預防檢測 (本地/Edge)...")
+        if (args.download_compiled or args.use_qnn or args.edge_only) and not args.realtime:
+            print("💡 尚未啟動攝影機即時推論。若要開啟鏡頭請加 --realtime (可搭配 --max-frames 120)。")
+            print("   範例: python dragon_x_fall_detection_system.py --edge-only --realtime --use-qnn --max-frames 200")
         if args.image and os.path.exists(args.image):
             img = cv2.imread(args.image)
             if img is None:
