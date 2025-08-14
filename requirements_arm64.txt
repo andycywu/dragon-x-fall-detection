@@ -1,10 +1,6 @@
-onnx-graphsurgeon==0.5.2
-onnx==1.17.0
-numpy==1.24.3
+numpy
 protobuf==4.25.3
 qai-hub
 qai-hub-models
 python-dotenv
-
-
 
