@@ -12,6 +12,10 @@ import qai_hub as hub
 import numpy as np
 import cv2
 import onnxruntime as ort
+try:
+    import onnx  # 型式驗證用 (避免反覆 INVALID_PROTOBUF)
+except ImportError:  # 可選
+    onnx = None
 import logging
 try:
     from dotenv import load_dotenv  # type: ignore
@@ -38,20 +42,12 @@ class DragonXFallDetectionSystem:
     def __init__(self, full_pipeline: bool = False, wait: bool = False, poll_interval: int = 15,
                  debug_link: bool = False, link_python: bool = False, export_local_onnx: bool = False,
                  wait_compile_only: bool = False, download_compiled: bool = False,
-                 realtime: bool = False, camera_index: int = 0, max_frames: Optional[int] = None):
-        """初始化Dragon X檢測系統
-
-        Args:
-            full_pipeline: 是否執行 Compile→Profile→Inference (官方示例步驟)
-            wait: 是否等待所有 Job 完成
-            poll_interval: 輪詢秒數
-            debug_link: 是否輸出 link job 除錯資訊
-            link_python: 是否使用 Python API submit_link_job 進行多模型 link (否則僅嘗試 CLI)
-        """
-        # 基本屬性
+                 realtime: bool = False, camera_index: int = 0, max_frames: Optional[int] = None,
+                 edge_only: bool = False, no_qnn_dlc: bool = False):
+        """初始化Dragon X檢測系統"""
+        # -------- 基本屬性與工作追蹤結構 --------
         self.api_token = os.getenv('QAI_HUB_API_TOKEN')
         self.target_device = None
-        # 模型與工作追蹤
         self.qai_hub_models: Dict[str, Any] = {}
         self.compiled_models: Dict[str, Any] = {}
         self.onnx_sessions: Dict[str, Any] = {}
@@ -60,24 +56,35 @@ class DragonXFallDetectionSystem:
         self.target_models: Dict[str, Any] = {}
         self.inference_jobs: Dict[str, Any] = {}
         self.inference_outputs: Dict[str, Any] = {}
-        # 執行參數
+
+        # -------- 參數 --------
         self.full_pipeline = full_pipeline
         self.wait_for_jobs = wait
         self.poll_interval = poll_interval
-        self.debug_link = debug_link  # 是否輸出 link job 除錯資訊
+        self.debug_link = debug_link
         self.python_link_requested = link_python
         self.export_local_onnx = export_local_onnx
-        # Edge 部署參數
         self.wait_compile_only = wait_compile_only
         self.download_compiled = download_compiled
         self.realtime = realtime
         self.camera_index = camera_index
         self.max_frames = max_frames
-        self._pose_session = None  # 快取姿態 ONNX session (edge)
+        self.edge_only = edge_only
+        self.no_qnn_dlc = no_qnn_dlc  # 不使用 qnn_dlc 產出純 ONNX
+
+        # -------- 狀態 --------
+        self._pose_session = None
+        self._invalid_onnx_cache = {}
 
         logger.info("🐉 初始化Dragon X老人跌倒預防檢測系統...")
         self._find_dragon_x_devices()
-        self._initialize_fall_detection_models()
+
+        # edge-only: 只在需要原始 ONNX 匯出時才載入模型 (避免重新 compile)
+        if self.edge_only and not self.export_local_onnx:
+            logger.info("🧊 (--edge-only) 跳過模型雲端編譯提交，僅使用本地 compiled_*.onnx / 原始 ONNX")
+        else:
+            self._initialize_fall_detection_models()
+
         if self.export_local_onnx:
             try:
                 self._export_original_pose_onnx()
@@ -87,19 +94,18 @@ class DragonXFallDetectionSystem:
         if self.full_pipeline:
             logger.info("🧪 啟動完整官方流程 (Step 1~6 for each model)")
             self._run_full_official_steps_for_all_models()
-            # 如果使用 Python link 先執行 (官方 API)；否則嘗試 CLI；若兩者都想要可自行再呼叫
             if self.python_link_requested:
                 self._link_all_models_python()
             else:
                 self._attempt_link_jobs_cli()
-        # 僅等待既有 compile / profile (若未啟 full pipeline 但使用者希望等待)
+
         if self.wait_compile_only and not self.full_pipeline:
             logger.info("⏳ (--wait-compile) 等待現有編譯/Profiling Jobs 完成")
             self.wait_for_all_jobs()
-        # 下載已編譯 target models 供 Edge
+
         if self.download_compiled:
             self._download_all_target_models()
-        # 即時推論模式
+
         if self.realtime:
             self.run_realtime_inference()
     
@@ -191,28 +197,26 @@ class DragonXFallDetectionSystem:
             pose_model = PoseModel.from_pretrained()
             pose_detector = pose_model.pose_detector
             self.qai_hub_models['pose_fall_detection'] = pose_detector
-            
-            # 提交到Dragon X設備編譯
-            if self.target_device:
+
+            if self.edge_only:
+                logger.info("⏭️ edge-only: 不提交姿態編譯 Job")
+            # 提交到Dragon X設備編譯 (除非 edge-only)
+            elif self.target_device:
                 logger.info("🐉 提交姿態檢測模型到Dragon X編譯...")
-                
                 try:
                     torchscript_model = pose_detector.convert_to_torchscript()
                     uploaded_model = hub.upload_model(torchscript_model)
-                    
-                    compile_job = hub.submit_compile_job(
+                    compile_kwargs = dict(
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 256, 256), "float32")},
                         device=self.target_device,
-                        # 指定目標產出為 Qualcomm AI Engine Direct DLC, 以便後續 link
-                        options="--target_runtime qnn_dlc"
                     )
-                    
+                    if not self.no_qnn_dlc:
+                        compile_kwargs['options'] = "--target_runtime qnn_dlc"
+                    compile_job = hub.submit_compile_job(**compile_kwargs)
                     logger.info(f"✅ 姿態檢測Dragon X編譯Job: {compile_job.job_id}")
                     logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{compile_job.job_id}")
-                    
                     self.compiled_models['pose_fall_detection_job'] = compile_job
-                    
                 except Exception as e:
                     logger.error(f"❌ 姿態檢測Dragon X編譯失敗: {e}")
             
@@ -230,27 +234,24 @@ class DragonXFallDetectionSystem:
             face_model = FaceModel.from_pretrained()
             face_detector = face_model.face_detector
             self.qai_hub_models['face_elderly_id'] = face_detector
-            
-            # 提交到Dragon X設備編譯
-            if self.target_device:
+            if self.edge_only:
+                logger.info("⏭️ edge-only: 不提交人臉編譯 Job")
+            elif self.target_device:
                 logger.info("🐉 提交人臉檢測模型到Dragon X編譯...")
-                
                 try:
                     torchscript_model = face_detector.convert_to_torchscript()
                     uploaded_model = hub.upload_model(torchscript_model)
-                    
-                    compile_job = hub.submit_compile_job(
+                    compile_kwargs = dict(
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 256, 256), "float32")},
                         device=self.target_device,
-                        options="--target_runtime qnn_dlc"
                     )
-                    
+                    if not self.no_qnn_dlc:
+                        compile_kwargs['options'] = "--target_runtime qnn_dlc"
+                    compile_job = hub.submit_compile_job(**compile_kwargs)
                     logger.info(f"✅ 人臉檢測Dragon X編譯Job: {compile_job.job_id}")
                     logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{compile_job.job_id}")
-                    
                     self.compiled_models['face_elderly_id_job'] = compile_job
-                    
                 except Exception as e:
                     logger.error(f"❌ 人臉檢測Dragon X編譯失敗: {e}")
             
@@ -268,27 +269,24 @@ class DragonXFallDetectionSystem:
             hand_model = HandModel.from_pretrained()
             hand_detector = hand_model.hand_detector
             self.qai_hub_models['hand_emergency_gesture'] = hand_detector
-            
-            # 提交到Dragon X設備編譯
-            if self.target_device:
+            if self.edge_only:
+                logger.info("⏭️ edge-only: 不提交手部編譯 Job")
+            elif self.target_device:
                 logger.info("🐉 提交手部檢測模型到Dragon X編譯...")
-                
                 try:
                     torchscript_model = hand_detector.convert_to_torchscript()
                     uploaded_model = hub.upload_model(torchscript_model)
-                    
-                    compile_job = hub.submit_compile_job(
+                    compile_kwargs = dict(
                         model=uploaded_model,
                         input_specs={"image": ((1, 3, 224, 224), "float32")},
                         device=self.target_device,
-                        options="--target_runtime qnn_dlc"
                     )
-                    
+                    if not self.no_qnn_dlc:
+                        compile_kwargs['options'] = "--target_runtime qnn_dlc"
+                    compile_job = hub.submit_compile_job(**compile_kwargs)
                     logger.info(f"✅ 手部檢測Dragon X編譯Job: {compile_job.job_id}")
                     logger.info(f"🔗 Dashboard: https://app.aihub.qualcomm.com/jobs/{compile_job.job_id}")
-                    
                     self.compiled_models['hand_emergency_gesture_job'] = compile_job
-                    
                 except Exception as e:
                     logger.error(f"❌ 手部檢測Dragon X編譯失敗: {e}")
             
@@ -507,41 +505,74 @@ class DragonXFallDetectionSystem:
                 except Exception as e:
                     logger.warning(f"⚠️ 複製 DLC -> ONNX 失敗: {e}")
             if not os.path.exists(onnx_path):
-                logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled_pose_fall_detection.onnx 或 .onnx.dlc)，使用模擬資料")
-                return None
+                # 改嘗試使用原始匯出 ONNX (若存在)
+                orig = 'pose_fall_detection_original.onnx'
+                if os.path.exists(orig):
+                    logger.info("🔄 使用原始匯出姿態 ONNX (pose_fall_detection_original.onnx) 進行本地推論")
+                    onnx_path = orig
+                else:
+                    logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled 或 original)，使用模擬資料")
+                    return None
+        # 檢查是否曾標記為無效，若是則直接跳過 (避免狂刷)
+        if onnx_path in self._invalid_onnx_cache:
+            return None
+
         try:
             if self._pose_session is None:
                 providers = ort.get_available_providers()
-                preferred = []
-                for cand in ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider']:
-                    if cand in providers and cand not in preferred:
-                        preferred.append(cand)
+                preferred = [p for p in ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider'] if p in providers]
                 if not preferred:
                     preferred = providers
                 highlight = '✅' if any(p.startswith('QNN') for p in preferred) else '⚠️'
-                logger.info(f"🧩 ONNX Providers 可用: {providers} -> 使用: {preferred} {highlight}{' (含QNN)' if highlight=='✅' else ' (未啟用QNN, 可能僅CPU/其他後端)'}")
-                self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
+                logger.info(f"🧩 ONNX Providers 可用: {providers} -> 使用: {preferred} {highlight}{' (含QNN)' if highlight=='✅' else ' (未啟用QNN)'}")
+                # 先快速驗證 ONNX (若 onnx 套件存在)
+                if onnx is not None:
+                    try:
+                        onnx.load(onnx_path)
+                    except Exception as ve:
+                        self._invalid_onnx_cache[onnx_path] = str(ve)
+                        logger.warning(f"⚠️ compiled 檔案不是合法 ONNX: {ve}. 嘗試原始匯出 ONNX")
+                        # 隔離問題檔案
+                        try:
+                            quarantine_name = onnx_path + '.invalid'
+                            if not os.path.exists(quarantine_name):
+                                os.rename(onnx_path, quarantine_name)
+                                logger.info(f"🧪 已隔離無效檔案: {onnx_path} -> {quarantine_name}")
+                        except Exception as re_err:
+                            logger.debug(f"rename invalid failed: {re_err}")
+                        fallback_orig = 'pose_fall_detection_original.onnx'
+                        if os.path.exists(fallback_orig):
+                            try:
+                                self._pose_session = ort.InferenceSession(fallback_orig, providers=preferred)
+                                logger.info("✅ 使用原始匯出姿態 ONNX 成功 (pose_fall_detection_original.onnx)")
+                            except Exception as e2:
+                                logger.warning(f"⚠️ 原始 ONNX 也無法載入: {e2}")
+                                self._pose_session = False
+                        else:
+                            self._pose_session = False
+                        return None
+                # 若未提前返回則建立 session
+                if self._pose_session is None:
+                    self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
             sess = self._pose_session
+            if sess is False:
+                return None
 
-            # 前處理: BGR->RGB, resize 256, normalize 0..1
+            # 前處理
             img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             img_resized = cv2.resize(img, (256, 256), interpolation=cv2.INTER_LINEAR)
             tensor = img_resized.astype('float32') / 255.0
-            tensor = np.transpose(tensor, (2, 0, 1))  # CHW
-            tensor = np.expand_dims(tensor, 0)  # NCHW
-
+            tensor = np.transpose(tensor, (2, 0, 1))[None, ...]
             input_name = sess.get_inputs()[0].name
             outputs = sess.run(None, {input_name: tensor})
             output_meta = sess.get_outputs()
 
-            # 嘗試從第一個輸出推測 keypoints (假設形狀 [1, K, 3] 或 [1, 3, K])
             keypoints_list = []
             if outputs:
-                arr = outputs[0]
-                arr_np = np.array(arr)
+                arr_np = np.array(outputs[0])
                 kpts = []
                 try:
-                    if arr_np.ndim == 3:  # 例如 (1, K, C) or (1, C, K)
+                    if arr_np.ndim == 3:
                         if arr_np.shape[2] == 3:  # (1, K, 3)
                             for i in range(min(arr_np.shape[1], 25)):
                                 x, y, c = arr_np[0, i]
@@ -552,7 +583,7 @@ class DragonXFallDetectionSystem:
                                 y = arr_np[0, 1, i]
                                 c = arr_np[0, 2, i] if arr_np.shape[1] > 2 else 0.9
                                 kpts.append({"x": float(x), "y": float(y), "confidence": float(c)})
-                    elif arr_np.ndim == 2 and arr_np.shape[0] == 1:  # (1, N) 攤平
+                    elif arr_np.ndim == 2 and arr_np.shape[0] == 1:  # (1, N)
                         flat = arr_np[0]
                         for i in range(0, min(len(flat), 75), 3):
                             if i + 2 < len(flat):
@@ -568,17 +599,10 @@ class DragonXFallDetectionSystem:
                 return None
             return {"keypoints": keypoints_list, "provider": sess.get_providers(), "output_names": [o.name for o in output_meta]}
         except Exception as e:
-            logger.warning(f"⚠️ 本地姿態推論失敗 (改用模擬): {e}")
+            self._pose_session = False
+            self._invalid_onnx_cache[onnx_path] = str(e)
+            logger.warning(f"⚠️ 本地姿態推論失敗 (只提示一次，後續將靜默): {e}")
             return None
-
-    # ===== Edge 部署輔助 =====
-    def _download_all_target_models(self):
-        """嘗試對每個 compile job 取得 target model 並下載 compiled_{label}.onnx (若尚未存在)。"""
-        for job_key, cjob in self.compiled_models.items():
-            label = job_key.replace('_job', '')
-            filename = f"compiled_{label}.onnx"
-            if os.path.exists(filename):
-                continue
             try:
                 logger.info(f"💾 嘗試下載 target model: {label}")
                 # 確保編譯完成
@@ -632,7 +656,11 @@ class DragonXFallDetectionSystem:
                     except Exception as e:
                         logger.warning(f"⚠️ 複製 {alt} 失敗: {e}")
                 if not os.path.exists(onnx_name):
-                    continue
+                    # 專門對 pose 嘗試原始匯出 ONNX
+                    if label == 'pose_fall_detection' and os.path.exists('pose_fall_detection_original.onnx'):
+                        onnx_name = 'pose_fall_detection_original.onnx'
+                    else:
+                        continue
             try:
                 sess = ort.InferenceSession(onnx_name, providers=preferred)
                 self.onnx_sessions[label] = (sess, shape)
@@ -1180,6 +1208,8 @@ def main():
     parser.add_argument('--realtime', action='store_true', help='建立本地 ONNX 即時攝影機推論')
     parser.add_argument('--camera-index', type=int, default=0, help='攝影機索引 (realtime)')
     parser.add_argument('--max-frames', type=int, default=None, help='即時推論最大影格 (測試用)')
+    parser.add_argument('--edge-only', action='store_true', help='僅使用已存在的 compiled_*.onnx / 原始ONNX，不重新提交雲端編譯')
+    parser.add_argument('--no-qnn-dlc', action='store_true', help='編譯時不加入 --target_runtime qnn_dlc (產出純 ONNX target model)')
     args = parser.parse_args()
 
     print("🐉 Dragon X老人跌倒預防檢測系統")
@@ -1191,7 +1221,8 @@ def main():
         dragon_system = DragonXFallDetectionSystem(full_pipeline=args.full_pipeline, wait=args.wait, poll_interval=args.poll_interval,
                                debug_link=args.debug_link, link_python=args.link_python, export_local_onnx=args.export_local_onnx,
                                wait_compile_only=args.wait_compile, download_compiled=args.download_compiled,
-                               realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames)
+                               realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames,
+                               edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc)
         status_report = dragon_system.get_dragon_x_status_report()
         print("📊 Dragon X系統狀態:")
         print(f"   🐉 目標設備: {status_report['dragon_x_device']['name']}")
