@@ -1,43 +1,69 @@
-# Dragon X Fall Detection System Dependencies (Windows-compatible version)
-# Qualcomm Snapdragon X Elite Device Cloud compatible dependencies
+############################################################
+# Dragon X Fall Detection - Windows / Snapdragon X Elite 依賴清單
+# 分層: 核心 → QAI Hub → 拓展(語音/視覺/Web) → 可選高風險
+# 安裝策略: 先核心 + QAI Hub；其他視情況追加。
+############################################################
 
-# Core AI frameworks
-onnxruntime>=1.15.0
-torch>=1.13.0
-torchvision>=0.14.0
-mediapipe>=0.10.0
+# ========== 核心必備 ==========
+numpy>=1.26.0
+opencv-python>=4.9.0.80
+Pillow>=10.2.0
+requests>=2.31.0
+prettytable>=3.10.0
+python-dotenv>=1.0.1
+onnxruntime>=1.18.0
 
-# Computer vision
-opencv-python>=4.5.0
-Pillow>=8.0.0
-numpy>=1.21.0
-scipy>=1.7.0
+# ========== PyTorch (CPU) ==========
+# 若官方釋出 Windows ARM64 專用輪子，pip 會自動取得；
+# 如需特定 index (僅 CPU): --index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
 
-# Web interface and API
-streamlit>=1.28.0
-requests>=2.25.0
-fastapi>=0.68.0
-uvicorn>=0.15.0
+# ========== QAI Hub 生態 ==========
+qai-hub
+qai-hub-models
 
-# Audio processing
-# Note: whisper may not be available on Device Cloud
-# If unavailable, the system will disable audio detection
-openai-whisper>=20230918
-sounddevice>=0.4.4
-librosa>=0.9.0
+# ========== Whisper / 語音 (可選) ==========
+# 需要 ffmpeg（手動安裝並加入 PATH）
+pyttsx3>=2.90
+SpeechRecognition>=3.10.0
+openai-whisper>=20231117
 
-# Data processing
-pandas>=1.3.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
-plotly>=5.0.0
-transformers>=4.20.0
+# ========== Web / 服務 (可選) ==========
+# streamlit 用於展示；FastAPI + uvicorn 可做 API。
+streamlit>=1.33.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
 
-# QAI Hub client (optional)
-# If not available, system will use CPU fallback
-# qai-hub>=0.9.0
+# ========== 數據/分析 (可選) ==========
+pandas>=2.0.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.20.0
 
-# System tools
-psutil>=5.8.0
-tqdm>=4.62.0
-pyyaml>=5.4.0
+# ========== 進階 / 其他 (可選) ==========
+scipy>=1.11.0
+tqdm>=4.66.0
+psutil>=5.9.0
+pyyaml>=6.0.0
+
+# ========== 高風險 / ARM64 可能失敗 ==========
+# face-recognition
+# dlib
+
+############################################################
+# 安裝建議:
+# 1) 建立並啟用虛擬環境:
+#    python -m venv venv
+#    venv\Scripts\activate
+# 2) 升級 pip:
+#    python -m pip install --upgrade pip
+# 3) 分段安裝 (失敗好排錯):
+#    pip install -r requirements_windows.txt --no-cache-dir \
+#        --extra-index-url https://download.pytorch.org/whl/cpu
+# 4) 若要升級 QAI Hub SDK:
+#    pip install --upgrade --upgrade-strategy eager qai-hub qai-hub-models
+# 5) Whisper 需 ffmpeg:
+#    確保 ffmpeg.exe 在 PATH (可用 ffmpeg -version 測試)
+# 6) face-recognition 如需: 先安裝 CMake 與 dlib 再解除註解
+############################################################

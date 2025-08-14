@@ -13,7 +13,12 @@ import numpy as np
 import cv2
 import onnxruntime as ort
 import logging
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv  # type: ignore
+except ImportError:  # make optional
+    def load_dotenv(*args, **kwargs):
+        print("⚠️ 未安裝 python-dotenv，跳過 .env 載入 (可執行: pip install python-dotenv)")
+        return False
 from typing import Dict, Any, List, Optional
 import time
 import json
