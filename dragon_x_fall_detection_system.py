@@ -1003,6 +1003,39 @@ class DragonXFallDetectionSystem:
         except Exception as e:
             logger.warning(f"⚠️ 匯出姿態 ONNX 失敗: {e}")
 
+    def _export_all_original_onnx(self):
+        """匯出 pose / face / hand 原始 ONNX 供統一本地推論或驗證。
+
+        - pose: 256x256
+        - face: 假設輸入 3x256x256 (若模型需要其他尺寸可再調整)
+        - hand: 假設輸入 3x256x256
+        若模型無法匯出或尚未載入則跳過並記錄警告。
+        """
+        try:
+            self._export_original_pose_onnx()
+        except Exception as e:
+            logger.warning(f"⚠️ 匯出 pose 失敗 (略過): {e}")
+        # Face
+        if 'face_elderly_id' in self.qai_hub_models and not os.path.exists('face_elderly_id_original.onnx'):
+            try:
+                import torch
+                dummy = torch.randn(1,3,256,256)
+                base = getattr(self.qai_hub_models['face_elderly_id'], 'model', None) or self.qai_hub_models['face_elderly_id']
+                torch.onnx.export(base, dummy, 'face_elderly_id_original.onnx', input_names=['image'], output_names=['output'], opset_version=17, do_constant_folding=True)
+                logger.info("💾 已匯出 face_elderly_id_original.onnx")
+            except Exception as e:
+                logger.warning(f"⚠️ 匯出 face 原始 ONNX 失敗: {e}")
+        # Hand
+        if 'hand_emergency_gesture' in self.qai_hub_models and not os.path.exists('hand_emergency_gesture_original.onnx'):
+            try:
+                import torch
+                dummy = torch.randn(1,3,256,256)
+                base = getattr(self.qai_hub_models['hand_emergency_gesture'], 'model', None) or self.qai_hub_models['hand_emergency_gesture']
+                torch.onnx.export(base, dummy, 'hand_emergency_gesture_original.onnx', input_names=['image'], output_names=['output'], opset_version=17, do_constant_folding=True)
+                logger.info("💾 已匯出 hand_emergency_gesture_original.onnx")
+            except Exception as e:
+                logger.warning(f"⚠️ 匯出 hand 原始 ONNX 失敗: {e}")
+
     def _link_all_models_python(self):
         """使用官方 API hub.submit_link_job 將多個已編譯的 target_models 進行 link。
 
