@@ -61,6 +61,7 @@ class DragonXFallDetectionSystem:
                  offline: bool = False,
                  use_qnn: bool = False,
                  force_qnn: bool = False,
+                 prefer_directml: bool = False,
                  simulate_fall: bool = False,
                  demo_pose: bool = False,
                  summarize_edge: bool = False):
@@ -94,6 +95,7 @@ class DragonXFallDetectionSystem:
         self.offline = offline
         self.use_qnn = use_qnn
         self.force_qnn = force_qnn
+        self.prefer_directml = prefer_directml
         self.simulate_fall = simulate_fall
         self.demo_pose = demo_pose
         self.summarize_edge = summarize_edge
@@ -1416,26 +1418,52 @@ class DragonXFallDetectionSystem:
             vflag = '✅' if info['valid_onnx'] else ('📦' if info['type']=='dlc' else '⚠️')
             extra = ' (合法ONNX)' if info['valid_onnx'] else (' (DLC檔案)' if info['type']=='dlc' else '')
             logger.info(f"   {name} ({info['size']} bytes) {vflag}{extra}")
-        # 如果沒有任何 valid ONNX 但有 dlc, 提示使用者 (避免重複 typo)
+        # 如果沒有任何 valid ONNX  但有 dlc, 提示使用者 (避免重複 typo)
         if all((not i['valid_onnx']) for i in summary.values()):
             logger.warning("⚠️ 未偵測到可驗證 ONNX; 目前可能僅有 DLC. 本地 ORT+QNN EP 多半直接使用原始 ONNX 而非 DLC, 建議同時保留 pose_fall_detection_original.onnx。")
 
     def _get_preferred_providers(self):
         providers = ort.get_available_providers()
-        # 預設優先順序
-        order = ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider']
-        preferred = []
-        for p in order:
-            if p in providers and p not in preferred:
+        # 動態優先順序基礎
+        base_order = ['QNNExecutionProvider', 'QNN', 'CUDAExecutionProvider', 'DmlExecutionProvider', 'CPUExecutionProvider']
+        preferred: List[str] = []
+        # 如果使用者要求 DirectML 優先且未 force_qnn，將 DmlExecutionProvider 提升至最前並暫時延後 QNN
+        if getattr(self, 'prefer_directml', False) and not self.force_qnn:
+            if 'DmlExecutionProvider' in providers:
+                preferred.append('DmlExecutionProvider')
+            # 其餘保持原順序 (排除已加入的 DmlExecutionProvider)
+            for p in base_order:
+                if p == 'DmlExecutionProvider':
+                    continue
+                if p in providers and p not in preferred:
+                    preferred.append(p)
+        else:
+            for p in base_order:
+                if p in providers and p not in preferred:
+                    preferred.append(p)
+        # 補上所有剩餘 providers (避免遺漏自訂 EP)
+        for p in providers:
+            if p not in preferred:
                 preferred.append(p)
-        # 增強: 若使用者未要求 QNN, 仍保持順序; 若要求 QNN 但 QNN 不存在, 仍可 fallback (除非 force_qnn)
         if not preferred:
             preferred = providers
         qnn_active = any(p.startswith('QNN') for p in preferred if p in providers)
+        # 如果使用者顯式 use_qnn 但尚未啟用 QNN，插入 QNNExecutionProvider 到最前
         if self.use_qnn and not qnn_active and 'QNNExecutionProvider' in providers:
-            # 插入 QNNExecutionProvider 到最前
             preferred = ['QNNExecutionProvider'] + [p for p in preferred if p != 'QNNExecutionProvider']
             qnn_active = True
+        # prefer_directml 模式下，若 force_qnn 仍需確保 QNN 第一順位
+        if self.force_qnn and 'QNNExecutionProvider' in providers and preferred[0] != 'QNNExecutionProvider':
+            preferred = ['QNNExecutionProvider'] + [p for p in preferred if p != 'QNNExecutionProvider']
+            qnn_active = True
+        # 訊息提示
+        if self.prefer_directml and 'DmlExecutionProvider' in providers:
+            if preferred[0] == 'DmlExecutionProvider':
+                logger.info("🎯 DirectML優先模式: 目前將使用 DmlExecutionProvider 進行推論 (之後可移除 --prefer-directml 並加上 --use-qnn 切回 QNN/NPU)")
+            else:
+                logger.info("ℹ️ 指定 --prefer-directml 但排序後第一個並非 DmlExecutionProvider (可能被 --force-qnn 覆寫)")
+        elif self.prefer_directml:
+            logger.warning("⚠️ 指定 --prefer-directml 但環境未提供 DmlExecutionProvider，改用其他可用 EP: %s" % providers)
         return providers, preferred, qnn_active
 
 def main():
@@ -1462,6 +1490,7 @@ def main():
     # QNN / NPU 相關
     parser.add_argument('--use-qnn', action='store_true', help='若可用則優先使用 QNNExecutionProvider/NPU')
     parser.add_argument('--force-qnn', action='store_true', help='強制要求 QNNExecutionProvider，否則報錯 (用於檢查環境)')
+    parser.add_argument('--prefer-directml', action='store_true', help='優先使用 DmlExecutionProvider (Windows GPU/DirectML) 進行推論，稍後可再切回 QNN')
     # Demo / 風險模擬
     parser.add_argument('--simulate-fall', action='store_true', help='模擬高跌倒風險 (不依實際模型輸出)')
     parser.add_argument('--demo-pose', action='store_true', help='使用動態生成的 demo pose 資料 (無須實際模型)')
@@ -1485,6 +1514,7 @@ def main():
             realtime=args.realtime, camera_index=args.camera_index, max_frames=args.max_frames,
             edge_only=args.edge_only, no_qnn_dlc=args.no_qnn_dlc, offline=args.offline,
             use_qnn=args.use_qnn, force_qnn=args.force_qnn,
+            prefer_directml=args.prefer_directml,
             simulate_fall=args.simulate_fall, demo_pose=args.demo_pose,
             summarize_edge=args.summarize_edge
         )
