@@ -497,8 +497,18 @@ class DragonXFallDetectionSystem:
         """
         onnx_path = 'compiled_pose_fall_detection.onnx'
         if not os.path.exists(onnx_path):
-            logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled_pose_fall_detection.onnx)，使用模擬資料")
-            return None
+            # 嘗試接受 CLI 下載的 .onnx.dlc 檔案並複製為 .onnx 供 ORT 使用
+            alt_path = 'compiled_pose_fall_detection.onnx.dlc'
+            if os.path.exists(alt_path):
+                try:
+                    # 有些情況 DLC 其實仍是可解析的 ONNX；若不是，使用者需另行轉換
+                    shutil.copyfile(alt_path, onnx_path)
+                    logger.info("🔁 已將 .onnx.dlc 複製為 compiled_pose_fall_detection.onnx 供本地推論嘗試")
+                except Exception as e:
+                    logger.warning(f"⚠️ 複製 DLC -> ONNX 失敗: {e}")
+            if not os.path.exists(onnx_path):
+                logger.warning("⚠️ 找不到已下載的姿態 ONNX (compiled_pose_fall_detection.onnx 或 .onnx.dlc)，使用模擬資料")
+                return None
         try:
             if self._pose_session is None:
                 providers = ort.get_available_providers()
@@ -508,7 +518,8 @@ class DragonXFallDetectionSystem:
                         preferred.append(cand)
                 if not preferred:
                     preferred = providers
-                logger.info(f"🧩 ONNX Providers: {providers} -> 使用: {preferred}")
+                highlight = '✅' if any(p.startswith('QNN') for p in preferred) else '⚠️'
+                logger.info(f"🧩 ONNX Providers 可用: {providers} -> 使用: {preferred} {highlight}{' (含QNN)' if highlight=='✅' else ' (未啟用QNN, 可能僅CPU/其他後端)'}")
                 self._pose_session = ort.InferenceSession(onnx_path, providers=preferred)
             sess = self._pose_session
 
@@ -575,18 +586,95 @@ class DragonXFallDetectionSystem:
                 tm = cjob.get_target_model()
                 if hasattr(tm, 'download'):
                     tm.download(filename)
-                    logger.info(f"✅ 已下載 {filename}")
+                    # 可能實際下載成 .onnx.dlc
+                    dlc_variant = filename + '.dlc'
+                    if os.path.exists(dlc_variant) and not os.path.exists(filename):
+                        try:
+                            shutil.copyfile(dlc_variant, filename)
+                            logger.info(f"🔁 正規化 DLC -> ONNX: {dlc_variant} -> {filename}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ DLC 正規化失敗 {dlc_variant}: {e}")
+                    if os.path.exists(filename):
+                        logger.info(f"✅ 已下載 {filename}")
+                    else:
+                        logger.warning(f"⚠️ 未找到 {filename}，可能只存在 DLC: {dlc_variant if os.path.exists(dlc_variant) else '無'}")
                 else:
                     logger.warning(f"⚠️ target_model 無 download 方法: {label}")
             except Exception as e:
                 logger.warning(f"⚠️ 下載 {label} 失敗: {e}")
 
+    # ===== Edge Session 建立 =====
+    def _ensure_edge_sessions(self):
+        """建立或快取 pose / face / hand 的 ONNX Runtime session (若有 compiled 模型檔)."""
+        models = [
+            ('pose_fall_detection', (256, 256)),
+            ('face_elderly_id', (256, 256)),
+            ('hand_emergency_gesture', (224, 224)),
+        ]
+        providers_available = ort.get_available_providers()
+        preferred = []
+        for cand in ['QNNExecutionProvider','QNN','CUDAExecutionProvider','DmlExecutionProvider','CPUExecutionProvider']:
+            if cand in providers_available and cand not in preferred:
+                preferred.append(cand)
+        if not preferred:
+            preferred = providers_available
+        qnn_flag = any(p.startswith('QNN') for p in preferred)
+        for label, shape in models:
+            onnx_name = f"compiled_{label}.onnx"
+            if label in self.onnx_sessions:
+                continue
+            if not os.path.exists(onnx_name):
+                alt = onnx_name + '.dlc'
+                if os.path.exists(alt):
+                    try:
+                        shutil.copyfile(alt, onnx_name)
+                        logger.info(f"🔁 DLC -> ONNX 複製: {alt} -> {onnx_name}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ 複製 {alt} 失敗: {e}")
+                if not os.path.exists(onnx_name):
+                    continue
+            try:
+                sess = ort.InferenceSession(onnx_name, providers=preferred)
+                self.onnx_sessions[label] = (sess, shape)
+                logger.info(f"🧩 载入 {label} ONNX Session (providers={sess.get_providers()}) {'✅含QNN' if qnn_flag else '⚠️無QNN'}")
+            except Exception as e:
+                logger.warning(f"⚠️ 建立 {label} session 失敗: {e}")
+
+    def _edge_infer_generic(self, label: str, frame: np.ndarray):
+        entry = self.onnx_sessions.get(label)
+        if not entry:
+            return None
+        sess, (tw, th) = entry
+        try:
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img_resized = cv2.resize(img, (tw, th), interpolation=cv2.INTER_LINEAR)
+            tensor = img_resized.astype('float32') / 255.0
+            tensor = np.transpose(tensor, (2,0,1))[None, ...]
+            input_name = sess.get_inputs()[0].name
+            outputs = sess.run(None, {input_name: tensor})
+            # 輕量摘要：只輸出第一個張量 shape 與前幾個值
+            if outputs:
+                arr = np.array(outputs[0])
+                preview = arr.flatten()[:6].tolist()
+                return {"shape": list(arr.shape), "preview": [float(x) for x in preview]}
+        except Exception as e:
+            logger.debug(f"edge inference {label} error: {e}")
+        return None
+
     def run_realtime_inference(self):
         """啟動攝影機即時推論 (僅使用姿態模型做風險分析)。"""
-        if not os.path.exists('compiled_pose_fall_detection.onnx') and not self._pose_session:
-            logger.warning("⚠️ 無姿態 compiled ONNX，請先使用 --download-compiled 或 --full-pipeline")
+        # 先嘗試載入全部 edge sessions
+        self._ensure_edge_sessions()
+        pose_ok = (
+            'pose_fall_detection' in self.onnx_sessions or
+            os.path.exists('compiled_pose_fall_detection.onnx') or
+            os.path.exists('compiled_pose_fall_detection.onnx.dlc') or
+            self._pose_session is not None
+        )
+        if not pose_ok:
+            logger.warning("⚠️ 無姿態 compiled ONNX(.dlc)，請先使用 --download-compiled 或 --full-pipeline")
             return
-        logger.info("🎥 啟動即時推論 (按 q 結束)")
+        logger.info("🎥 啟動即時推論 (按 q 結束) - 會嘗試使用 pose/face/hand Edge 模型")
         cap = cv2.VideoCapture(self.camera_index)
         if not cap.isOpened():
             logger.error("❌ 無法開啟攝影機")
@@ -601,6 +689,9 @@ class DragonXFallDetectionSystem:
                     logger.warning("⚠️ 讀取影格失敗")
                     break
                 result = self.comprehensive_fall_prevention_detection(frame)
+                # 額外 edge 推論 (face / hand)
+                face_info = self._edge_infer_generic('face_elderly_id', frame)
+                hand_info = self._edge_infer_generic('hand_emergency_gesture', frame)
                 frame_id += 1
                 if frame_id % 15 == 0:
                     now = time.time(); fps = 15.0 / (now - t_last); t_last = now
@@ -609,6 +700,10 @@ class DragonXFallDetectionSystem:
                 status = fa.get('message', 'N/A')
                 cv2.putText(overlay, f"FPS:{fps:.1f}", (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,255),2)
                 cv2.putText(overlay, status, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.7,(0,255,0),2)
+                if face_info:
+                    cv2.putText(overlay, f"Face:{face_info['shape']}", (10,90), cv2.FONT_HERSHEY_SIMPLEX, 0.55,(255,200,0),1)
+                if hand_info:
+                    cv2.putText(overlay, f"Hand:{hand_info['shape']}", (10,110), cv2.FONT_HERSHEY_SIMPLEX, 0.55,(0,200,255),1)
                 cv2.imshow('DragonX Edge Realtime', overlay)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     logger.info("👋 使用者結束即時推論")
