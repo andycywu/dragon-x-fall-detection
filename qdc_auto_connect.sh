@@ -1,3 +1,18 @@
+            # QNN backend DLL 自動偵測與設置
+            if [ $WINDOWS_OS -eq 1 ]; then
+                echo -e "${BLUE}🔍 嘗試自動偵測 QNN backend DLL...${NC}"
+                QNN_SDK_PATH=$(ssh_exec "echo %QNN_SDK_ROOT%")
+                if [[ ! -z "$QNN_SDK_PATH" && "$QNN_SDK_PATH" != "%QNN_SDK_ROOT%" ]]; then
+                    QNN_DLL_PATH=$(ssh_exec "powershell -NoProfile -Command \"Get-ChildItem -Path '$QNN_SDK_PATH' -Recurse -Filter QnnHtp.dll | Select-Object -First 1 -ExpandProperty FullName\"")
+                    if [[ ! -z "$QNN_DLL_PATH" ]]; then
+                        ssh_exec "setx QNN_BACKEND_PATH \"$QNN_DLL_PATH\"" >/dev/null 2>&1 && echo -e "${GREEN}✅ 已自動設 QNN_BACKEND_PATH=$QNN_DLL_PATH${NC}"
+                    else
+                        echo -e "${YELLOW}⚠️ 未找到 QnnHtp.dll，請確認 QNN SDK 安裝完整${NC}"
+                    fi
+                else
+                    echo -e "${YELLOW}⚠️ QNN_SDK_ROOT 未設，請先安裝 QNN SDK 並設環境變數${NC}"
+                fi
+            fi
 #!/bin/bash
 # QDC (Qualcomm Device Cloud) 自動連接腳本 - Mac 端
 # 此腳本用於從 Mac 端建立 SSH 隧道並連接到 QDC
@@ -29,6 +44,16 @@ LOCAL_ENV_FILE="${SCRIPT_DIR}/.env"
 LOCAL_API_TOKEN=""
 POST_INSTALL_CONFIG=0  # 預設不需安裝後再 configure，若初次失敗會設為1
 CONFIG_DIR_NAME=".qai_hub"  # QAI Hub CLI 實際使用的設定資料夾 (注意是底線 _ )
+PYTHON_TARGET_VERSION="3.11"          # 主要大版本/次版本 (升級至 3.11 ARM64)
+PYTHON_PATCH_VERSION="9"              # 指定修正版號 (官方 installer 組合需要)
+PYTHON_FULL_VERSION="${PYTHON_TARGET_VERSION}.${PYTHON_PATCH_VERSION}"  # 3.11.9
+PYTHON_REQUIRED_ARCH="ARM64"          # 目標架構
+REQUIRED_PY_PACKAGES=(numpy opencv-python onnxruntime onnxruntime-directml python-dotenv protobuf==4.25.3 qai-hub qai-hub-models)
+OPTIONAL_PY_PACKAGES=(psutil packaging)
+QNN_PROVIDER_TEST_SCRIPT='import onnxruntime as ort;print("QNNExecutionProvider" in ort.get_available_providers())'
+DIRECTML_PROVIDER_TEST_SCRIPT='import onnxruntime as ort;print("DmlExecutionProvider" in ort.get_available_providers())'
+
+echo -e "${BLUE}🔧 目標 Python 版本: ${PYTHON_TARGET_VERSION} / 目標架構: ${PYTHON_REQUIRED_ARCH}${NC}"
 
 # 嘗試從本地 .env 讀取 QAI_HUB_API_TOKEN
 if [ -f "$LOCAL_ENV_FILE" ]; then
@@ -177,20 +202,44 @@ else
     fi
 fi
 
-# 檢查用戶主目錄
-echo -e "${YELLOW}🔍 檢查用戶主目錄...${NC}"
-
-# 嘗試檢測操作系統類型
+# ===== 立即偵測遠端 OS 與架構 (統一安裝策略) =====
+echo -e "${YELLOW}� 探測遠端系統資訊...${NC}"
 OS_TYPE=$(ssh_exec "ver" 2>/dev/null)
 WINDOWS_OS=0
-
+REMOTE_OS_ARCH="UNKNOWN"
+REMOTE_OS_ARM64=0
 if [[ "$OS_TYPE" == *"Microsoft Windows"* ]]; then
-    echo -e "${BLUE}✅ 檢測到 Windows 操作系統${NC}"
     WINDOWS_OS=1
-    # Windows 環境下使用 %USERPROFILE%
+    REMOTE_OS_ARCH=$(ssh_exec "echo %PROCESSOR_ARCHITECTURE%" 2>/dev/null | tr -d '\r' | tr '[:lower:]' '[:upper:]')
+    if [ -z "$REMOTE_OS_ARCH" ]; then
+        REMOTE_OS_ARCH=$(ssh_exec "powershell -NoProfile -Command \"$env:PROCESSOR_ARCHITECTURE\"" 2>/dev/null | tr -d '\r' | tr '[:lower:]' '[:upper:]')
+    fi
+    [ -z "$REMOTE_OS_ARCH" ] && REMOTE_OS_ARCH="UNKNOWN"
+    if [ "$REMOTE_OS_ARCH" = "ARM64" ]; then
+        REMOTE_OS_ARM64=1
+        echo -e "${GREEN}✅ 遠端 Windows (ARM64)${NC}"
+    else
+        echo -e "${YELLOW}⚠️ 遠端 Windows 架構: $REMOTE_OS_ARCH (非 ARM64)${NC}"
+    fi
+else
+    echo -e "${CYAN}ℹ️ 非 Windows 環境 (暫以 Unix/Linux 流程)${NC}"
+fi
+
+# 統一決定 Python 安裝架構參數
+if [ $WINDOWS_OS -eq 1 ]; then
+    if [ $REMOTE_OS_ARM64 -eq 1 ]; then
+        WINGET_PY_ARCH="--architecture arm64"
+    else
+        WINGET_PY_ARCH="--architecture x64"
+    fi
+    echo -e "${BLUE}🛠️  之後 winget Python 安裝將使用: $WINGET_PY_ARCH${NC}"
+fi
+
+# 檢查用戶主目錄 (依平台)
+echo -e "${YELLOW}🔍 檢查用戶主目錄...${NC}"
+if [ $WINDOWS_OS -eq 1 ]; then
     USER_HOME_DIR=$(ssh_exec "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')
 else
-    # 嘗試獲取 Unix/Linux 環境下的 $HOME
     USER_HOME_DIR=$(ssh_exec "echo \$HOME" 2>/dev/null | tr -d '\r')
 fi
 
@@ -207,35 +256,51 @@ else
     echo -e "${GREEN}✅ 檢測到用戶主目錄: $USER_HOME_DIR${NC}"
 fi
 
-# === 自動上傳本地 test_images 目錄到 QDC (若存在) ===
+# === test_images 上傳選擇 (若存在) ===
 LOCAL_TEST_IMAGES_DIR="$SCRIPT_DIR/test_images"
 if [ -d "$LOCAL_TEST_IMAGES_DIR" ]; then
-    echo -e "${YELLOW}📤 發現本地 test_images 目錄，準備上傳到 QDC...${NC}"
-    # 統計檔案數
     FILE_COUNT=$(find "$LOCAL_TEST_IMAGES_DIR" -type f | wc -l | tr -d ' ')
     DIR_COUNT=$(find "$LOCAL_TEST_IMAGES_DIR" -type d | wc -l | tr -d ' ')
-    echo -e "${BLUE}ℹ️ 目錄統計: $DIR_COUNT 個子目錄, $FILE_COUNT 個檔案${NC}"
-    # 使用 -r 遞迴複製整個資料夾到使用者主目錄下 (保留目錄名稱)
-    scp -r -i "$SSH_KEY_PATH" -P $LOCAL_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$LOCAL_TEST_IMAGES_DIR" "$USERNAME@localhost:$USER_HOME_DIR" 2>&1
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ test_images 已上傳到 $USER_HOME_DIR/${NC}"
-        # 驗證遠端是否存在 (使用平台差異指令)
-        if [ $WINDOWS_OS -eq 1 ]; then
-            REMOTE_CHECK=$(ssh_exec "if exist \"$USER_HOME_DIR\\test_images\" (echo EXISTS) else (echo MISSING)")
-        else
-            REMOTE_CHECK=$(ssh_exec "[ -d '$USER_HOME_DIR/test_images' ] && echo EXISTS || echo MISSING")
-        fi
-        if [[ "$REMOTE_CHECK" == *"EXISTS"* ]]; then
-            echo -e "${GREEN}📂 遠端 test_images 驗證成功${NC}"
-        else
-            echo -e "${YELLOW}⚠️ 遠端似乎未找到 test_images，請稍後手動檢查${NC}"
-        fi
-    else
-        echo -e "${RED}❌ 上傳 test_images 失敗 (可稍後手動執行)${NC}"
-        echo -e "${BLUE}手動指令範例:${NC} scp -r -i $SSH_KEY_PATH -P $LOCAL_PORT test_images $USERNAME@localhost:$USER_HOME_DIR" 
-    fi
+    echo -e "${YELLOW}📤 偵測到 test_images (檔案: $FILE_COUNT)${NC}"
+    read -t 10 -p "上傳 test_images? (a=全部 / n=指定前N個 / s=跳過) [a/n/s]: " TI_DECISION || TI_DECISION="a"
+    case "$TI_DECISION" in
+        n|N)
+            read -p "輸入要上傳的前 N 個檔案數 (默認 10): " TI_N
+            TI_N=${TI_N:-10}
+            echo -e "${BLUE}🔧 將上傳前 $TI_N 個檔案到遠端 test_images_partial${NC}"
+            TMP_LIST=$(find "$LOCAL_TEST_IMAGES_DIR" -type f | head -n $TI_N)
+            TAR_TMP="$SCRIPT_DIR/test_images_partial_upload"
+            rm -rf "$TAR_TMP" 2>/dev/null || true
+            mkdir -p "$TAR_TMP"
+            I=0
+            while IFS= read -r P; do
+                BN=$(basename "$P")
+                cp "$P" "$TAR_TMP/$BN"
+            done <<< "$TMP_LIST"
+            scp -r -i "$SSH_KEY_PATH" -P $LOCAL_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$TAR_TMP" "$USERNAME@localhost:$USER_HOME_DIR/test_images_partial" 2>&1 && echo -e "${GREEN}✅ 已上傳部分測試影像 -> test_images_partial${NC}" || echo -e "${RED}❌ 部分上傳失敗${NC}"
+            rm -rf "$TAR_TMP" || true
+            ;;
+        s|S)
+            echo -e "${CYAN}ℹ️ 跳過 test_images 上傳${NC}"
+            ;;
+        *)
+            echo -e "${BLUE}🌐 上傳全部 test_images...${NC}"
+            scp -r -i "$SSH_KEY_PATH" -P $LOCAL_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$LOCAL_TEST_IMAGES_DIR" "$USERNAME@localhost:$USER_HOME_DIR" 2>&1
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}✅ test_images 已上傳到 $USER_HOME_DIR/${NC}"
+                if [ $WINDOWS_OS -eq 1 ]; then
+                    REMOTE_CHECK=$(ssh_exec "if exist \"$USER_HOME_DIR\\test_images\" (echo EXISTS) else (echo MISSING)")
+                else
+                    REMOTE_CHECK=$(ssh_exec "[ -d '$USER_HOME_DIR/test_images' ] && echo EXISTS || echo MISSING")
+                fi
+                [[ "$REMOTE_CHECK" == *"EXISTS"* ]] && echo -e "${GREEN}📂 遠端 test_images 驗證成功${NC}" || echo -e "${YELLOW}⚠️ 未驗證到 test_images${NC}"
+            else
+                echo -e "${RED}❌ 上傳 test_images 失敗 (可稍後手動執行)${NC}"
+            fi
+            ;;
+    esac
 else
-    echo -e "${CYAN}ℹ️ 未找到本地 test_images 目錄，跳過自動上傳${NC}"
+    echo -e "${CYAN}ℹ️ 未找到本地 test_images 目錄，跳過上傳區段${NC}"
 fi
 
 # 準備設置指南
@@ -260,8 +325,8 @@ if [ $WINDOWS_OS -eq 1 ]; then
         GIT_INSTALLED=1
     fi
     
-    # 檢查 Python 是否已安裝 - 改進版本
-    echo -e "${BLUE}ℹ️ 檢查 Python 安裝狀態...${NC}"
+    # 檢查 Python 是否已安裝並且為 ARM64 (若 OS 支援)
+    echo -e "${BLUE}ℹ️ 檢查 Python (ARM64) 安裝狀態...${NC}"
     
     # 首先檢查 python 命令
     PYTHON_CHECK=$(ssh_exec "where python 2>nul")
@@ -269,8 +334,13 @@ if [ $WINDOWS_OS -eq 1 ]; then
     if [ ! -z "$PYTHON_CHECK" ]; then
         PYTHON_CMD="python"
         PYTHON_VERSION=$(ssh_exec "$PYTHON_CMD --version 2>&1")
-        echo -e "${GREEN}✅ Python 已安裝: $PYTHON_VERSION${NC}"
-        PYTHON_INSTALLED=1
+        if echo "$PYTHON_VERSION" | grep -qi "was not found"; then
+            echo -e "${YELLOW}⚠️ 偵測到 Windows Store 佔位 python (實際未安裝)${NC}"
+            PYTHON_INSTALLED=0
+        else
+            echo -e "${GREEN}✅ Python 已安裝: $PYTHON_VERSION${NC}"
+            PYTHON_INSTALLED=1
+        fi
     else
         # 如果 python 不存在，檢查 py 命令
         PY_CHECK=$(ssh_exec "where py 2>nul")
@@ -291,7 +361,71 @@ if [ $WINDOWS_OS -eq 1 ]; then
     if [ $PYTHON_INSTALLED -eq 1 ]; then
         echo -e "${BLUE}ℹ️ 使用 Python 命令: $PYTHON_CMD${NC}"
 
-        echo -e "${YELLOW}🔍 檢查 python-dotenv 是否已安裝...${NC}"
+        # 偵測 Python 架構 (透過 platform.machine())
+        PY_MACHINE=$(ssh_exec "$PYTHON_CMD -c \"import platform;print(platform.machine())\"" 2>/dev/null | tr -d '\r')
+        PY_VERSION_STR=$(ssh_exec "$PYTHON_CMD -c \"import sys;print(sys.version.split()[0])\"" 2>/dev/null | tr -d '\r')
+        echo -e "${BLUE}ℹ️ 遠端 Python 版本: ${PY_VERSION_STR} / 機器架構: ${PY_MACHINE}${NC}"
+        NEED_ARM64_REINSTALL=0
+        if [[ ! "$PY_MACHINE" =~ [Aa][Rr][Mm]64 ]]; then
+            echo -e "${YELLOW}⚠️ 當前 Python 不是 ARM64 (偵測為: $PY_MACHINE)${NC}"
+            NEED_ARM64_REINSTALL=1
+        fi
+        if [[ ! "$PY_VERSION_STR" == ${PYTHON_TARGET_VERSION}* ]]; then
+            echo -e "${YELLOW}⚠️ Python 版本與目標 ${PYTHON_TARGET_VERSION} 不符${NC}"
+            NEED_ARM64_REINSTALL=1
+        fi
+            if [ $NEED_ARM64_REINSTALL -eq 1 ]; then
+                # 若已存在錯誤架構 Python 且 OS 為 ARM64，可選擇嘗試卸載
+                if [ "$REMOTE_OS_ARM64" = "1" ] && [[ "$PY_MACHINE" != *"ARM64"* ]]; then
+                    echo -e "${YELLOW}⚠️ 偵測到 OS=ARM64 但 Python=$PY_MACHINE，可選擇卸載 x64 Python 後再裝 ARM64。${NC}"
+                    read -t 8 -p "是否嘗試 winget 卸載現有 Python 3.11? (y/N): " UNINSTALL_DECISION || true
+                    if [[ "$UNINSTALL_DECISION" == "y" || "$UNINSTALL_DECISION" == "Y" ]]; then
+                        echo -e "${BLUE}�️  嘗試卸載現有 Python 3.11 (x64)...${NC}"
+                        ssh_exec "winget uninstall --id Python.Python.${PYTHON_TARGET_VERSION} --silent" >/dev/null 2>&1 || true
+                        sleep 2
+                    fi
+                    # 進一步提供官方安裝程式強制 ARM64 方案
+                    echo -e "${YELLOW}💡 可嘗試下載 python-${PYTHON_FULL_VERSION}-arm64.exe 官方安裝程式並靜默安裝 (若 winget 仍裝成 x64)。${NC}"
+                    read -t 12 -p "是否嘗試官方 ARM64 安裝程式強制重裝？ (y/N): " FORCE_ARM64 || true
+                    if [[ "$FORCE_ARM64" == "y" || "$FORCE_ARM64" == "Y" ]]; then
+                        echo -e "${BLUE}🌐 下載 ARM64 安裝程式...${NC}"
+                        ssh_exec "powershell -NoProfile -Command \"$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri https://www.python.org/ftp/python/${PYTHON_FULL_VERSION}/python-${PYTHON_FULL_VERSION}-arm64.exe -OutFile $env:TEMP\\py_arm64_setup.exe\"" >/dev/null 2>&1 || true
+                        echo -e "${BLUE}📦 靜默安裝 ARM64 Python...${NC}"
+                        ssh_exec "powershell -NoProfile -Command \"Start-Process -FilePath $env:TEMP\\py_arm64_setup.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0' -Wait\"" >/dev/null 2>&1 || true
+                        echo -e "${BLUE}🔁 重新檢測 Python 架構...${NC}"
+                        PY_MACHINE=$(ssh_exec "$PYTHON_CMD -c \"import platform;print(platform.machine())\"" 2>/dev/null | tr -d '\r')
+                        echo -e "${BLUE}📊 目前 Python machine: $PY_MACHINE${NC}"
+                        if [[ "$PY_MACHINE" =~ [Aa][Rr][Mm]64 ]]; then
+                            echo -e "${GREEN}✅ ARM64 Python 重新安裝成功${NC}"
+                        else
+                            echo -e "${RED}❌ 仍非 ARM64 Python，可能 PATH 仍指向舊版本，需手動清理環境變數與舊安裝路徑${NC}"
+                        fi
+                    fi
+                fi
+                if [ $WINDOWS_OS -eq 1 ]; then
+                    echo -e "${YELLOW}🔄 使用 winget 安裝指定架構 Python ${PYTHON_TARGET_VERSION} (${WINGET_PY_ARCH})...${NC}"
+                    ssh_exec "winget install --id Python.Python.${PYTHON_TARGET_VERSION} --source winget --silent --override \"InstallAllUsers=1 PrependPath=1\" $WINGET_PY_ARCH" >/dev/null 2>&1 || true
+                fi
+            echo -e "${BLUE}ℹ️ 重新載入 PATH 後再檢測 python ...${NC}"
+            # 再次檢測 (可能需要新 session，但先嘗試)
+            PYTHON_CMD="python"
+            PY_MACHINE=$(ssh_exec "$PYTHON_CMD -c \"import platform;print(platform.machine())\"" 2>/dev/null | tr -d '\r')
+            PY_VERSION_STR=$(ssh_exec "$PYTHON_CMD -c \"import sys;print(sys.version.split()[0])\"" 2>/dev/null | tr -d '\r')
+            echo -e "${BLUE}ℹ️ 安裝後 Python 版本: ${PY_VERSION_STR} / 架構: ${PY_MACHINE}${NC}"
+            if [[ "$PY_MACHINE" =~ [Aa][Rr][Mm]64 ]]; then
+                echo -e "${GREEN}✅ 已取得 ARM64 Python${NC}"
+            else
+                if [ "$REMOTE_OS_ARM64" = "1" ]; then
+                    echo -e "${RED}❌ 仍非 ARM64 Python，請手動下載官方 ARM64 安裝程式 (python.org) 並重新執行腳本${NC}"
+                else
+                    echo -e "${YELLOW}ℹ️ 因 OS 非 ARM64，僅能使用 x64 Python；QNN 原生加速將受限${NC}"
+                fi
+            fi
+        else
+            echo -e "${GREEN}✅ Python 已符合 ARM64 + 版本需求${NC}"
+        fi
+
+        echo -e "${YELLOW}�🔍 檢查 python-dotenv 是否已安裝...${NC}"
         DOTENV_CHECK=$(ssh_exec "$PYTHON_CMD -c \"import dotenv; print('OK')\" 2>nul")
         if [[ "$DOTENV_CHECK" == *"OK"* ]]; then
             echo -e "${GREEN}✅ python-dotenv 已存在${NC}"
@@ -332,24 +466,29 @@ if not errorlevel 1 (
   echo Git installation requested. Please check if installed.
 )
 
-rem Check Python 3.10
-echo Checking Python 3.10...
+rem Check Python 3.11
+echo Checking Python 3.11...
 where python >nul 2>&1
 if not errorlevel 1 (
   python --version
-  echo Checking if Python 3.10 is installed...
-  python -c "import sys; print(sys.version)" | findstr "3.10" >nul
+    echo Checking if Python 3.11 is installed...
+    python -c "import sys; print(sys.version)" | findstr "3.11" >nul
   if not errorlevel 1 (
-    echo Python 3.10 is available as 'python'
+    echo Python 3.11 is available as 'python'
     goto CLONE_REPO
   ) else (
-    echo Current Python is not version 3.10
+    echo Current Python is not version 3.11
   )
 )
 
-echo Installing Python 3.10 using winget...
-winget install --id Python.Python.3.10 --source winget --silent
-echo Python 3.10 installation requested. This may take a few minutes.
+echo Detecting OS architecture...
+for /f "tokens=*" %%A in ('echo %PROCESSOR_ARCHITECTURE%') do set CURR_ARCH=%%A
+echo Current machine arch: %CURR_ARCH%
+set PY_ARCH_ARG=--architecture arm64
+if /I NOT "%CURR_ARCH%"=="ARM64" set PY_ARCH_ARG=--architecture x64
+echo Installing Python 3.11 with %PY_ARCH_ARG% ...
+winget install --id Python.Python.3.11 --source winget --silent %PY_ARCH_ARG%
+echo Python 3.11 installation requested. This may take a few minutes.
 echo After installation, you may need to restart the terminal.
 
 :CLONE_REPO
@@ -470,69 +609,145 @@ EOL
     
     # 檢查是否需要安裝 Python 套件
     if [ $PYTHON_INSTALLED -eq 1 ]; then
-        echo -e "${YELLOW}🔍 檢查 Python 套件...${NC}"
+    echo -e "${YELLOW}🔍 檢查 / 安裝 ARM64 Python 套件 (含 onnxruntime / QNN 需求)...${NC}"
         
         # 檢查 numpy 套件，使用確定的 Python 命令
         NUMPY_CHECK=$(ssh_exec "$PYTHON_CMD -c \"import numpy; print('OK')\" 2>nul")
         
         if [[ "$NUMPY_CHECK" == *"OK"* ]]; then
-            echo -e "${GREEN}✅ Python 核心套件已安裝${NC}"
+            echo -e "${GREEN}✅ 偵測到部分套件，將補齊 ARM64 需求${NC}"
         else
-            echo -e "${YELLOW}⚠️ Python 套件可能未安裝，是否安裝？ (y/n)${NC}"
-            read -p "安裝 Python 套件？ (y/n): " INSTALL_PACKAGES
-            
-            if [ "$INSTALL_PACKAGES" = "y" ]; then
-                echo -e "${BLUE}ℹ️ 安裝 Python 套件，這可能需要一些時間...${NC}"
-                
-                # 確保使用 Python 3.10
-                PYTHON_CMD="C:\\Users\\HCKTest\\AppData\\Local\\Programs\\Python\\Python310\\python.exe"
-                echo -e "${BLUE}ℹ️ 使用 Python 3.10: $PYTHON_CMD${NC}"
-                
-                # 使用單獨的命令安裝每個套件，避免一個失敗導致全部失敗
-                echo -e "${BLUE}ℹ️ 安裝 numpy...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install numpy"
-                
-                echo -e "${BLUE}ℹ️ 安裝 opencv-python...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install opencv-python"
-                
-                echo -e "${BLUE}ℹ️ 安裝 onnxruntime...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install onnxruntime"
-                
-                echo -e "${BLUE}ℹ️ 安裝 qai-hub 套件與 python-dotenv...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install -U python-dotenv qai-hub qai-hub-models"
+            echo -e "${YELLOW}⚠️ 尚未安裝核心套件${NC}"
+        fi
 
-                # 再次確保 python-dotenv 存在
-                DOTENV_CHECK_POST=$(ssh_exec "$PYTHON_CMD -c \"import dotenv; print('OK')\" 2>nul")
-                if [[ "$DOTENV_CHECK_POST" != *"OK"* ]]; then
-                    echo -e "${YELLOW}⚠️ 再嘗試單獨安裝 python-dotenv...${NC}"
-                    ssh_exec "\"$PYTHON_CMD\" -m pip install python-dotenv"
+    read -p "是否進行 ARM64/目前架構 Python 套件完整安裝/更新？ (y/n): " INSTALL_PACKAGES
+        if [ "$INSTALL_PACKAGES" = "y" ]; then
+            # 一次升級 pip
+            ssh_exec "$PYTHON_CMD -m pip install --upgrade pip" >/dev/null 2>&1 || true
+            if [ "$REMOTE_OS_ARM64" = "1" ]; then
+                echo -e "${BLUE}ℹ️ 安裝 / 更新必要套件 (ARM64 wheel) ...${NC}"
+            else
+                echo -e "${YELLOW}ℹ️ 遠端非 ARM64 OS，將安裝 x64 版套件 (QNN 原生 NPU 可能無法啟用) ...${NC}"
+            fi
+            INSTALL_FAIL_LIST=()
+            # 第一階段: numpy, protobuf
+            for PKG in numpy "protobuf==4.25.3"; do
+                echo -e "${BLUE}→ $PKG${NC}"
+                ssh_exec "$PYTHON_CMD -m pip install --no-cache-dir --only-binary=:all: --upgrade $PKG" >/dev/null 2>&1 || INSTALL_FAIL_LIST+=("$PKG:install")
+                IMPORT_NAME="$PKG"; [ "$PKG" = "protobuf==4.25.3" ] && IMPORT_NAME="google.protobuf"
+                IMPORT_TEST=$(ssh_exec "$PYTHON_CMD -c 'import $IMPORT_NAME; print(\"OK\")'" 2>/dev/null | tr -d '\r')
+                if [[ "$IMPORT_TEST" == *"OK"* ]]; then
+                    echo -e "${GREEN}   ✔ import $IMPORT_NAME 成功${NC}"
+                else
+                    echo -e "${RED}   ✖ import $IMPORT_NAME 失敗${NC}"
+                    INSTALL_FAIL_LIST+=("$PKG:import")
                 fi
-                
-                echo -e "${BLUE}ℹ️ 安裝 protobuf...${NC}"
-                ssh_exec "cd C:\\dragon-x-fall-detection && \"$PYTHON_CMD\" -m pip install \"protobuf>=4.25.3\""
-                
-                # 若先前 configure 失敗且有 token，安裝後再嘗試一次
-                if [ ! -z "$LOCAL_API_TOKEN" ] && [ "$POST_INSTALL_CONFIG" = "1" ]; then
+            done
+            # 第二階段: onnxruntime, onnxruntime-directml, opencv-python
+            for PKG in onnxruntime onnxruntime-directml opencv-python; do
+                echo -e "${BLUE}→ $PKG${NC}"
+                ssh_exec "$PYTHON_CMD -m pip install --no-cache-dir --only-binary=:all: --upgrade $PKG" >/dev/null 2>&1 || INSTALL_FAIL_LIST+=("$PKG:install")
+                IMPORT_NAME="$PKG"; [ "$PKG" = "onnxruntime-directml" ] && IMPORT_NAME="onnxruntime"; [ "$PKG" = "opencv-python" ] && IMPORT_NAME="cv2"
+                IMPORT_TEST=$(ssh_exec "$PYTHON_CMD -c 'import $IMPORT_NAME; print(\"OK\")'" 2>/dev/null | tr -d '\r')
+                if [[ "$IMPORT_TEST" == *"OK"* ]]; then
+                    echo -e "${GREEN}   ✔ import $IMPORT_NAME 成功${NC}"
+                else
+                    echo -e "${RED}   ✖ import $IMPORT_NAME 失敗${NC}"
+                    INSTALL_FAIL_LIST+=("$PKG:import")
+                fi
+            done
+            # 第三階段: qai-hub, qai-hub-models, python-dotenv
+            for PKG in qai-hub qai-hub-models python-dotenv; do
+                echo -e "${BLUE}→ $PKG${NC}"
+                ssh_exec "$PYTHON_CMD -m pip install --no-cache-dir --upgrade $PKG" >/dev/null 2>&1 || INSTALL_FAIL_LIST+=("$PKG:install")
+                IMPORT_NAME="$PKG"; [ "$PKG" = "python-dotenv" ] && IMPORT_NAME="dotenv"
+                IMPORT_TEST=$(ssh_exec "$PYTHON_CMD -c 'import $IMPORT_NAME; print(\"OK\")'" 2>/dev/null | tr -d '\r')
+                if [[ "$IMPORT_TEST" == *"OK"* ]]; then
+                    echo -e "${GREEN}   ✔ import $IMPORT_NAME 成功${NC}"
+                else
+                    echo -e "${RED}   ✖ import $IMPORT_NAME 失敗${NC}"
+                    INSTALL_FAIL_LIST+=("$PKG:import")
+                fi
+            done
+            # 自動產生 requirements_arm64.txt
+            echo -e "${BLUE}📝 產生 requirements_arm64.txt...${NC}"
+            echo "numpy\nprotobuf==4.25.3\nonnxruntime\nonnxruntime-directml\nopencv-python\nqai-hub\nqai-hub-models\npython-dotenv" > "$SCRIPT_DIR/requirements_arm64.txt"
+            if [ ${#INSTALL_FAIL_LIST[@]} -gt 0 ]; then
+                echo -e "${RED}❌ 以下套件安裝或匯入失敗:${NC}"
+                for F in "${INSTALL_FAIL_LIST[@]}"; do echo "  - $F"; done
+                echo -e "${YELLOW}👉 建議手動逐一重試，如:${NC}"
+                echo "    $PYTHON_CMD -m pip install --no-cache-dir --upgrade <pkg>"
+                echo -e "${YELLOW}若為 onnxruntime 失敗，可嘗試先升級 pip/setuptools/wheel 再重裝。${NC}"
+                echo -e "${YELLOW}若為 opencv-python，可改用 opencv-python-headless 或指定舊版。${NC}"
+            else
+                echo -e "${GREEN}✅ 必要套件全部可匯入${NC}"
+            fi
+            if [ ${#OPTIONAL_PY_PACKAGES[@]} -gt 0 ]; then
+                echo -e "${BLUE}ℹ️ 安裝可選套件...${NC}"
+                for PKG in "${OPTIONAL_PY_PACKAGES[@]}"; do
+                    ssh_exec "$PYTHON_CMD -m pip install --no-cache-dir --upgrade $PKG" >/dev/null 2>&1 || true
+                done
+            fi
+
+            # 再測試部分 provider 可用性
+            QNN_AVAILABLE=$(ssh_exec "$PYTHON_CMD -c \"$QNN_PROVIDER_TEST_SCRIPT\"" 2>/dev/null | tr -d '\r')
+            DML_AVAILABLE=$(ssh_exec "$PYTHON_CMD -c \"$DIRECTML_PROVIDER_TEST_SCRIPT\"" 2>/dev/null | tr -d '\r')
+            echo -e "${BLUE}ℹ️ Provider 測試: QNN=$QNN_AVAILABLE / DirectML=$DML_AVAILABLE${NC}"
+            if [ "$QNN_AVAILABLE" != "True" ]; then
+                echo -e "${YELLOW}⚠️ QNNExecutionProvider 尚不可用${NC}"
+                echo -e "${BLUE}👉 請確認已在裝置安裝 Qualcomm AI Engine Direct (QNN) SDK 並設定環境變數:${NC}"
+                echo -e "    setx QNN_SDK_ROOT C:\\Qualcomm\\AIStack\\QNN   (或實際安裝路徑)"
+                echo -e "    並確保 provider options 中 backend_path 指向對應 dll (例如 QnnHtp.dll)"
+            else
+                echo -e "${GREEN}✅ QNNExecutionProvider 可用${NC}"
+            fi
+            if [ "$DML_AVAILABLE" != "True" ]; then
+                echo -e "${YELLOW}ℹ️ DirectML 未啟用 (可能不影響 QNN 使用)${NC}"
+            fi
+
+            # 安裝結果總結
+            echo -e "${BLUE}📦 安裝結果總結:${NC}"
+            if [ ${#INSTALL_FAIL_LIST[@]} -gt 0 ]; then
+                echo -e "${RED}  ✖ 失敗套件數: ${#INSTALL_FAIL_LIST[@]}${NC}"
+            else
+                echo -e "${GREEN}  ✔ 全部必要套件匯入成功${NC}"
+            fi
+            echo -e "${BLUE}  QNN Provider: ${NC}$([ "$QNN_AVAILABLE" == "True" ] && echo "✅" || echo "❌")"
+            echo -e "${BLUE}  DirectML Provider: ${NC}$([ "$DML_AVAILABLE" == "True" ] && echo "✅" || echo "❌")"
+            if [ ${#INSTALL_FAIL_LIST[@]} -gt 0 ]; then
+                echo -e "${YELLOW}🛠 建議: 針對失敗套件逐一手動重試並查看錯誤訊息。${NC}"
+            fi
+            # 自動修復 Windows 遠端 PATH
+            if [ $WINDOWS_OS -eq 1 ]; then
+                echo -e "${BLUE}🔧 嘗試自動修復遠端 PATH...${NC}"
+                SCRIPTS_PATH_WIN="%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python311\\Scripts"
+                PATH_CHECK=$(ssh_exec "echo %PATH% | findstr /I /C:\"$SCRIPTS_PATH_WIN\"")
+                if [ -z "$PATH_CHECK" ]; then
+                    ssh_exec "setx PATH \"%PATH%;$SCRIPTS_PATH_WIN\"" >/dev/null 2>&1 && echo -e "${GREEN}✅ 已將 Scripts 目錄加入 PATH${NC}"
+                else
+                    echo -e "${GREEN}✅ Scripts 目錄已在 PATH${NC}"
+                fi
+            fi
+
+            # 若先前 configure 失敗且有 token，安裝後再嘗試一次
+            if [ ! -z "$LOCAL_API_TOKEN" ] && [ "$POST_INSTALL_CONFIG" = "1" ]; then
+                if command -v ssh >/dev/null 2>&1; then
                     echo -e "${BLUE}ℹ️ 安裝後重試 QAI Hub configure...${NC}"
                     CONFIG_RESULT2=$(ssh_exec "qai-hub configure --api_token $LOCAL_API_TOKEN" 2>&1)
                     if [[ "$CONFIG_RESULT2" == *"Successfully"* ]] || [[ "$CONFIG_RESULT2" == *"success"* ]]; then
                         echo -e "${GREEN}✅ 第二次 configure 成功${NC}"
                     else
                         echo -e "${RED}❌ 仍無法 configure，請手動在 QDC 執行: qai-hub configure --api_token YOUR_TOKEN${NC}"
+                        echo -e "${YELLOW}🔧 除錯建議:${NC}"
+                        echo "  1. 確認 Scripts 目錄 (如 C:\\Users\\<USER>\\AppData\\Local\\Programs\\Python\\Python311\\Scripts) 已加入 PATH"
+                        echo "  2. 執行: $PYTHON_CMD -m pip install --upgrade pip setuptools wheel"
+                        echo "  3. 重裝 CLI: $PYTHON_CMD -m pip install -U qai-hub qai-hub-models"
+                        echo "  4. 再次執行: qai-hub configure --api_token <TOKEN>"
                     fi
                 fi
-
-                # 再次檢查 numpy 是否已安裝
-                NUMPY_CHECK=$(ssh_exec "\"$PYTHON_CMD\" -c \"import numpy; print('OK')\" 2>nul")
-                
-                if [[ "$NUMPY_CHECK" == *"OK"* ]]; then
-                    echo -e "${GREEN}✅ Python 核心套件安裝成功${NC}"
-                else
-                    echo -e "${RED}❌ Python 套件安裝可能不完整${NC}"
-                fi
-            else
-                echo -e "${BLUE}ℹ️ 跳過 Python 套件安裝${NC}"
             fi
+        else
+            echo -e "${BLUE}ℹ️ 跳過 ARM64 套件安裝${NC}"
         fi
     fi
 
