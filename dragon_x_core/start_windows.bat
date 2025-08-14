@@ -61,6 +61,7 @@ echo 1) 標準版 (不建議在 Windows 上使用)
 echo 2) Windows 版
 echo 3) 跨平台兼容版
 echo 4) Dragon X 強化版推論啟動 (QAI Hub/相機回退)
+echo 5) QAI Hub MobileNet 官方示範 + 量化 / 延遲報表
 echo q) 退出
 
 set /p CHOICE=請選擇 [1-4, q]: 
@@ -70,6 +71,7 @@ if "%CHOICE%"=="2" goto RUN_WIN
 if "%CHOICE%"=="3" goto RUN_COMP
 if /i "%CHOICE%"=="q" goto QUIT
 if "%CHOICE%"=="4" goto RUN_ENHANCED
+if "%CHOICE%"=="5" goto RUN_MOBILENET
 
 echo 無效選擇，退出...
 goto DEACT
@@ -97,6 +99,23 @@ if exist ..\run_dragon_x_real_inference_ascii_fixed.bat (
 ) else (
     echo 未找到統一啟動器：..\run_dragon_x_real_inference_ascii_fixed.bat
 )
+goto DEACT
+
+:RUN_MOBILENET
+echo 啟動 QAI Hub MobileNet 官方示範 (含量化/延遲報表)...
+REM 切換到根目錄並執行示範腳本
+pushd ..
+if exist qai_hub_mobilenet_demo.py (
+    python qai_hub_mobilenet_demo.py || echo 示範主流程失敗
+) else (
+    echo 未找到 qai_hub_mobilenet_demo.py
+)
+if exist mobilenet_quantize_report.py (
+    python mobilenet_quantize_report.py || echo 量化與報表腳本失敗
+) else (
+    echo 未找到 mobilenet_quantize_report.py (將跳過量化/報表)
+)
+popd
 goto DEACT
 
 :DEACT

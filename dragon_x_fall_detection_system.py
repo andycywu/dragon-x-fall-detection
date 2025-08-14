@@ -54,6 +54,7 @@ class DragonXFallDetectionSystem:
 
         if self.full_pipeline:
             logger.info("🧪 啟動完整Pipeline (Compile → Profile → Link[可選])")
+            # 先等待並依序提交 profile，再嘗試 link
             self._submit_profile_jobs_for_all()
             self._attempt_link_jobs_cli()
             if self.wait_for_jobs:
@@ -448,6 +449,10 @@ class DragonXFallDetectionSystem:
             if model_label in self.profile_jobs:
                 continue
             try:
+                # 等待單一 compile job 完成後再送 profiling (避免 'model not compiled' 錯誤)
+                logger.info(f"⏳ 等待編譯完成以便 Profiling: {model_label} ({compile_job.job_id}) ...")
+                self._wait_for_single_job(compile_job, f"compile:{model_label}")
+                logger.info(f"✅ 編譯已完成，提交 Profiling: {model_label}")
                 # 嘗試從原始模型字典找到對應 component
                 component_key = None
                 if 'pose' in model_label:
@@ -503,15 +508,30 @@ class DragonXFallDetectionSystem:
             model_label = key.replace('_job', '')
             if model_label in self.link_jobs:
                 continue
+            # 優先使用 compile job id (多旗標嘗試)；若失敗再回退 model id
             model_id = getattr(getattr(compile_job, 'model', None), 'model_id', None)
-            if not model_id:
-                continue
-            base_cmd = [cli, 'submit-link-job', '--model-id', model_id, '--device', device_name]
-            if device_os:
-                base_cmd += ['--device-os', str(device_os)]
+            compile_job_id = getattr(compile_job, 'job_id', None)
+            variant_cmds = []
+            # 嘗試可能的旗標組合 (依序)：--compile-job-id, --job-id, --model, --model-id
+            if compile_job_id:
+                variant_cmds.append([cli, 'submit-link-job', '--compile-job-id', compile_job_id, '--device', device_name])
+                variant_cmds.append([cli, 'submit-link-job', '--job-id', compile_job_id, '--device', device_name])
+            if model_id:
+                variant_cmds.append([cli, 'submit-link-job', '--model', model_id, '--device', device_name])
+                variant_cmds.append([cli, 'submit-link-job', '--model-id', model_id, '--device', device_name])
+            # 加上 device-os
+            enriched = []
+            for c in variant_cmds:
+                if device_os:
+                    enriched.append(c + ['--device-os', str(device_os)])
+                enriched.append(c)
+            variant_cmds = enriched
 
-            # 優先嘗試 JSON 輸出（如果 CLI 支援）
-            variants = [base_cmd + ['--output', 'json'], base_cmd]
+            # 每個 variant 再試一次 JSON 輸出
+            variants = []
+            for c in variant_cmds:
+                variants.append(c + ['--output', 'json'])
+                variants.append(c)
             submitted = False
             for cmd in variants:
                 try:
@@ -559,6 +579,23 @@ class DragonXFallDetectionSystem:
                     'raw_output': raw_capture[:500] if 'raw_capture' in locals() else 'no_output'
                 }
                 logger.warning(f"⚠️ 無法解析 Link Job ID ({model_label}) - 已記錄 raw_output")
+
+    def _wait_for_single_job(self, job_obj, label: str, timeout: int = 1800, poll: int = 10):
+        """輪詢等待單一 job 完成。timeout 秒後放棄 (標記為 still_running)。"""
+        start = time.time()
+        while True:
+            try:
+                job_obj.wait(timeout=1)
+                return True
+            except Exception:
+                pass
+            elapsed = time.time() - start
+            if elapsed >= timeout:
+                logger.warning(f"⚠️ 等待超時 ({timeout}s) job 仍未完成: {label}")
+                return False
+            if int(elapsed) % (poll) == 0:
+                logger.info(f"⏳ {label} 進行中... 已等待 {int(elapsed)}s")
+            time.sleep(1)
 
     def wait_for_all_jobs(self):
         """等待所有 compile / profile job 完成（link 為 CLI 暫不輪詢）。"""
