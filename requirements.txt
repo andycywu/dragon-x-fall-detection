@@ -2,7 +2,9 @@
 # Qualcomm Snapdragon X Elite優化版依賴包 (ARM64-optimized, wheel-friendly versions to avoid source compilation)
 
 # Core AI Framework 核心AI框架
-onnxruntime==1.18.0
+onnxruntime
+onnxruntime-directml
+onnxruntime-qnn 
 # 以下加速器將由 install_platform_accelerators.py 自動安裝:
 # - Windows: onnxruntime-directml (x64/ARM64)
 # - Windows ARM64: onnxruntime-qnn (Snapdragon)
