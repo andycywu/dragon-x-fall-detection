@@ -1,66 +1,62 @@
-############################################################
-# Dragon X Fall Detection - Windows / Snapdragon X Elite 依賴清單
-# 分層: 核心 → QAI Hub → 拓展(語音/視覺/Web) → 可選高風險
-# 安裝策略: 先核心 + QAI Hub；其他視情況追加。
-############################################################
-
-# ========== 核心必備 ==========
 numpy>=1.26.0
-opencv-python>=4.9.0.80
-Pillow>=10.2.0
-requests>=2.31.0
-prettytable>=3.10.0
-python-dotenv>=1.0.1
-# ========== PyTorch (CPU) ==========
-# 若官方釋出 Windows ARM64 專用輪子，pip 會自動取得；
-# 如需特定 index (僅 CPU): --index-url https://download.pytorch.org/whl/cpu
 torch
-torchvision
+asttokens==3.0.0
+colorama==0.4.6
+coloredlogs==15.0.1
+comm==0.2.3
+debugpy==1.8.16
+decorator==5.2.1
+executing==2.2.0
+filelock==3.19.1
+flatbuffers==25.2.10
+fsspec==2025.7.0
+humanfriendly==10.0
+iniconfig==2.1.0
+ipykernel==6.30.1
+ipython==9.4.0
+ipython_pygments_lexers==1.1.1
+jedi==0.19.2
+Jinja2==3.1.6
+jupyter_client==8.6.3
+jupyter_core==5.8.1
+MarkupSafe==3.0.2
+matplotlib-inline==0.1.7
+mpmath==1.3.0
+nest-asyncio==1.6.0
+netron==8.2.1
+networkx==3.5
+numpy==2.3.2
+onnxruntime-qnn==1.20.1
+packaging==25.0
+parso==0.8.4
+pillow==11.1.0
+platformdirs==4.3.8
+pluggy==1.6.0
+prompt_toolkit==3.0.51
+protobuf==6.32.0
+psutil==7.0.0
+pure_eval==0.2.3
+Pygments==2.19.2
+pyreadline3==3.5.4
+pytest==8.3.5
+python-dateutil==2.9.0.post0
+pywin32==311
+pyzmq==27.0.1
+setuptools==75.8.0
+six==1.17.0
+stack-data==0.6.3
+sympy==1.14.0
+torch==2.8.0+cpu
+tornado==6.5.2
+traitlets==5.14.3
+typing_extensions==4.14.1
+wcwidth==0.2.13
 
-# ========== QAI Hub 生態 ==========
+opencv-python
+onnxruntime
+onnxruntime-directml
+python-dotenv
+protobuf==4.25.3
 qai-hub
 qai-hub-models
-
-# ========== Whisper / 語音 (可選) ==========
-# 需要 ffmpeg（手動安裝並加入 PATH）
-pyttsx3>=2.90
-SpeechRecognition>=3.10.0
-openai-whisper>=20231117
-
-# ========== Web / 服務 (可選) ==========
-# streamlit 用於展示；FastAPI + uvicorn 可做 API。
-streamlit>=1.33.0
-fastapi>=0.110.0
-uvicorn[standard]>=0.29.0
-
-# ========== 數據/分析 (可選) ==========
-pandas>=2.0.0
-matplotlib>=3.8.0
-seaborn>=0.13.0
-plotly>=5.20.0
-
-# ========== 進階 / 其他 (可選) ==========
-scipy>=1.11.0
-tqdm>=4.66.0
-psutil>=5.9.0
-pyyaml>=6.0.0
-
-# ========== 高風險 / ARM64 可能失敗 ==========
-# face-recognition
-# dlib
-
-############################################################
-# 安裝建議:
 # 1) 建立並啟用虛擬環境:
-#    python -m venv venv
-#    venv\Scripts\activate
-# 2) 升級 pip:
-#    python -m pip install --upgrade pip
-# 3) 分段安裝 (失敗好排錯):
-#    pip install -r requirements_windows.txt --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu
-# 4) 若要升級 QAI Hub SDK:
-#    pip install --upgrade --upgrade-strategy eager qai-hub qai-hub-models
-# 5) Whisper 需 ffmpeg:
-#    確保 ffmpeg.exe 在 PATH (可用 ffmpeg -version 測試)
-# 6) face-recognition 如需: 先安裝 CMake 與 dlib 再解除註解
-############################################################
