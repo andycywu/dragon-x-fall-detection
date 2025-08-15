@@ -1,17 +1,21 @@
-# === Core for Win-ARM + QNN (Snapdragon X) ===
-torch>=2.7,<3              # 你已裝到 2.8.0+cpu；保留範圍避免鎖死
-onnxruntime-qnn==1.20.1    # QNN EP（NPU/HTP）必備
-numpy>=2,<3                # Win-ARM 有輪子；避免 1.26 在 ARM 上觸發編譯
-pillow>=10,<12             # 影像處理；你已用到 11.1.0
-protobuf>=4.25,<7          # onnxruntime-qnn 的常見依賴範圍
-python-dotenv>=1.0         # 讀取 .env（你已安裝 1.1.1）
+# === Core for Win-ARM + QNN ===
+torch>=2.7,<3
+onnxruntime-qnn==1.20.1
+numpy>=2,<3
+Pillow==11.1.0
+pytest==8.3.5
+setuptools==75.8.0
+netron==8.2.1
+streamlit>=1.37.0
+qai-hub>=0.3.0  # 官方 QAI Hub Python SDK
+
+# === 明確移除：在 Win-ARM 容易安裝失敗 ===
+# torchvision==0.21.0
+# notebook==7.3.2
 
 # === Nice-to-have / 小工具 ===
 coloredlogs>=15,<16        # 漂亮日誌，非必須
 tqdm>=4.65                  # 進度條，非必須
-
-# === 可視化（選用；只是看 ONNX 結構，不影響推論） ===
-netron>=8,<9
 
 # === 明確排除（Win-ARM 常卡住/用不到） ===
 # onnxruntime
