@@ -1,0 +1,10 @@
+torch>=2.7,<3
+onnxruntime-qnn==1.20.1
+numpy>=2,<3
+Pillow==11.1.0
+pytest==8.3.5
+setuptools==75.8.0
+netron==8.2.1
+coloredlogs>=15,<16
+tqdm>=4.65
+# 不要裝：streamlit、qai-hub、onnxruntime、onnxruntime-directml、h5py、opencv-python、notebook
