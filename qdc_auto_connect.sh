@@ -33,8 +33,8 @@ PYTHON_TARGET_VERSION="3.11"          # 主要大版本/次版本 (升級至 3.1
 PYTHON_PATCH_VERSION="9"              # 指定修正版號 (官方 installer 組合需要)
 PYTHON_FULL_VERSION="${PYTHON_TARGET_VERSION}.${PYTHON_PATCH_VERSION}"  # 3.11.9
 PYTHON_REQUIRED_ARCH="ARM64"          # 目標架構
-REQUIRED_PY_PACKAGES=(numpy opencv-python onnxruntime onnxruntime-directml python-dotenv protobuf==4.25.3 qai-hub qai-hub-models)
-OPTIONAL_PY_PACKAGES=(psutil packaging)
+REQUIRED_PY_PACKAGES=()
+OPTIONAL_PY_PACKAGES=()
 QNN_PROVIDER_TEST_SCRIPT='import onnxruntime as ort;print("QNNExecutionProvider" in ort.get_available_providers())'
 DIRECTML_PROVIDER_TEST_SCRIPT='import onnxruntime as ort;print("DmlExecutionProvider" in ort.get_available_providers())'
 
@@ -333,10 +333,8 @@ if [[ "$WINDOWS_OS" == "1" ]]; then
     # 安裝 Python 套件（補充：若 requirements.txt 沒有的也補裝）
     echo -e "${YELLOW}🔍 安裝/驗證 Python 套件...${NC}"
     ssh_exec "$PYTHON_CMD -m pip install --upgrade pip" >/dev/null 2>&1 || true
-    for PKG in numpy protobuf==4.25.3 onnxruntime onnxruntime-directml opencv-python qai-hub qai-hub-models python-dotenv; do
-    echo -e "${BLUE}→ $PKG${NC}"
-        ssh_exec "$PYTHON_CMD -m pip install --no-cache-dir --upgrade $PKG" >/dev/null 2>&1 || true
-    done
+    echo -e "${YELLOW}🔍 直接安裝 requirements.txt...${NC}"
+    ssh_exec "cd C:\\dragon-x-fall-detection && $PYTHON_CMD -m pip install --upgrade pip && $PYTHON_CMD -m pip install -r requirements.txt" || true
     # 驗證 client.ini
     if [ ! -z "$LOCAL_API_TOKEN" ]; then
         CONFIG_PATH_WIN="$USER_HOME_DIR\\$CONFIG_DIR_NAME\\client.ini"
