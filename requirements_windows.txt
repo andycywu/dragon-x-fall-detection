@@ -51,12 +51,12 @@ tornado==6.5.2
 traitlets==5.14.3
 typing_extensions==4.14.1
 wcwidth==0.2.13
+python-dotenv
 
 opencv-python
 onnxruntime
 onnxruntime-directml
-python-dotenv
-protobuf==4.25.3
+
 qai-hub
 qai-hub-models
 # 1) 建立並啟用虛擬環境:
