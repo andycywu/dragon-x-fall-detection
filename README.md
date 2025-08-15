@@ -316,7 +316,51 @@ This project is for educational and research purposes. Please ensure proper attr
 
 ## Acknowledgments
 
-- MediaPipe for pose detection
-- OpenAI Whisper for speech recognition
-- OpenCV for computer vision
-- Streamlit for web interface
+   - MediaPipe for pose detection
+   - OpenAI Whisper for speech recognition
+   - OpenCV for computer vision
+   - Streamlit for web interface
+
+---
+
+## qnn_sample_apps 子專案目錄結構
+
+
+## 目前專案目錄結構
+
+
+```
+mvp_fall_detection_starter/
+├─ src/                        # 所有核心程式、模組、啟動腳本、依賴檔案
+│  ├─ main.py
+│  ├─ ...（其他核心模組/腳本）
+│  ├─ models/                  # AI 模型檔案
+│  │   ├─ job_*.tflite/.dlc/.onnx.zip
+│  ├─ qdc_package/             # QDC 安裝包與模組
+├─ elderly_data/               # 資料
+│  ├─ elderly_behavior.db
+│  └─ face_encodings.json
+├─ test_images/                # 測試圖像
+│  ├─ andy.jpg
+│  └─ official_test_image.jpg
+├─ assets/                     # 靜態資源
+├─ Old_Data/                   # 備份或舊版內容
+├─ README.md
+├─ requirements.txt            # 全域依賴
+├─ requirements_demo.txt
+├─ requirements_windows.txt
+├─ CLEANUP_INSTRUCTIONS.md
+├─ DEPLOYMENT_GUIDE.md
+├─ ENVIRONMENT_SETUP_COMPLETE.md
+├─ PROJECT_SUMMARY.md
+├─ FINAL_REPORT.md
+├─ ...（其他必要說明文件）
+```
+
+### 說明
+- `src/`：所有核心功能、模組、依賴、啟動腳本
+- `elderly_data/`：資料庫與人臉特徵等資料
+- `test_images/`：測試圖像
+- `assets/`：靜態資源
+- `Old_Data/`：備份或舊版內容
+- 其他根目錄僅保留必要說明文件與全域依賴
