@@ -11,8 +11,6 @@ Pillow>=10.2.0
 requests>=2.31.0
 prettytable>=3.10.0
 python-dotenv>=1.0.1
-onnxruntime>=1.18.0
-
 # ========== PyTorch (CPU) ==========
 # 若官方釋出 Windows ARM64 專用輪子，pip 會自動取得；
 # 如需特定 index (僅 CPU): --index-url https://download.pytorch.org/whl/cpu
@@ -59,8 +57,7 @@ pyyaml>=6.0.0
 # 2) 升級 pip:
 #    python -m pip install --upgrade pip
 # 3) 分段安裝 (失敗好排錯):
-#    pip install -r requirements_windows.txt --no-cache-dir \
-#        --extra-index-url https://download.pytorch.org/whl/cpu
+#    pip install -r requirements_windows.txt --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu
 # 4) 若要升級 QAI Hub SDK:
 #    pip install --upgrade --upgrade-strategy eager qai-hub qai-hub-models
 # 5) Whisper 需 ffmpeg:
