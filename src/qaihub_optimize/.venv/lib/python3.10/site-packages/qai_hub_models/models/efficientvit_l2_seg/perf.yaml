@@ -1,0 +1,86 @@
+supported_devices:
+- Snapdragon 8 Elite QRD
+- Snapdragon X Elite CRD
+- Samsung Galaxy S24
+- Samsung Galaxy S24 Ultra
+- Samsung Galaxy S24+
+- Samsung Galaxy S23
+- Samsung Galaxy S23 Ultra
+- Samsung Galaxy S23+
+- Samsung Galaxy S22 5G
+- Samsung Galaxy S22 Ultra 5G
+- Samsung Galaxy S22+ 5G
+- Samsung Galaxy Tab S8
+- Xiaomi 12
+- Xiaomi 12 Pro
+- Samsung Galaxy S21
+- Samsung Galaxy S21 Ultra
+- Samsung Galaxy S21+
+- Snapdragon X Plus 8-Core CRD
+supported_chipsets:
+- qualcomm-snapdragon-8-elite
+- qualcomm-snapdragon-x-elite
+- qualcomm-snapdragon-8gen3
+- qualcomm-snapdragon-8gen2
+- qualcomm-snapdragon-8gen1
+- qualcomm-snapdragon-888
+- qualcomm-snapdragon-x-plus-8-core
+precisions:
+  float:
+    components:
+      EfficientViT-l2-seg:
+        universal_assets:
+          onnx: mqevge95m
+        performance_metrics:
+          Samsung Galaxy S23:
+            onnx:
+              job_id: jpyj4mllp
+              job_status: Passed
+              inference_time_milliseconds: 1805.139
+              estimated_peak_memory_range_mb:
+                min: 101
+                max: 200
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 464
+                npu: 462
+                cpu: 2
+          Samsung Galaxy S24:
+            onnx:
+              job_id: jp0216wn5
+              job_status: Passed
+              inference_time_milliseconds: 1976.118
+              estimated_peak_memory_range_mb:
+                min: 127
+                max: 999
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 464
+                npu: 462
+                cpu: 2
+          Snapdragon 8 Elite QRD:
+            onnx:
+              job_id: jp8m31no5
+              job_status: Passed
+              inference_time_milliseconds: 1190.489
+              estimated_peak_memory_range_mb:
+                min: 94
+                max: 1048
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 464
+                npu: 462
+                cpu: 2
+          Snapdragon X Elite CRD:
+            onnx:
+              job_id: jgkql81ng
+              job_status: Passed
+              inference_time_milliseconds: 2976.535
+              estimated_peak_memory_range_mb:
+                min: 143
+                max: 143
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 464
+                npu: 462
+                cpu: 2

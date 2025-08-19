@@ -14,13 +14,48 @@ from qai_hub_unified_detector import QAIHubUnifiedDetector, demo_qai_hub_detecti
 from official_qai_hub_detector import OfficialQAIHubDetector, demo_official_qai_hub_detection
 
 
-def run_compile():
-    print("\n[Compile] QAI Hub Compile Pipeline (Practical)")
+def run_compile(source='onnx'):
+    print(f"\n[Compile] QAI Hub Compile Pipeline (Practical) | source={source}")
     system = PracticalQAIHubONNX()
-    system.load_mediapipe_models()
+    system.load_mediapipe_models(source=source)
+    # ONNX 檢查
+    if source == 'onnx':
+        invalid = system.check_onnx_models()
+        if invalid:
+            print("\n❌ 偵測到下列 ONNX 模型檔案格式異常，請修正後再執行：")
+            for name, path, err in invalid:
+                print(f"   - {name}: {path}\n     錯誤: {err}")
+            print("\n請參考 onnx.checker.check_model('your_model.onnx', full_check=True) 進行本地檢查。\n流程中止。")
+            return
+    # 列出要處理的模型
+    models_to_process = [k for k, v in system.qai_hub_models.items() if v.get('loaded')]
+    print(f"\n🔎 偵測到 {len(models_to_process)} 個模型將進行 QAI Hub 最佳化：")
+    for m in models_to_process:
+        print(f"   - {m}")
+    # 提示 QAI Hub 作業流程
+    print("""
+📋 QAI Hub 雲端最佳化作業流程：
+1. 上傳模型（Upload Model）
+2. 提交編譯任務（Submit Compile Job）
+3. 等待雲端完成最佳化（Job Queue & Compile）
+4. 下載最佳化模型（Download）
+5. 可進行 Profile、Infer、Demo 等後續測試
+\n詳細說明與 API 範例請參考：
+https://app.aihub.qualcomm.com/docs/hub/index.html#examples
+""")
     system.export_models_to_torchscript()
     system.upload_models_to_qai_hub()
     system.submit_compilation_jobs()
+    # 編譯結果報告
+    compiled = [k for k, v in system.qai_hub_models.items() if v.get('compile_job')]
+    failed = [k for k, v in system.qai_hub_models.items() if v.get('loaded') and not v.get('compile_job')]
+    print(f"\n✅ 已成功提交 {len(compiled)} 個模型進行 QAI Hub 編譯：")
+    for m in compiled:
+        print(f"   - {m}")
+    if failed:
+        print(f"\n⚠️ 下列模型未能成功提交編譯（可能缺檔或上傳失敗）：")
+        for m in failed:
+            print(f"   - {m}")
     print("\nCompile 完成！")
 
 def run_profile():
@@ -68,10 +103,12 @@ def main():
     parser = argparse.ArgumentParser(description="QAI Hub Optimize Full - All-in-One 整合工具")
     parser.add_argument('mode', choices=['compile', 'profile', 'infer', 'demo', 'official', 'test'],
                         help="執行模式: compile | profile | infer | demo | official | test")
+    parser.add_argument('--source', choices=['onnx', 'original'], default='onnx',
+                        help="模型來源: onnx (預設) 或 original (tflite)")
     args = parser.parse_args()
 
     if args.mode == 'compile':
-        run_compile()
+        run_compile(source=args.source)
     elif args.mode == 'profile':
         run_profile()
     elif args.mode == 'infer':

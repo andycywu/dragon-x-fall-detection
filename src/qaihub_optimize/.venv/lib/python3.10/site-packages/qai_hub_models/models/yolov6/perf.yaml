@@ -1,0 +1,1013 @@
+supported_devices:
+- Snapdragon 8 Elite QRD
+- Snapdragon X Elite CRD
+- Samsung Galaxy S24
+- Samsung Galaxy S24 Ultra
+- Samsung Galaxy S24+
+- Samsung Galaxy S23
+- Samsung Galaxy S23 Ultra
+- Samsung Galaxy S23+
+- Samsung Galaxy S22 5G
+- Samsung Galaxy S22 Ultra 5G
+- Samsung Galaxy S22+ 5G
+- Samsung Galaxy Tab S8
+- Xiaomi 12
+- Xiaomi 12 Pro
+- Samsung Galaxy S21
+- Samsung Galaxy S21 Ultra
+- Samsung Galaxy S21+
+- Snapdragon X Plus 8-Core CRD
+- QCS6490 (Proxy)
+- RB3 Gen 2 (Proxy)
+- QCS8250 (Proxy)
+- RB5 (Proxy)
+- QCS8550 (Proxy)
+- SA8775P ADP
+- SA8650 (Proxy)
+- SA8255 (Proxy)
+- QCS8275 (Proxy)
+- QCS8450 (Proxy)
+- XR2 Gen 2 (Proxy)
+- QCS9075 (Proxy)
+- SA7255P ADP
+- SA8295P ADP
+supported_chipsets:
+- qualcomm-snapdragon-8-elite
+- qualcomm-snapdragon-x-elite
+- qualcomm-snapdragon-8gen3
+- qualcomm-snapdragon-8gen2
+- qualcomm-snapdragon-8gen1
+- qualcomm-snapdragon-888
+- qualcomm-snapdragon-x-plus-8-core
+- qualcomm-qcs6490-proxy
+- qualcomm-qcs8250-proxy
+- qualcomm-qcs8550-proxy
+- qualcomm-sa8775p
+- qualcomm-sa8650p-proxy
+- qualcomm-sa8255p-proxy
+- qualcomm-qcs8275-proxy
+- qualcomm-qcs8450-proxy
+- qualcomm-qcs9075-proxy
+- qualcomm-sa7255p
+- qualcomm-sa8295p
+precisions:
+  float:
+    components:
+      Yolo-v6:
+        universal_assets:
+          tflite: mqy78r9rq
+          qnn_dlc: mnoxprdvn
+          onnx: mm50r2rkq
+        device_assets:
+          Snapdragon X Elite CRD:
+            qnn_context_binary: mngv60e6n
+            precompiled_qnn_onnx: mmry1vxwq
+        performance_metrics:
+          QCS8275 (Proxy):
+            tflite:
+              job_id: jpr2vlek5
+              job_status: Passed
+              inference_time_milliseconds: 22.267
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 43
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jpvr6lwz5
+              job_status: Passed
+              inference_time_milliseconds: 14.869
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 74
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          QCS8450 (Proxy):
+            tflite:
+              job_id: j5qr6l2ep
+              job_status: Passed
+              inference_time_milliseconds: 12.907
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 41
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jp1w4n8ng
+              job_status: Passed
+              inference_time_milliseconds: 7.409
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 40
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          QCS8550 (Proxy):
+            tflite:
+              job_id: jgkqe2yvg
+              job_status: Passed
+              inference_time_milliseconds: 10.748
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 15
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jg9ylz4m5
+              job_status: Passed
+              inference_time_milliseconds: 4.501
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 33
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          QCS9075 (Proxy):
+            tflite:
+              job_id: jp8mqe7q5
+              job_status: Passed
+              inference_time_milliseconds: 12.667
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 43
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: j5w3el94p
+              job_status: Passed
+              inference_time_milliseconds: 6.25
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 69
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          SA7255P ADP:
+            tflite:
+              job_id: jpr2vlek5
+              job_status: Passed
+              inference_time_milliseconds: 22.267
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 43
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jpvr6lwz5
+              job_status: Passed
+              inference_time_milliseconds: 14.869
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 74
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          SA8255 (Proxy):
+            tflite:
+              job_id: jp29krl6g
+              job_status: Passed
+              inference_time_milliseconds: 10.766
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 16
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jgj2vrl15
+              job_status: Passed
+              inference_time_milliseconds: 4.513
+              estimated_peak_memory_range_mb:
+                min: 4
+                max: 35
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          SA8295P ADP:
+            tflite:
+              job_id: jpyj1o60p
+              job_status: Passed
+              inference_time_milliseconds: 13.556
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 29
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jpewd7v8p
+              job_status: Passed
+              inference_time_milliseconds: 6.94
+              estimated_peak_memory_range_mb:
+                min: 4
+                max: 32
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          SA8650 (Proxy):
+            tflite:
+              job_id: jp02zmr05
+              job_status: Passed
+              inference_time_milliseconds: 11.0
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 20
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jgzj3l74p
+              job_status: Passed
+              inference_time_milliseconds: 4.523
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 31
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          SA8775P ADP:
+            tflite:
+              job_id: jp8mqe7q5
+              job_status: Passed
+              inference_time_milliseconds: 12.667
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 43
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: j5w3el94p
+              job_status: Passed
+              inference_time_milliseconds: 6.25
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 69
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+          Samsung Galaxy S23:
+            tflite:
+              job_id: jpx6kly8p
+              job_status: Passed
+              inference_time_milliseconds: 10.699
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 15
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jgl2vyk2p
+              job_status: Passed
+              inference_time_milliseconds: 4.549
+              estimated_peak_memory_range_mb:
+                min: 3
+                max: 34
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+            onnx:
+              job_id: jgon11oqp
+              job_status: Passed
+              inference_time_milliseconds: 5.639
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 49
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 229
+                npu: 229
+          Samsung Galaxy S24:
+            tflite:
+              job_id: j5m6n037g
+              job_status: Passed
+              inference_time_milliseconds: 7.393
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 56
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: j56zy81ng
+              job_status: Passed
+              inference_time_milliseconds: 3.225
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 111
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+            onnx:
+              job_id: jpvr119k5
+              job_status: Passed
+              inference_time_milliseconds: 4.108
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 151
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 229
+                npu: 229
+          Snapdragon 8 Elite QRD:
+            tflite:
+              job_id: jgnm6z3jp
+              job_status: Passed
+              inference_time_milliseconds: 6.368
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 50
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 181
+                npu: 181
+            qnn_dlc:
+              job_id: jp31jzmmg
+              job_status: Passed
+              inference_time_milliseconds: 2.949
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 76
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+            onnx:
+              job_id: jgj200wv5
+              job_status: Passed
+              inference_time_milliseconds: 4.118
+              estimated_peak_memory_range_mb:
+                min: 5
+                max: 102
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 229
+                npu: 229
+          Snapdragon X Elite CRD:
+            qnn_dlc:
+              job_id: jgon2lv1p
+              job_status: Passed
+              inference_time_milliseconds: 4.995
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 0
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 219
+                npu: 219
+            onnx:
+              job_id: jpewrrlop
+              job_status: Passed
+              inference_time_milliseconds: 6.154
+              estimated_peak_memory_range_mb:
+                min: 6
+                max: 6
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 229
+                npu: 229
+  w8a16:
+    components:
+      Yolo-v6:
+        universal_assets:
+          qnn_dlc: mqy7lgx5q
+          onnx: mnld797km
+        device_assets:
+          Snapdragon X Elite CRD:
+            qnn_context_binary: mnz26d6xn
+            precompiled_qnn_onnx: mmry1vgwq
+          RB3 Gen 2 (Proxy):
+            qnn_context_binary: mnz26d0xn
+        performance_metrics:
+          QCS8275 (Proxy):
+            qnn_dlc:
+              job_id: jp8m338k5
+              job_status: Passed
+              inference_time_milliseconds: 5.198
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 28
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          QCS8450 (Proxy):
+            qnn_dlc:
+              job_id: jpvr11ek5
+              job_status: Passed
+              inference_time_milliseconds: 2.779
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 42
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          QCS8550 (Proxy):
+            qnn_dlc:
+              job_id: jgon11mqp
+              job_status: Passed
+              inference_time_milliseconds: 2.141
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 11
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          QCS9075 (Proxy):
+            qnn_dlc:
+              job_id: j56z33v6g
+              job_status: Passed
+              inference_time_milliseconds: 2.751
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 27
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          RB3 Gen 2 (Proxy):
+            qnn_dlc:
+              job_id: jp314483g
+              job_status: Passed
+              inference_time_milliseconds: 8.496
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 31
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          SA7255P ADP:
+            qnn_dlc:
+              job_id: jp8m338k5
+              job_status: Passed
+              inference_time_milliseconds: 5.198
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 28
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          SA8255 (Proxy):
+            qnn_dlc:
+              job_id: jgkqlldwg
+              job_status: Passed
+              inference_time_milliseconds: 2.149
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 11
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          SA8295P ADP:
+            qnn_dlc:
+              job_id: j5qr77wnp
+              job_status: Passed
+              inference_time_milliseconds: 3.3
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 36
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          SA8650 (Proxy):
+            qnn_dlc:
+              job_id: jgl2007jp
+              job_status: Passed
+              inference_time_milliseconds: 2.154
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 11
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          SA8775P ADP:
+            qnn_dlc:
+              job_id: j56z33v6g
+              job_status: Passed
+              inference_time_milliseconds: 2.751
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 27
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+          Samsung Galaxy S23:
+            qnn_dlc:
+              job_id: jgnm99xkp
+              job_status: Passed
+              inference_time_milliseconds: 2.218
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 11
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+            onnx:
+              job_id: jgj200ov5
+              job_status: Passed
+              inference_time_milliseconds: 5.802
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 34
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 236
+                npu: 226
+                cpu: 10
+          Samsung Galaxy S24:
+            qnn_dlc:
+              job_id: jp2977jrg
+              job_status: Passed
+              inference_time_milliseconds: 1.454
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 42
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+            onnx:
+              job_id: jpewrr8op
+              job_status: Passed
+              inference_time_milliseconds: 4.183
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 101
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 236
+                npu: 226
+                cpu: 10
+          Snapdragon 8 Elite QRD:
+            qnn_dlc:
+              job_id: jpyj44n8p
+              job_status: Passed
+              inference_time_milliseconds: 1.356
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 35
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+            onnx:
+              job_id: jgzjxx8op
+              job_status: Passed
+              inference_time_milliseconds: 3.94
+              estimated_peak_memory_range_mb:
+                min: 2
+                max: 102
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 236
+                npu: 226
+                cpu: 10
+          Snapdragon X Elite CRD:
+            qnn_dlc:
+              job_id: jp0211k95
+              job_status: Passed
+              inference_time_milliseconds: 2.597
+              estimated_peak_memory_range_mb:
+                min: 8
+                max: 8
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 169
+                npu: 169
+            onnx:
+              job_id: j5w3dd83p
+              job_status: Passed
+              inference_time_milliseconds: 6.284
+              estimated_peak_memory_range_mb:
+                min: 3
+                max: 3
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 236
+                npu: 226
+                cpu: 10
+  w8a8:
+    components:
+      Yolo-v6:
+        universal_assets:
+          tflite: mn45dl7vm
+          qnn_dlc: mm6y93j4q
+          onnx: mq3k7z7lm
+        device_assets:
+          Snapdragon X Elite CRD:
+            qnn_context_binary: mqy7lj17q
+            precompiled_qnn_onnx: mn7789k3n
+          RB3 Gen 2 (Proxy):
+            qnn_context_binary: mqy7lgevq
+        performance_metrics:
+          QCS8275 (Proxy):
+            tflite:
+              job_id: jgkqyxrng
+              job_status: Passed
+              inference_time_milliseconds: 4.415
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 20
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: j5m6wwodg
+              job_status: Passed
+              inference_time_milliseconds: 3.196
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 22
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          QCS8450 (Proxy):
+            tflite:
+              job_id: jpewvm2vp
+              job_status: Passed
+              inference_time_milliseconds: 2.257
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 31
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jgkqllowg
+              job_status: Passed
+              inference_time_milliseconds: 1.66
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 35
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          QCS8550 (Proxy):
+            tflite:
+              job_id: jgj2ln1e5
+              job_status: Passed
+              inference_time_milliseconds: 2.075
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 30
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jp8m336k5
+              job_status: Passed
+              inference_time_milliseconds: 1.351
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 17
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          QCS9075 (Proxy):
+            tflite:
+              job_id: jp31m08ng
+              job_status: Passed
+              inference_time_milliseconds: 2.472
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 22
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jpyj44q8p
+              job_status: Passed
+              inference_time_milliseconds: 1.713
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 23
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          RB3 Gen 2 (Proxy):
+            tflite:
+              job_id: jgonv6mkp
+              job_status: Passed
+              inference_time_milliseconds: 4.47
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 27
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jp0211d95
+              job_status: Passed
+              inference_time_milliseconds: 4.866
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 27
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          RB5 (Proxy):
+            tflite:
+              job_id: jpvrwk4r5
+              job_status: Passed
+              inference_time_milliseconds: 31.42
+              estimated_peak_memory_range_mb:
+                min: 3
+                max: 12
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 184
+                gpu: 2
+                cpu: 1
+          SA7255P ADP:
+            tflite:
+              job_id: jgkqyxrng
+              job_status: Passed
+              inference_time_milliseconds: 4.415
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 20
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: j5m6wwodg
+              job_status: Passed
+              inference_time_milliseconds: 3.196
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 22
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          SA8255 (Proxy):
+            tflite:
+              job_id: j5qr2q9op
+              job_status: Passed
+              inference_time_milliseconds: 2.066
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 30
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jgnm99okp
+              job_status: Passed
+              inference_time_milliseconds: 1.363
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 27
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          SA8295P ADP:
+            tflite:
+              job_id: jgl2km7mp
+              job_status: Passed
+              inference_time_milliseconds: 2.96
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 26
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jpr244o05
+              job_status: Passed
+              inference_time_milliseconds: 2.344
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 24
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          SA8650 (Proxy):
+            tflite:
+              job_id: j56z14vyg
+              job_status: Passed
+              inference_time_milliseconds: 2.066
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 29
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jp29774rg
+              job_status: Passed
+              inference_time_milliseconds: 1.36
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 17
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          SA8775P ADP:
+            tflite:
+              job_id: jp31m08ng
+              job_status: Passed
+              inference_time_milliseconds: 2.472
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 22
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jpyj44q8p
+              job_status: Passed
+              inference_time_milliseconds: 1.713
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 23
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+          Samsung Galaxy S23:
+            tflite:
+              job_id: jpyjd3vlp
+              job_status: Passed
+              inference_time_milliseconds: 2.06
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 30
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jgdqrr8r5
+              job_status: Passed
+              inference_time_milliseconds: 1.365
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 9
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+            onnx:
+              job_id: j5qr77znp
+              job_status: Passed
+              inference_time_milliseconds: 4.197
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 42
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 248
+                npu: 234
+                cpu: 14
+          Samsung Galaxy S24:
+            tflite:
+              job_id: jp02r0en5
+              job_status: Passed
+              inference_time_milliseconds: 1.357
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 38
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: j57ljjkvg
+              job_status: Passed
+              inference_time_milliseconds: 0.891
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 32
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+            onnx:
+              job_id: jgl200ojp
+              job_status: Passed
+              inference_time_milliseconds: 2.936
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 121
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 248
+                npu: 234
+                cpu: 14
+          Snapdragon 8 Elite QRD:
+            tflite:
+              job_id: jp8m7ywo5
+              job_status: Passed
+              inference_time_milliseconds: 1.36
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 28
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 187
+                npu: 187
+            qnn_dlc:
+              job_id: jp4dxxm8p
+              job_status: Passed
+              inference_time_milliseconds: 0.676
+              estimated_peak_memory_range_mb:
+                min: 1
+                max: 25
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+            onnx:
+              job_id: j56z33r6g
+              job_status: Passed
+              inference_time_milliseconds: 3.154
+              estimated_peak_memory_range_mb:
+                min: 0
+                max: 104
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 248
+                npu: 234
+                cpu: 14
+          Snapdragon X Elite CRD:
+            qnn_dlc:
+              job_id: jpx67733p
+              job_status: Passed
+              inference_time_milliseconds: 1.706
+              estimated_peak_memory_range_mb:
+                min: 18
+                max: 18
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 171
+                npu: 171
+            onnx:
+              job_id: jp3144x3g
+              job_status: Passed
+              inference_time_milliseconds: 4.691
+              estimated_peak_memory_range_mb:
+                min: 4
+                max: 4
+              primary_compute_unit: NPU
+              layer_counts:
+                total: 248
+                npu: 234
+                cpu: 14

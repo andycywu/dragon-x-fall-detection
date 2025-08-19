@@ -1,0 +1,78 @@
+Metadata-Version: 2.1
+Name: qai-hub
+Version: 0.31.0
+Summary: Python API for Qualcomm® AI Hub.
+Home-page: https://aihub.qualcomm.com/
+Author: Qualcomm® Technologies, Inc.
+Author-email: ai-hub-support@qti.qualcomm.com
+License: BSD License
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development
+Requires-Python: >=3.9
+Requires-Dist: backoff >=2.2
+Requires-Dist: deprecation
+Requires-Dist: h5py <4,>=2.10.0
+Requires-Dist: numpy <2,>=1.22.0
+Requires-Dist: packaging >=20.0
+Requires-Dist: prettytable >=3.9.0
+Requires-Dist: protobuf <4,>=3.20
+Requires-Dist: requests
+Requires-Dist: requests-toolbelt
+Requires-Dist: s3transfer <0.11,>=0.10.3
+Requires-Dist: semver >=3.0
+Requires-Dist: tqdm
+Requires-Dist: typing-extensions >=4.12.2
+Provides-Extra: coremltools
+Requires-Dist: coremltools ==6.2 ; extra == 'coremltools'
+Provides-Extra: onnx
+Requires-Dist: onnx ==1.13.1 ; extra == 'onnx'
+Provides-Extra: torch
+Requires-Dist: torch >=1.13 ; extra == 'torch'
+Requires-Dist: torchvision >=0.14 ; extra == 'torch'
+
+Qualcomm® AI Hub
+================
+
+`Qualcomm® AI Hub <https://aihub.qualcomm.com>`_ simplifies deploying AI models
+for vision, audio, and speech applications to edge devices.
+
+helps to optimize, validate,
+and deploy machine learning models on-device for vision, audio, and speech use
+cases.
+
+With Qualcomm® AI Model Hub, you can:
+
+- Convert trained models from frameworks like PyTorch for optimized on-device performance on Qualcomm® devices.
+- Profile models on-device to obtain detailed metrics including runtime, load time, and compute unit utilization.
+- Verify numerical correctness by performing on-device inference.
+- Easily deploy models using Qualcomm® AI Engine Direct or TensorFlow Lite.
+
+:code:`qai_hub` is a python package that provides an API for users to upload a
+model, submit the profile jobs for hardware and get key metrics to optimize the
+machine learning model further.
+
+
+Installation with PyPI
+----------------------
+
+The easiest way to install :code:`qai_hub` is by using pip, running
+
+:code:`pip install qai-hub`
+
+For more information, check out the `documentation <https://app.aihub.qualcomm.com/docs/>`_.
+
+License
+-------
+
+Copyright (c) 2023, Qualcomm Technologies Inc. All rights reserved.
+
+
