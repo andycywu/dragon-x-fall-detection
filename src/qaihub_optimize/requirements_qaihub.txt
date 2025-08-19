@@ -1,0 +1,16 @@
+# QAI Hub 模型最佳化/量化/轉換專用 requirements
+# 只安裝 QAI Hub 相關依賴，避免與 onnxruntime/mediapipe 衝突
+numpy>=1.22,<2
+protobuf>=3.20,<4
+onnx>=1.15,<2
+qai-hub>=0.31,<0.32
+qai-hub-models>=0.33,<0.34
+setuptools>=75,<81
+pytest>=8.3,<9
+coloredlogs>=15,<16
+tqdm>=4.65,<5
+requests
+streamlit
+opencv-python
+python-dotenv
+plotly

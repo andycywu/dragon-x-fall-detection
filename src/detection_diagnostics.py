@@ -16,7 +16,7 @@ import traceback
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
-from completely_fixed_detector import CompletelyFixedHackathonDetector
+from qaihub_optimize.completely_fixed_detector import CompletelyFixedHackathonDetector
 
 def test_detection_methods_live():
     """實時測試各檢測方法的具體問題"""

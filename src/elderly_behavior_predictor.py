@@ -37,7 +37,7 @@ except ImportError:
 
 # 嘗試導入fallback檢測系統
 try:
-    from completely_fixed_detector import CompletelyFixedHackathonDetector
+    from qaihub_optimize.completely_fixed_detector import CompletelyFixedHackathonDetector
     print("✅ Fallback檢測系統可用")
 except ImportError:
     print("⚠️ 無法導入fallback檢測系統，將使用模擬模式")

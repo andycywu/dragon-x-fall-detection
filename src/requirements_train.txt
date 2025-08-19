@@ -1,0 +1,21 @@
+# 訓練用 requirements（PyTorch/TensorFlow/ONNX）
+numpy>=1.24,<1.27
+protobuf>=4.25,<5
+torch>=2.0,<3
+torchvision>=0.15,<1
+tensorflow>=2.12,<2.20
+onnx>=1.15,<2
+onnxruntime>=1.22,<1.23
+opencv-python-headless==4.10.0.84
+Pillow>=9.5,<12
+scipy>=1.10,<1.12
+matplotlib
+jupyter
+setuptools>=75,<81
+pytest>=8.3,<9
+coloredlogs>=15,<16
+tqdm>=4.65,<5
+requests
+# 其他訓練常用工具
+pandas
+scikit-learn
