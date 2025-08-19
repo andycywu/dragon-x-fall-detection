@@ -1,0 +1,15 @@
+# 跨平台 ONNX 推論 requirements（不含 QAI Hub，不含 mediapipe）
+numpy>=1.24,<1.27
+protobuf>=4.25,<5
+onnxruntime>=1.22,<1.23
+torch>=2.0,<3
+torchvision>=0.15,<1
+opencv-python-headless==4.10.0.84
+Pillow<12,>=9.5
+streamlit>=1.28,<2
+pytest>=8.3,<9
+setuptools>=75,<81
+coloredlogs>=15,<16
+tqdm>=4.65,<5
+requests
+sounddevice

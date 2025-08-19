@@ -8,7 +8,7 @@ import logging
 import numpy as np
 from typing import Optional, Dict, Any
 import time
-from config_manager import get_config
+from qaihub_optimize.config_manager import get_config
 
 logger = logging.getLogger(__name__)
 

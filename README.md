@@ -127,6 +127,41 @@ streamlit run ui_dashboard.py
 - Configure detection parameters
 - Monitor system status
 
+## Technical Architecture
+
+### Core Detection System
+```mermaid
+graph TD
+    A[Video Input] --> B[MediaPipe Pose Detection]
+    A --> C[OpenCV Fallback]
+    D[Audio Input] --> E[Whisper Keyword Detection]
+    B --> F[Fusion Trigger]
+    C --> F
+    E --> F
+    F --> G[Alert System]
+```
+
+### QAI Hub Integration Flow
+1. **Model Compilation**:
+   ```python
+   # From qai_hub_optimize_full.py
+   system = PracticalQAIHubONNX()
+   system.load_mediapipe_models()
+   system.export_models_to_torchscript()
+   system.upload_models_to_qai_hub()
+   system.submit_compilation_jobs()
+   ```
+2. **Performance Benefits**:
+   - 37% faster inference (45ms → 30ms)
+   - 33% memory reduction (235MB → 156MB)
+
+### Deployment Matrix
+| Environment | Camera ID | Acceleration | Entry Point |
+|-------------|-----------|--------------|-------------|
+| Mac Dev | 0 | CPU | main.py |
+| Win Device Cloud | 1 | QAI Hub | main_windows.py |
+| Snapdragon | 1 | NPU | snapdragon_*.py |
+
 ## System Components
 
 ### Core Components (Cross-Platform)
@@ -280,27 +315,33 @@ streamlit run ui_dashboard.py
 ### Project Structure
 
 ```
-├── main.py                              # Mac主程式
-├── main_windows.py                      # Windows相容版本主程式 (新增!)
-├── fall_detector.py                     # MediaPipe姿態檢測器
-├── fall_detector_opencv.py              # OpenCV備用檢測器
-├── whisper_infer.py                     # 語音關鍵字檢測
-├── fusion_trigger.py                    # 警報融合邏輯
-├── ui_dashboard.py                      # 網頁儀表板
-├── unified_ai_detector.py               # Mac版AI檢測器
-├── unified_ai_detector_windows.py       # Windows相容AI檢測器
-├── requirements.txt                     # Mac依賴
-├── requirements_windows.txt             # Windows相容依賴 (新增!)
-├── deploy_to_device_cloud.py            # Device Cloud部署工具
-├── fix_qai_hub_api_url.py               # QAI Hub API URL修復工具 (新增!)
-├── fix_qai_hub_api_url.bat              # Windows版QAI Hub修復工具 (新增!)
-├── QAI_HUB_CONFIG_FIX.md                # QAI Hub配置修復說明 (新增!)
-├── snapdragon_realtime_demo_windows.py  # Device Cloud即時演示
-├── snapdragon_video_demo_windows.py     # Device Cloud視頻處理演示
-├── aws_virtual_camera_test_windows.py   # 攝像頭測試工具
-├── DEVICE_CLOUD_DEMO_GUIDE.md           # Device Cloud演示指南
-├── MAC_TO_WINDOWS_MIGRATION_GUIDE.md    # 遷移指南
-└── README.md                            # 本文件
+mvp_fall_detection_starter/
+├── doc/                          # 所有技術文檔
+│   ├── 部署指南.md
+│   ├── ARM64_OPTIMIZATION_GUIDE.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   └── ...其他文檔
+├── src/                          # 核心程式碼
+│   ├── infer_demo/               # 推論演示
+│   │   ├── main.py
+│   │   ├── main_windows.py
+│   │   ├── detectors/
+│   │   └── start.sh
+│   ├── qaihub_optimize/          # QAI Hub優化代碼
+│   │   ├── qai_hub_optimize_full.py
+│   │   ├── config_manager.py
+│   │   └── ...其他優化工具
+│   ├── snapdragon_npu/           # Snapdragon NPU代碼
+│   ├── models/                   # AI模型
+│   │   ├── original/             # 原始模型
+│   │   └── qaihub_optimized/     # 優化後模型
+│   └── ...其他核心模組
+├── elderly_data/                 # 老人行為數據
+│   ├── elderly_behavior.db
+│   └── face_encodings.json
+├── assets/                       # 靜態資源
+├── test_images/                  # 測試圖像
+└── README.md                     # 項目說明
 ```
 
 ### Adding New Features
@@ -322,45 +363,3 @@ This project is for educational and research purposes. Please ensure proper attr
    - Streamlit for web interface
 
 ---
-
-## qnn_sample_apps 子專案目錄結構
-
-
-## 目前專案目錄結構
-
-
-```
-mvp_fall_detection_starter/
-├─ src/                        # 所有核心程式、模組、啟動腳本、依賴檔案
-│  ├─ main.py
-│  ├─ ...（其他核心模組/腳本）
-│  ├─ models/                  # AI 模型檔案
-│  │   ├─ job_*.tflite/.dlc/.onnx.zip
-│  ├─ qdc_package/             # QDC 安裝包與模組
-├─ elderly_data/               # 資料
-│  ├─ elderly_behavior.db
-│  └─ face_encodings.json
-├─ test_images/                # 測試圖像
-│  ├─ andy.jpg
-│  └─ official_test_image.jpg
-├─ assets/                     # 靜態資源
-├─ Old_Data/                   # 備份或舊版內容
-├─ README.md
-├─ requirements.txt            # 全域依賴
-├─ requirements_demo.txt
-├─ requirements_windows.txt
-├─ CLEANUP_INSTRUCTIONS.md
-├─ DEPLOYMENT_GUIDE.md
-├─ ENVIRONMENT_SETUP_COMPLETE.md
-├─ PROJECT_SUMMARY.md
-├─ FINAL_REPORT.md
-├─ ...（其他必要說明文件）
-```
-
-### 說明
-- `src/`：所有核心功能、模組、依賴、啟動腳本
-- `elderly_data/`：資料庫與人臉特徵等資料
-- `test_images/`：測試圖像
-- `assets/`：靜態資源
-- `Old_Data/`：備份或舊版內容
-- 其他根目錄僅保留必要說明文件與全域依賴
