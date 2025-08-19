@@ -17,6 +17,7 @@ from typing import Dict, Any, Optional
 import time
 import json
 import tempfile
+import onnx
 
 # 載入環境變數
 load_dotenv()
@@ -26,220 +27,184 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class PracticalQAIHubONNX:
-    """實用的QAI Hub + ONNX Runtime系統"""
-    
-    def __init__(self):
-        """初始化系統"""
-        self.api_token = os.getenv('QAI_HUB_API_TOKEN')
-        if not self.api_token:
-            raise ValueError("❌ 請在.env文件中設置QAI_HUB_API_TOKEN")
-        
-        # ONNX Runtime配置
-        self.onnx_providers = self._setup_onnx_providers()
-        self.onnx_sessions = {}
-        
-        # QAI Hub相關
+    def __init__(self, target_device_name: str = "Snapdragon X Elite CRD"):
         self.qai_hub_models = {}
-        self.upload_jobs = {}
-        
-        logger.info("🚀 初始化實用QAI Hub + ONNX系統...")
-        self._verify_qai_hub_connection()
-        
-    def _verify_qai_hub_connection(self):
-        """驗證QAI Hub連接"""
+        self.onnx_sessions = {}
+        self.target_device = None
+        self.target_device_name = target_device_name
+        # 依名稱自動選擇目標設備
         try:
             devices = hub.get_devices()
-            logger.info(f"✅ QAI Hub連接成功，可用設備: {len(devices)}")
-            
-            # 選擇Snapdragon設備作為目標
-            snapdragon_devices = [d for d in devices if 'Snapdragon' in d.name or 'Samsung' in d.name]
-            if snapdragon_devices:
-                self.target_device = snapdragon_devices[0]
-                logger.info(f"🎯 選擇目標設備: {self.target_device.name}")
+            if not devices:
+                logger.warning("❌ 無可用QAI Hub設備，請確認帳號或API Key")
+                self.target_device = None
             else:
-                self.target_device = devices[0] if devices else None
-                logger.info(f"🎯 使用設備: {self.target_device.name if self.target_device else 'None'}")
-                
+                # 先精確比對名稱
+                matched = [d for d in devices if d.name == self.target_device_name]
+                if matched:
+                    self.target_device = matched[0]
+                else:
+                    # 再用關鍵字模糊比對
+                    target_devices = [d for d in devices if any(kw in d.name for kw in ["Snapdragon", "X Elite", "CPU"])]
+                    self.target_device = target_devices[0] if target_devices else devices[0]
+                logger.info(f"🎯 目標設備: {self.target_device.name}")
         except Exception as e:
-            logger.error(f"❌ QAI Hub連接失敗: {e}")
-            raise
+            logger.error(f"❌ 取得QAI Hub設備失敗: {e}")
+            self.target_device = None
+    """實用的QAI Hub + ONNX Runtime系統"""
     
-    def _setup_onnx_providers(self):
-        """設置ONNX Runtime提供商"""
-        providers = []
-        available = ort.get_available_providers()
-        
-        logger.info(f"📋 可用ONNX執行提供商: {available}")
-        
-        # 優先級: CUDA > DirectML > CPU
-        if 'CUDAExecutionProvider' in available:
-            providers.append('CUDAExecutionProvider')
-            logger.info("✅ 啟用CUDA GPU加速")
-        elif 'DmlExecutionProvider' in available:
-            providers.append('DmlExecutionProvider')
-            logger.info("✅ 啟用DirectML GPU加速")
-        
-        providers.append('CPUExecutionProvider')
-        logger.info("✅ CPU執行提供商已添加")
-        
-        return providers
-    
-    def load_mediapipe_models(self):
-        """載入MediaPipe模型"""
-        logger.info("📥 載入QAI Hub MediaPipe模型...")
-        
+    def load_mediapipe_models(self, source: str = 'onnx'):
+        """
+        載入MediaPipe模型，支援本地 onnx 或 tflite 格式。
+        source: 'onnx'（預設，src/models/onnx）或 'original'（src/models/original, tflite）
+        """
+        logger.info(f"📥 載入MediaPipe模型來源: {source}")
+        base_dir = Path(__file__).parent.parent / 'models'
+        if source == 'onnx':
+            model_dir = base_dir / 'onnx'
+            ext = '.onnx'
+        elif source == 'original':
+            model_dir = base_dir / 'original'
+            ext = '.tflite'
+        else:
+            raise ValueError(f"未知模型來源: {source}")
+
+        # 支援的模型對應表
         models_to_load = {
-            'face': {
-                'module': 'qai_hub_models.models.mediapipe_face',
-                'class': 'Model',
-                'description': 'MediaPipe Face Detection',
+            'face_detection_full_range': {
+                'description': 'Face Detection Full Range',
                 'input_size': (192, 192)
             },
-            'pose': {
-                'module': 'qai_hub_models.models.mediapipe_pose',
-                'class': 'Model',
-                'description': 'MediaPipe Pose Estimation',
+            'face_detection_short_range': {
+                'description': 'Face Detection Short Range',
+                'input_size': (192, 192)
+            },
+            'face_landmark': {
+                'description': 'Face Landmark',
+                'input_size': (192, 192)
+            },
+            'face_landmark_with_attention': {
+                'description': 'Face Landmark with Attention',
+                'input_size': (192, 192)
+            },
+            'hand_landmark': {
+                'description': 'Hand Landmark',
+                'input_size': (224, 224)
+            },
+            'hand_recrop': {
+                'description': 'Hand Recrop',
+                'input_size': (224, 224)
+            },
+            'iris_landmark': {
+                'description': 'Iris Landmark',
+                'input_size': (64, 64)
+            },
+            'pose_landmark_full': {
+                'description': 'Pose Landmark Full',
                 'input_size': (256, 256)
             },
-            'hand': {
-                'module': 'qai_hub_models.models.mediapipe_hand',
-                'class': 'Model',
-                'description': 'MediaPipe Hand Detection',
-                'input_size': (224, 224)
-            }
+            'pose_landmark_heavy': {
+                'description': 'Pose Landmark Heavy',
+                'input_size': (256, 256)
+            },
+            'pose_landmark_lite': {
+                'description': 'Pose Landmark Lite',
+                'input_size': (256, 256)
+            },
         }
-        
+
         for model_name, config in models_to_load.items():
-            try:
-                logger.info(f"📱 載入 {config['description']}...")
-                
-                # 動態導入模型
-                module = __import__(config['module'], fromlist=[config['class']])
-                ModelClass = getattr(module, config['class'])
-                
-                # 創建預訓練模型
-                model = ModelClass.from_pretrained()
-                
+            model_path = model_dir / f"{model_name}{ext}"
+            if not model_path.exists():
+                logger.warning(f"⚠️ 找不到模型檔案: {model_path}")
                 self.qai_hub_models[model_name] = {
-                    'model': model,
-                    'config': config,
-                    'loaded': True
-                }
-                
-                logger.info(f"✅ {config['description']} 載入成功")
-                
-            except Exception as e:
-                logger.error(f"❌ {config['description']} 載入失敗: {e}")
-                self.qai_hub_models[model_name] = {
-                    'model': None,
+                    'model_path': str(model_path),
                     'config': config,
                     'loaded': False,
-                    'error': str(e)
+                    'error': 'file not found'
                 }
+                continue
+            self.qai_hub_models[model_name] = {
+                'model_path': str(model_path),
+                'config': config,
+                'loaded': True,
+                'format': source
+            }
+        logger.info(f"✅ {config['description']} 載入成功: {model_path}")
+        logger.info("✅ CPU執行提供商已添加")
+    
     
     def export_models_to_torchscript(self):
         """將模型導出為TorchScript格式（QAI Hub支援）"""
         logger.info("📤 導出模型為TorchScript格式...")
         
         for model_name, model_info in self.qai_hub_models.items():
-            if not model_info['loaded']:
+            if not model_info.get('loaded'):
                 continue
-                
+            if 'model' not in model_info:
+                logger.info(f"⚠️ {model_name} 無 PyTorch model，跳過 TorchScript 導出。")
+                continue
             try:
                 model = model_info['model']
-                config = model_info['config']
-                
+                config = model_info.get('config', {'description': model_name})
                 logger.info(f"🔄 導出 {config['description']} 為TorchScript...")
-                
-                # 準備示例輸入
                 input_size = config['input_size']
                 sample_input = torch.randn(1, 3, input_size[1], input_size[0])
-                
-                # 設置模型為評估模式
                 model.eval()
-                
-                # 導出為TorchScript
                 with torch.no_grad():
                     traced_model = torch.jit.trace(model, sample_input)
-                
-                # 保存TorchScript模型
                 torchscript_path = f"qai_hub_{model_name}_model.pt"
                 traced_model.save(torchscript_path)
-                
                 logger.info(f"✅ {config['description']} TorchScript已保存: {torchscript_path}")
-                
-                # 更新模型信息
                 model_info['torchscript_path'] = torchscript_path
                 model_info['sample_input_shape'] = sample_input.shape
-                
             except Exception as e:
                 logger.error(f"❌ {config['description']} TorchScript導出失敗: {e}")
                 model_info['export_error'] = str(e)
     
     def upload_models_to_qai_hub(self):
-        """上傳模型到QAI Hub"""
+        """上傳模型到QAI Hub (支援 onnx/tflite/torchscript)"""
         logger.info("☁️ 上傳模型到QAI Hub...")
-        
         for model_name, model_info in self.qai_hub_models.items():
-            if not model_info.get('torchscript_path'):
-                logger.warning(f"⚠️ {model_name} 沒有TorchScript文件，跳過上傳")
+            # 優先順序：torchscript > onnx/tflite
+            model_path = model_info.get('torchscript_path') or model_info.get('model_path')
+            if not model_info.get('loaded') or not model_path or not os.path.exists(model_path):
+                logger.warning(f"⚠️ {model_name} 沒有可用模型檔案，跳過上傳")
                 continue
-                
             try:
-                torchscript_path = model_info['torchscript_path']
                 config = model_info['config']
-                
-                logger.info(f"📤 上傳 {config['description']} 到QAI Hub...")
-                
-                # 上傳模型到QAI Hub
-                uploaded_model = hub.upload_model(torchscript_path)
-                
+                logger.info(f"📤 上傳 {config['description']} ({model_path}) 到QAI Hub...")
+                uploaded_model = hub.upload_model(model_path)
                 logger.info(f"✅ {config['description']} 上傳成功")
                 logger.info(f"   模型ID: {uploaded_model.model_id}")
-                
-                # 保存上傳的模型引用
                 model_info['qai_hub_model'] = uploaded_model
                 model_info['model_id'] = uploaded_model.model_id
-                
             except Exception as e:
                 logger.error(f"❌ {config['description']} 上傳失敗: {e}")
                 model_info['upload_error'] = str(e)
     
     def submit_compilation_jobs(self):
-        """提交編譯Jobs"""
+        """提交編譯Jobs (只要有成功上傳的模型都能提交)"""
         logger.info("🔄 提交模型編譯Jobs到QAI Hub...")
-        
         for model_name, model_info in self.qai_hub_models.items():
             if not model_info.get('qai_hub_model'):
                 logger.warning(f"⚠️ {model_name} 沒有上傳到QAI Hub，跳過編譯")
                 continue
-                
             try:
                 qai_model = model_info['qai_hub_model']
                 config = model_info['config']
-                input_size = config['input_size']
-                
                 logger.info(f"🚀 提交 {config['description']} 編譯Job...")
-                
-                # 設置輸入規格
-                input_specs = {
-                    "image": ((1, 3, input_size[1], input_size[0]), "float32")
-                }
-                
-                # 提交編譯Job
+                # input_specs 可根據模型格式自動推斷或簡化
+                input_specs = None  # 若需自訂可擴充
                 compile_job = hub.submit_compile_job(
                     model=qai_model,
                     input_specs=input_specs,
                     device=self.target_device
                 )
-                
                 logger.info(f"✅ {config['description']} 編譯Job已提交")
                 logger.info(f"   Job ID: {compile_job.job_id}")
                 logger.info(f"   Dashboard: https://aihub.qualcomm.com/jobs/{compile_job.job_id}")
-                
-                # 保存Job引用
                 model_info['compile_job'] = compile_job
-                
             except Exception as e:
                 logger.error(f"❌ {config['description']} 編譯Job提交失敗: {e}")
                 model_info['compile_error'] = str(e)
@@ -487,6 +452,18 @@ class PracticalQAIHubONNX:
         
         return pipeline_results
 
+    def check_onnx_models(self):
+        """檢查所有 onnx 檔案是否合法，回傳異常清單"""
+        invalid = []
+        for model_name, model_info in self.qai_hub_models.items():
+            if model_info.get('format') == 'onnx' and model_info.get('loaded'):
+                path = model_info['model_path']
+                try:
+                    onnx.checker.check_model(path, full_check=True)
+                except Exception as e:
+                    invalid.append((model_name, path, str(e)))
+        return invalid
+
 def main():
     """主函數：演示實用QAI Hub + ONNX系統"""
     print("🎯 實用QAI Hub + ONNX Runtime系統演示")
@@ -499,35 +476,84 @@ def main():
         # 運行完整流水線
         results = system.run_full_pipeline()
         
+        # 顯示將進行 QAI Hub 最佳化的模型數量與清單
+        models_to_optimize = [k for k, v in system.qai_hub_models.items() if v.get('loaded')]
+        print(f"\n🔎 偵測到 {len(models_to_optimize)} 個模型將進行 QAI Hub 最佳化：")
+        for m in models_to_optimize:
+            print(f"   - {m}")
+
         # 測試檢測（如果ONNX會話可用）
         if system.onnx_sessions:
             print("\n🧪 測試ONNX檢測...")
-            
             test_images = ['andy.jpg', 'official_test_image.jpg']
             for img_path in test_images:
                 if os.path.exists(img_path):
                     print(f"\n📷 測試圖像: {img_path}")
                     image = cv2.imread(img_path)
-                    
                     if image is not None:
                         for model_name in system.onnx_sessions.keys():
                             detection_result = system.detect_with_onnx(image, model_name)
                             print(f"   {model_name}: {detection_result.get('inference_time_ms', 'N/A')}ms")
         
-        # 檢查QAI Hub Job狀態
+        # 自動查詢 QAI Hub Job 狀態，等待所有 Job 完成
+        import time
+        print("\n⏳ 等待所有 QAI Hub Job 完成...")
+        all_done = False
+        poll_interval = 10  # 秒
+        max_wait = 60 * 30  # 最長等待 30 分鐘
+        waited = 0
+        while not all_done and waited < max_wait:
+            all_done = True
+            for model_name, model_info in system.qai_hub_models.items():
+                job = model_info.get('compile_job')
+                if job:
+                    job.refresh()  # 重新查詢狀態
+                    status = getattr(job, 'status', None) or getattr(job, 'state', None)
+                    model_info['job_status'] = status
+                    if status not in ('COMPLETED', 'SUCCEEDED', 'SUCCESS', 'FINISHED', 'COMPLETED_SUCCESSFULLY'):
+                        all_done = False
+            if not all_done:
+                print(f"  ...尚有 Job 執行中，{poll_interval} 秒後再查詢...")
+                time.sleep(poll_interval)
+                waited += poll_interval
         print("\n📊 QAI Hub Job狀態:")
         for model_name, model_info in system.qai_hub_models.items():
-            if 'compile_job' in model_info:
-                job = model_info['compile_job']
-                print(f"   {model_name}: Job {job.job_id}")
-                print(f"     Dashboard: https://aihub.qualcomm.com/jobs/{job.job_id}")
-        
-        # 保存結果
+            job = model_info.get('compile_job')
+            job_id = job.job_id if job else ''
+            status = model_info.get('job_status', '')
+            print(f"   {model_name}: Job {job_id} 狀態: {status}")
+            if job_id:
+                print(f"     Dashboard: https://aihub.qualcomm.com/jobs/{job_id}")
+
+        # 保存結果 (JSON)
         results_file = 'practical_qai_hub_onnx_results.json'
         with open(results_file, 'w') as f:
             json.dump(results, f, indent=2, default=str)
-        
-        print(f"\n✅ 演示完成！結果已保存到 {results_file}")
+
+        # 產生 HTML 報告
+        html_file = 'practical_qai_hub_onnx_report.html'
+        with open(html_file, 'w') as f:
+            f.write('<html><head><meta charset="utf-8"><title>QAI Hub Pipeline Report</title></head><body>')
+            f.write('<h1>QAI Hub Pipeline Report</h1>')
+            f.write(f'<p><b>Timestamp:</b> {results.get("timestamp", "")}</p>')
+            f.write('<h2>Models & Jobs</h2><table border="1" cellpadding="4"><tr><th>Model</th><th>Status</th><th>Job ID</th><th>Dashboard</th></tr>')
+            for model_name, model_info in system.qai_hub_models.items():
+                job = model_info.get('compile_job')
+                job_id = job.job_id if job else ''
+                dashboard = f'<a href="https://aihub.qualcomm.com/jobs/{job_id}">{job_id}</a>' if job_id else ''
+                status = model_info.get('job_status', '') or ('已提交' if job_id else (model_info.get('error') or '未提交'))
+                f.write(f'<tr><td>{model_name}</td><td>{status}</td><td>{job_id}</td><td>{dashboard}</td></tr>')
+            f.write('</table>')
+            # pipeline summary
+            f.write('<h2>Pipeline Summary</h2><ul>')
+            for step, stat in results.get('steps', {}).items():
+                f.write(f'<li>{step}: {stat}</li>')
+            f.write('</ul>')
+            if 'error' in results:
+                f.write(f'<p style="color:red"><b>Pipeline Error:</b> {results["error"]}</p>')
+            f.write('</body></html>')
+
+        print(f"\n✅ 演示完成！結果已保存到 {results_file}，HTML 報告已產生 {html_file}")
         
     except Exception as e:
         print(f"❌ 演示失敗: {e}")

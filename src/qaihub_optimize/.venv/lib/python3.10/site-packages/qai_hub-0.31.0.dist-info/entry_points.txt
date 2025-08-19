@@ -1,0 +1,3 @@
+[console_scripts]
+qai-hub = qai_hub._cli:main
+
