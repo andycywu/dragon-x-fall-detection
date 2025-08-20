@@ -1,0 +1,2 @@
+[console_scripts]
+tflite2onnx = tflite2onnx.convert:cmd_convert
