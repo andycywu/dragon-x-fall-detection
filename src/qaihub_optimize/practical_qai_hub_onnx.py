@@ -53,84 +53,73 @@ class PracticalQAIHubONNX:
             self.target_device = None
     """實用的QAI Hub + ONNX Runtime系統"""
     
-    def load_mediapipe_models(self, source: str = 'onnx'):
+    def load_mediapipe_models(self, source: str = 'onnx', model_dir: str = None, ext: str = None):
         """
-        載入MediaPipe模型，支援本地 onnx 或 tflite 格式。
-        source: 'onnx'（預設，src/models/onnx）或 'original'（src/models/original, tflite）
+        自動載入指定目錄下所有副檔名正確的模型（onnx/tflite/dlc），不再只依 key 對應。
+        source: 標記來源類型
+        model_dir: 指定目錄（如 org-onnx、org-tflite、org-dlc...）
+        ext: 指定副檔名（.onnx/.tflite/.dlc）
         """
         logger.info(f"📥 載入MediaPipe模型來源: {source}")
         base_dir = Path(__file__).parent.parent / 'models'
-        if source == 'onnx':
-            model_dir = base_dir / 'onnx'
-            ext = '.onnx'
-        elif source == 'original':
-            model_dir = base_dir / 'original'
-            ext = '.tflite'
+        if model_dir is not None and ext is not None:
+            model_dir = base_dir / model_dir
         else:
-            raise ValueError(f"未知模型來源: {source}")
+            if source == 'onnx':
+                model_dir = base_dir / 'onnx'
+                ext = '.onnx'
+            elif source == 'original':
+                model_dir = base_dir / 'original'
+                ext = '.tflite'
+            else:
+                raise ValueError(f"未知模型來源: {source}")
 
-        # 支援的模型對應表
-        models_to_load = {
-            'face_detection_full_range': {
-                'description': 'Face Detection Full Range',
-                'input_size': (192, 192)
-            },
-            'face_detection_short_range': {
-                'description': 'Face Detection Short Range',
-                'input_size': (192, 192)
-            },
-            'face_landmark': {
-                'description': 'Face Landmark',
-                'input_size': (192, 192)
-            },
-            'face_landmark_with_attention': {
-                'description': 'Face Landmark with Attention',
-                'input_size': (192, 192)
-            },
-            'hand_landmark': {
-                'description': 'Hand Landmark',
-                'input_size': (224, 224)
-            },
-            'hand_recrop': {
-                'description': 'Hand Recrop',
-                'input_size': (224, 224)
-            },
-            'iris_landmark': {
-                'description': 'Iris Landmark',
-                'input_size': (64, 64)
-            },
-            'pose_landmark_full': {
-                'description': 'Pose Landmark Full',
-                'input_size': (256, 256)
-            },
-            'pose_landmark_heavy': {
-                'description': 'Pose Landmark Heavy',
-                'input_size': (256, 256)
-            },
-            'pose_landmark_lite': {
-                'description': 'Pose Landmark Lite',
-                'input_size': (256, 256)
-            },
+        if not model_dir.exists() or not model_dir.is_dir():
+            logger.warning(f"❌ 模型目錄不存在: {model_dir}")
+            return
+
+        found_models = list(model_dir.glob(f"*{ext}"))
+        if not found_models:
+            logger.warning(f"❌ 目錄 {model_dir} 下找不到任何 {ext} 模型檔案")
+        # 常見 MediaPipe 模型 input_size 對應表
+        input_size_map = {
+            'facedetector': (192, 192),
+            'facelandmark': (192, 192),
+            'facelandmarkdetector': (192, 192),
+            'facelandmark_with_attention': (192, 192),
+            'handdetector': (224, 224),
+            'handlandmark': (224, 224),
+            'handlandmarkdetector': (224, 224),
+            'handrecrop': (224, 224),
+            'irislandmark': (64, 64),
+            'posedetector': (256, 256),
+            'poselandmark': (256, 256),
+            'poselandmarkdetector': (256, 256),
+            'poselandmark_full': (256, 256),
+            'poselandmark_heavy': (256, 256),
+            'poselandmark_lite': (256, 256),
         }
-
-        for model_name, config in models_to_load.items():
-            model_path = model_dir / f"{model_name}{ext}"
-            if not model_path.exists():
-                logger.warning(f"⚠️ 找不到模型檔案: {model_path}")
-                self.qai_hub_models[model_name] = {
-                    'model_path': str(model_path),
-                    'config': config,
-                    'loaded': False,
-                    'error': 'file not found'
-                }
-                continue
+        default_input_size = (224, 224)
+        for model_path in found_models:
+            model_name = model_path.stem
+            # 嘗試自動對應 input_size
+            key = model_name.lower().replace('mediapipe-', '').replace('_w8a8', '').replace('_with_attention', '').replace('_full', '').replace('_heavy', '').replace('_lite', '').replace('_detector', '').replace('_landmark', 'landmark')
+            # 例如 MediaPipe-FaceDetector -> facedetector
+            input_size = None
+            for k, v in input_size_map.items():
+                if k in key:
+                    input_size = v
+                    break
+            if input_size is None:
+                input_size = default_input_size
+                logger.warning(f"⚠️ {model_name} 未知input_size，自動設為 {default_input_size}")
             self.qai_hub_models[model_name] = {
                 'model_path': str(model_path),
-                'config': config,
+                'config': {'description': model_name, 'input_size': input_size},
                 'loaded': True,
                 'format': source
             }
-        logger.info(f"✅ {config['description']} 載入成功: {model_path}")
+            logger.info(f"✅ {model_name} 載入成功: {model_path} | input_size={input_size}")
         logger.info("✅ CPU執行提供商已添加")
     
     
@@ -194,8 +183,11 @@ class PracticalQAIHubONNX:
                 qai_model = model_info['qai_hub_model']
                 config = model_info['config']
                 logger.info(f"🚀 提交 {config['description']} 編譯Job...")
-                # input_specs 可根據模型格式自動推斷或簡化
-                input_specs = None  # 若需自訂可擴充
+                # input_specs 轉換: {'input': (1, 3, H, W)}
+                input_size = config.get('input_size', (224, 224))
+                # 預設 input 名稱為 'input'，可依需求擴充
+                input_specs = {'input': (1, 3, input_size[1], input_size[0])}
+                logger.info(f"   input_specs: {input_specs}")
                 compile_job = hub.submit_compile_job(
                     model=qai_model,
                     input_specs=input_specs,
