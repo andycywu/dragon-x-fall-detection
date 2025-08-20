@@ -27,6 +27,75 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class PracticalQAIHubONNX:
+    def submit_profile_jobs(self):
+        """自動提交所有已上傳模型的 profiling job，遇到裝置不支援自動提示/跳過/詢問轉換"""
+        logger.info("🚀 提交 Profiling Jobs 到 QAI Hub...")
+        # 取得裝置支援格式
+        device = self.target_device
+        if not device:
+            logger.error("❌ 無法取得目標裝置，無法提交 profiling job")
+            return
+        device_attrs = getattr(device, 'attributes', [])
+        support_onnx = any('framework:onnx' in a for a in device_attrs)
+        support_tflite = any('framework:tflite' in a for a in device_attrs)
+        support_dlc = any('framework:dlc' in a for a in device_attrs)
+        logger.info(f"🔍 目標裝置支援: ONNX={support_onnx}, TFLite={support_tflite}, DLC={support_dlc}")
+        for model_name, model_info in self.qai_hub_models.items():
+            qai_model = model_info.get('qai_hub_model')
+            if not qai_model:
+                logger.warning(f"⚠️ {model_name} 尚未上傳 QAI Hub，跳過 profiling job 提交")
+                continue
+            model_path = model_info.get('model_path','')
+            ext = os.path.splitext(model_path)[-1].lower()
+            try:
+                config = model_info['config']
+                # 判斷格式支援
+                if ext == '.onnx' and not support_onnx:
+                    logger.warning(f"⚠️ 目標裝置不支援 ONNX，{model_name} 跳過 profiling job 提交")
+                    continue
+                if ext == '.tflite' and not support_tflite:
+                    # 詢問是否要自動轉換 onnx
+                    print(f"⚠️ 目標裝置不支援 TFLite，模型 {model_name} 無法直接 profile。是否要自動轉換為 ONNX？(y/n)")
+                    user_input = input().strip().lower()
+                    if user_input == 'y':
+                        # 嘗試自動轉換 tflite->onnx
+                        try:
+                            import subprocess
+                            onnx_path = os.path.splitext(model_path)[0] + '.onnx'
+                            print(f"🔄 自動轉換 {model_path} → {onnx_path} ...")
+                            result = subprocess.run(['tflite2onnx', model_path, onnx_path], capture_output=True, text=True)
+                            if result.returncode == 0 and os.path.exists(onnx_path):
+                                print(f"✅ 轉換成功: {onnx_path}")
+                                # 重新上傳 onnx
+                                uploaded_model = hub.upload_model(onnx_path)
+                                model_info['qai_hub_model'] = uploaded_model
+                                model_info['model_path'] = onnx_path
+                                model_info['format'] = 'onnx'
+                                qai_model = uploaded_model
+                                ext = '.onnx'
+                            else:
+                                print(f"❌ 轉換失敗: {result.stderr}")
+                                continue
+                        except Exception as te:
+                            print(f"❌ tflite 轉 onnx 發生錯誤: {te}")
+                            continue
+                    else:
+                        print(f"⏭️ 跳過 {model_name}")
+                        continue
+                if ext == '.dlc' and not support_dlc:
+                    logger.warning(f"⚠️ 目標裝置不支援 DLC，{model_name} 跳過 profiling job 提交")
+                    continue
+                logger.info(f"📈 提交 {config['description']} profiling job...")
+                profile_job = hub.submit_profile_job(
+                    model=qai_model,
+                    device=self.target_device
+                )
+                logger.info(f"✅ {config['description']} Profiling Job已提交: {profile_job.job_id}")
+                logger.info(f"   Dashboard: https://aihub.qualcomm.com/jobs/{profile_job.job_id}")
+                model_info['profile_job'] = profile_job
+            except Exception as e:
+                logger.error(f"❌ {config['description']} Profiling Job提交失敗: {e}")
+                model_info['profile_error'] = str(e)
     def __init__(self, target_device_name: str = "Snapdragon X Elite CRD"):
         self.qai_hub_models = {}
         self.onnx_sessions = {}
@@ -174,6 +243,7 @@ class PracticalQAIHubONNX:
     
     def submit_compilation_jobs(self):
         """提交編譯Jobs (只要有成功上傳的模型都能提交)"""
+        import onnx
         logger.info("🔄 提交模型編譯Jobs到QAI Hub...")
         for model_name, model_info in self.qai_hub_models.items():
             if not model_info.get('qai_hub_model'):
@@ -183,11 +253,25 @@ class PracticalQAIHubONNX:
                 qai_model = model_info['qai_hub_model']
                 config = model_info['config']
                 logger.info(f"🚀 提交 {config['description']} 編譯Job...")
-                # input_specs 轉換: {'input': (1, 3, H, W)}
-                input_size = config.get('input_size', (224, 224))
-                # 預設 input 名稱為 'input'，可依需求擴充
-                input_specs = {'input': (1, 3, input_size[1], input_size[0])}
-                logger.info(f"   input_specs: {input_specs}")
+                # 自動讀取 onnx input shape
+                model_path = model_info.get('model_path')
+                input_specs = None
+                if model_path and model_path.endswith('.onnx'):
+                    try:
+                        onnx_model = onnx.load(model_path)
+                        input_tensor = onnx_model.graph.input[0]
+                        input_name = input_tensor.name
+                        shape = [d.dim_value for d in input_tensor.type.tensor_type.shape.dim]
+                        dtype = onnx.mapping.TENSOR_TYPE_TO_NP_TYPE[input_tensor.type.tensor_type.elem_type]
+                        input_specs = {input_name: (tuple(shape), str(dtype))}
+                        logger.info(f"   [Auto] input_specs: {input_specs}")
+                    except Exception as e:
+                        logger.warning(f"   [Auto] 讀取 onnx input shape 失敗: {e}")
+                if input_specs is None:
+                    # fallback 舊邏輯
+                    input_size = config.get('input_size', (224, 224))
+                    input_specs = {'input': (1, 3, input_size[1], input_size[0])}
+                    logger.info(f"   [Fallback] input_specs: {input_specs}")
                 compile_job = hub.submit_compile_job(
                     model=qai_model,
                     input_specs=input_specs,
