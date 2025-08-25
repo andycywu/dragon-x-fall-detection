@@ -1,0 +1,4 @@
+[2025-08-25 17:39:34] /Users/andycyw/mvp_fall_detection_starter/src/models/raw/face_detector.tflite -> 
+usage: tflite2onnx [-h] tflite_path onnx_path
+tflite2onnx: error: unrecognized arguments: --tflite --onnx
+

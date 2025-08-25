@@ -578,6 +578,12 @@ def main():
         poll_interval = 10  # 秒
         max_wait = 60 * 30  # 最長等待 30 分鐘
         waited = 0
+        
+        # 定義所有完成的狀態
+        completed_status = ('COMPLETED', 'SUCCEEDED', 'SUCCESS', 'FINISHED', 
+                          'COMPLETED_SUCCESSFULLY', 'RESULTS_READY', 'RESULTS READY', 
+                          'results_ready', 'Results Ready')
+        
         while not all_done and waited < max_wait:
             all_done = True
             for model_name, model_info in system.qai_hub_models.items():
@@ -586,7 +592,8 @@ def main():
                     job.refresh()  # 重新查詢狀態
                     status = getattr(job, 'status', None) or getattr(job, 'state', None)
                     model_info['job_status'] = status
-                    if status not in ('COMPLETED', 'SUCCEEDED', 'SUCCESS', 'FINISHED', 'COMPLETED_SUCCESSFULLY'):
+                    # 檢查狀態是否在完成狀態列表中（不區分大小寫）
+                    if status is None or str(status).upper() not in [s.upper() for s in completed_status]:
                         all_done = False
             if not all_done:
                 print(f"  ...尚有 Job 執行中，{poll_interval} 秒後再查詢...")

@@ -9,14 +9,20 @@ import sys
 import os
 import time
 from pathlib import Path
+from dotenv import load_dotenv
+import subprocess
+import shutil
+import re
+import logging
 
 # 匯入模組化組件
 from modules.scanner import ModelScanner
 from modules.conversion import ModelConverter
+from modules.advanced_conversion import AdvancedModelConverter, get_advanced_converter
 from modules.format_check import FormatChecker
 from modules.qaihub_client import QAIHubClient
 from modules.pipeline import QAIHubPipeline
-from modules.job_monitor import QAIHubJobMonitor
+from modules.job_monitor import QAIHubJobMonitor, get_job_monitor
 
 # 匯入其他必要的功能模組
 from practical_qai_hub_onnx import PracticalQAIHubONNX
@@ -24,208 +30,103 @@ from final_qai_hub_onnx_system import FinalQAIHubONNXSystem
 from qai_hub_unified_detector import QAIHubUnifiedDetector, demo_qai_hub_detection, test_live_detection
 from official_qai_hub_detector import OfficialQAIHubDetector, demo_official_qai_hub_detection
 
+# 加載 .env 配置
+load_dotenv()
+
+# 獲取模型相關目錄
+MODELS_BASE_DIR = os.getenv("MODELS_BASE_DIR")
+ONNX_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("ONNX_MODEL_DIR"))
+RAW_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("MODEL_SOURCE_DIR"))
+OPTIMIZED_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("OPTIMIZED_MODEL_DIR"))
+
 
 def get_models_dir():
     """取得 models 目錄路徑"""
+    # 優先使用環境變數中的路徑
+    models_base_dir = os.getenv('MODELS_BASE_DIR')
+    if models_base_dir:
+        return Path(models_base_dir)
+    # 備用方案：使用相對路徑
     return Path(__file__).parent.parent / 'models'
 
 
-def run_compile(source='dlc'):
-    """編譯並最佳化模型（自動掃描 org 目錄）"""
-    print(f"\n[Compile] QAI Hub Compile Pipeline (Practical) | source={source}")
+# 新增檢查 .env 變數是否正確載入
+if not MODELS_BASE_DIR or not ONNX_MODEL_DIR or not RAW_MODEL_DIR or not OPTIMIZED_MODEL_DIR:
+    print("❌ .env 配置錯誤，請檢查以下變數是否正確設置：")
+    print("   - MODELS_BASE_DIR")
+    print("   - ONNX_MODEL_DIR")
+    print("   - MODEL_SOURCE_DIR")
+    print("   - OPTIMIZED_MODEL_DIR")
+    sys.exit(1)
+
+
+def ensure_directory_exists(directory):
+    """
+    確保目錄存在，若不存在則建立。
+
+    Args:
+        directory (str): 目錄路徑。
+
+    Returns:
+        None
+    """
+    try:
+        if not os.path.exists(directory):
+            print(f"📁 目錄不存在，正在建立: {directory}")
+            os.makedirs(directory, exist_ok=True)
+    except Exception as e:
+        print(f"❌ 建立目錄失敗: {directory}，錯誤: {e}")
+        sys.exit(1)
+
+
+def run_compile():
+    """編譯並最佳化模型（自動掃描 raw 目錄）"""
+    print(f"\n[Compile] QAI Hub Compile Pipeline")
     
-    # 初始化模組
-    scanner = ModelScanner()
-    converter = ModelConverter()
-    format_checker = FormatChecker()
-    qaihub_client = QAIHubClient()
-    pipeline = QAIHubPipeline()
+    # 使用 QAIHubPipeline 進行完整的編譯流程
+    pipeline = QAIHubPipeline(get_models_dir())
     
-    # 掃描 org 目錄
-    model_files = scanner.scan_org_directory()
-    counts = scanner.get_model_counts(model_files)
     
-    if counts['total'] == 0:
-        print("❌ org 目錄下沒有可用模型檔案！")
-        return
+    # 執行編譯流程，使用新的 job monitor 會自動處理狀態監控和模型下載
+    # 自動掃描 raw 目錄並根據目標裝置支援決定來源類型
+    # 使用 source 參數而不是 quantize
+    success = pipeline.run_compile_pipeline(source='onnx')
     
-    print(f"\n共偵測到：{counts['tflite']} 個 tflite, {counts['onnx']} 個 onnx, {counts['dlc']} 個 dlc 檔案")
-    
-    # 自動轉換 TFLite 到 ONNX
-    if counts['tflite'] > 0:
-        tflite_files = model_files['tflite']
-        results, failed_conversions = converter.batch_convert_tflite(tflite_files, get_models_dir() / 'onnx')
+    if success:
+        # 檢查並顯示下載的優化模型
+        downloaded_models = []
+        for model_name, model_info in pipeline.qaihub_client.qai_hub_models.items():
+            if model_info.get('optimized_model_downloaded', False):
+                downloaded_models.append(model_name)
         
-        successful_conversions = [r for r in results if r["status"] == "ok"]
-        if successful_conversions:
-            print(f"✅ 批次轉換完成，{len(successful_conversions)} 個 onnx 檔案已存入 {get_models_dir() / 'onnx'}")
-            # 轉換完自動切換 source 為 onnx
-            source = 'onnx'
-        if failed_conversions:
-            print(f"⚠️  有 {len(failed_conversions)} 個檔案轉換失敗")
-    
-    # 根據 source 決定目錄與格式
-    source_map = {
-        'onnx':      ('onnx', '.onnx'),
-        'tflite':    ('org-tflite', '.tflite'),
-        'dlc':       ('org-dlc', '.dlc'),
-        'org-onnx':  ('onnx', '.onnx'),
-        'org-tflite':('org-tflite', '.tflite'),
-        'org-dlc':   ('org-dlc', '.dlc'),
-        'original':  ('original', '.tflite'),
-    }
-    
-    if source not in source_map:
-        print(f"❌ 不支援的 source: {source}")
-        return
-    
-    model_dir, ext = source_map[source]
-    
-    # 若是 onnx，先自動修正所有 onnx 檔案
-    if ext == '.onnx':
-        onnx_dir = get_models_dir() / model_dir
-        format_checker.batch_fix_onnx_value_info(onnx_dir)
-    
-    # 使用 pipeline 進行完整的編譯流程
-    system = PracticalQAIHubONNX()
-    system.load_mediapipe_models(source=source, model_dir=model_dir, ext=ext)
-    
-    # ONNX 檢查
-    if ext == '.onnx':
-        invalid_models = format_checker.check_onnx_models(system.qai_hub_models)
-        if invalid_models:
-            print("\n❌ 偵測到下列 ONNX 模型檔案格式異常，請修正後再執行：")
-            for name, path, err in invalid_models:
-                print(f"   - {name}: {path}\n     錯誤: {err}")
-            print("\n流程中止。")
-            return
-    
-    # 列出要處理的模型
-    models_to_process = [k for k, v in system.qai_hub_models.items() if v.get('loaded')]
-    print(f"\n🔎 偵測到 {len(models_to_process)} 個模型將進行 QAI Hub 最佳化：")
-    for m in models_to_process:
-        print(f"   - {m}")
-    
-    # 提示 QAI Hub 作業流程
-    print("""
-📋 QAI Hub 雲端最佳化作業流程：
-1. 上傳模型（Upload Model）
-2. 提交編譯任務（Submit Compile Job）
-3. 等待雲端完成最佳化（Job Queue & Compile）
-4. 下載最佳化模型（Download）
-5. 可進行 Profile、Infer、Demo 等後續測試
-""")
-    
-    # 執行編譯流程
-    system.upload_models_to_qai_hub()
-    system.submit_compilation_jobs()
-    
-    # 使用 JobMonitor 等待所有 compile job 完成
-    job_monitor = QAIHubJobMonitor()
-    job_monitor.wait_for_compile_jobs(system.qai_hub_models, timeout_minutes=30)
-    
-    # 產生 HTML 報告
-    job_monitor.generate_compile_report(system.qai_hub_models, 'practical_qai_hub_compile_report.html')
-    print(f"\n✅ Compile 完成！HTML 報告已產生 practical_qai_hub_compile_report.html")
+        if downloaded_models:
+            print(f"\n💾 優化模型已下載到 src/models/qaihub_optimized/ ({len(downloaded_models)} 個):")
+            for model_name in downloaded_models:
+                model_path = pipeline.qaihub_client.qai_hub_models[model_name].get('optimized_model_path', '未知路徑')
+                print(f"   - {model_name} -> {model_path}")
+        else:
+            print("\n⚠️  沒有下載優化模型，請檢查編譯任務是否成功完成")
+        
+        print(f"\n✅ Compile 完成！")
+    else:
+        print(f"\n❌ Compile 失敗！")
 
 
 def run_profile():
-    """進行模型效能分析（自動掃描 org 目錄）"""
-    print("\n[Profile] QAI Hub Profile Pipeline (Practical)")
+    """進行模型效能分析（自動掃描 raw 目錄）"""
+    print("\n[Profile] QAI Hub Profile Pipeline")
     
-    # 初始化模組
-    scanner = ModelScanner()
-    converter = ModelConverter()
-    qaihub_client = QAIHubClient()
-    job_monitor = QAIHubJobMonitor(qaihub_client)
+    # 使用 QAIHubPipeline 進行完整的分析流程
+    pipeline = QAIHubPipeline(get_models_dir())
     
-    # 掃描 org 目錄
-    model_files = scanner.scan_org_directory()
-    counts = scanner.get_model_counts(model_files)
+    # 執行分析流程，使用新的 job monitor 會自動處理狀態監控
+    # 自動掃描 raw 目錄並根據目標裝置支援決定來源類型
+    success = pipeline.run_profile_pipeline()
     
-    if counts['total'] == 0:
-        print("❌ org 目錄下找不到任何模型檔案，無法進行 profile。")
-        return
-    
-    # 合併所有模型檔案
-    all_model_files = model_files['tflite'] + model_files['onnx'] + model_files['dlc']
-    
-    print(f"🔎 偵測到 {counts['total']} 個模型檔案：")
-    for file_list in [model_files['tflite'], model_files['onnx'], model_files['dlc']]:
-        for f in file_list:
-            print(f"   - {f.name}")
-    
-    # 啟動系統，先取得裝置支援格式
-    system = PracticalQAIHubONNX()
-    device = system.target_device
-    if not device:
-        print("❌ 無法取得目標裝置，無法進行 profile。")
-        return
-    
-    # 檢查裝置支援的框架
-    device_attrs = getattr(device, 'attributes', [])
-    support_onnx = any('framework:onnx' in a for a in device_attrs)
-    support_tflite = any('framework:tflite' in a for a in device_attrs)
-    support_dlc = any('framework:dlc' in a for a in device_attrs)
-    
-    print(f"\n[裝置支援格式] ONNX={support_onnx}, TFLite={support_tflite}, DLC={support_dlc}")
-    
-    # 處理 TFLite 轉換
-    tflite_models = model_files['tflite']
-    convert_tflite = False
-    
-    if tflite_models and not support_tflite:
-        convert_tflite = converter.ask_for_conversion(len(tflite_models))
-    
-    # 篩選可 profile 的模型
-    models_to_profile = []
-    for f in all_model_files:
-        ext = f.suffix.lower()
-        if ext == '.onnx' and not support_onnx:
-            print(f"⏭️ 跳過 {f.name}，因目標裝置不支援 ONNX")
-            continue
-        if ext == '.dlc' and not support_dlc:
-            print(f"⏭️ 跳過 {f.name}，因目標裝置不支援 DLC")
-            continue
-        if ext == '.tflite':
-            if support_tflite:
-                models_to_profile.append(f)
-            elif convert_tflite:
-                # 嘗試轉換
-                result = converter.convert_tflite_to_onnx(f, get_models_dir() / 'onnx')
-                if result["status"] == "ok" and result["onnx_path"]:
-                    models_to_profile.append(Path(result["onnx_path"]))
-                    print(f"✅ 轉換成功: {f.name} -> {result['onnx_path'].name}")
-                else:
-                    print(f"❌ 轉換失敗: {f.name} - {result['message']}")
-            else:
-                print(f"⏭️ 跳過 {f.name}，因目標裝置不支援 TFLite 且未選擇自動轉換")
-        else:
-            models_to_profile.append(f)
-    
-    if not models_to_profile:
-        print("❌ 無可 profile 的模型。流程結束。")
-        return
-    
-    print(f"\n✅ 最終將進行 profile 的模型：")
-    for f in models_to_profile:
-        print(f"   - {f.name}")
-    
-    # 載入、上傳、profile
-    for ext, source in [('.onnx', 'onnx'), ('.tflite', 'tflite'), ('.dlc', 'dlc')]:
-        files = [f for f in models_to_profile if f.suffix.lower() == ext]
-        if files:
-            system.load_mediapipe_models(source=source, model_dir='org', ext=ext)
-    
-    system.upload_models_to_qai_hub()
-    system.submit_profile_jobs()
-    
-    # 使用 JobMonitor 等待所有 profile job 完成
-    job_monitor.wait_for_profile_jobs(system.qai_hub_models, timeout_minutes=30)
-    
-    # 產生 HTML 報告
-    job_monitor.generate_profile_report(system.qai_hub_models, 'practical_qai_hub_profile_report.html')
-    print(f"\n✅ Profile 完成！HTML 報告已產生 practical_qai_hub_profile_report.html")
+    if success:
+        print(f"\n✅ Profile 完成！")
+    else:
+        print(f"\n❌ Profile 失敗！")
 
 
 def run_infer():
@@ -278,11 +179,121 @@ def run_compile_profile(source='dlc'):
     print("\nCompile+Profile+Infer 完成！")
 
 
-def run_link(source='dlc'):
-    """Link Job（進階用途）"""
-    print(f"\n[Link] QAI Hub Link Job Pipeline | source={source}")
-    print("(目前僅支援現有檔案，不做自動轉換)")
-    print("\nLink Job 完成！")
+def run_link():
+    """Link Job（模型串接）"""
+    print(f"\n[Link] QAI Hub Link Job Pipeline")
+    
+    # 使用 QAIHubPipeline 進行模型串接流程
+    pipeline = QAIHubPipeline(get_models_dir())
+    
+    # 這裡示範一個基本的串接配置範例
+    # 實際使用時應該從配置文件或使用者輸入獲取
+    link_config = {
+        "models": [
+            {
+                "id": "DETECT_MODEL_ID",  # 需要替換為實際的模型 ID
+                "alias": "detector"
+            },
+            {
+                "id": "LANDMARK_MODEL_ID",  # 需要替換為實際的模型 ID
+                "alias": "landmark"
+            }
+        ],
+        "connections": [
+            {
+                "from": "detector:output_boxes",
+                "to": "landmark:input_boxes"
+            }
+        ]
+    }
+    
+    print("🔗 模型串接配置範例:")
+    print(f"   - 模型數量: {len(link_config['models'])}")
+    print(f"   - 連接數量: {len(link_config['connections'])}")
+    
+    # 提示使用者輸入實際的模型 ID
+    print("\n⚠️  請注意：需要先完成模型的編譯，取得模型 ID 後才能進行串接")
+    print("   請將配置中的 'DETECT_MODEL_ID' 和 'LANDMARK_MODEL_ID' 替換為實際的模型 ID")
+    
+    # 詢問使用者是否要使用範例配置或從文件載入
+    response = input("\n是否要使用範例配置進行串接？(y/n): ").strip().lower()
+    if response == 'y':
+        # 提交串接任務
+        link_job = pipeline.qaihub_client.submit_link_job(link_config, "fall_detection_pipeline")
+        if link_job:
+            print(f"\n✅ Link Job 提交成功！Job ID: {link_job.job_id}")
+            print("   請等待串接任務完成...")
+        else:
+            print("\n❌ Link Job 提交失敗")
+    else:
+        print("\n⏭️ 跳過串接任務，請手動準備 link_config.json 後再執行")
+    
+    print("\nLink Job 流程完成！")
+
+
+# 設定 logging
+logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+logger = logging.getLogger('qaihub_optimize')
+
+
+def find_executable_in_venv(exe_name):
+    """嘗試在專案 virtualenv 或系統 PATH 中尋找可執行檔。回傳完整路徑或 None。"""
+    # 1. 檢查虛擬環境 .venv/bin
+    venv_bin = Path(__file__).parent / '.venv' / 'bin'
+    candidate = venv_bin / exe_name
+    if candidate.exists():
+        return str(candidate)
+    # 2. 檢查當前環境 PATH
+    which = shutil.which(exe_name)
+    if which:
+        return which
+    return None
+
+
+def convert_tflite_to_onnx_advanced(tflite_path, onnx_path):
+    """
+    使用進階轉換方法進行 TFLite 到 ONNX 轉換
+    
+    回傳值： (success: bool, err_msg: str)
+    """
+    try:
+        converter = get_advanced_converter()
+        tflite_path_obj = Path(tflite_path)
+        onnx_dir = Path(onnx_path).parent
+        
+        result = converter.convert_tflite_to_onnx_fixed(tflite_path_obj, onnx_dir)
+        
+        if result["status"] == "ok":
+            logger.info(f'轉換成功: {tflite_path} -> {onnx_path}')
+            return True, result["message"]
+        elif result["status"] == "warning":
+            logger.warning(f'轉換完成但有警告: {tflite_path} -> {result["message"]}')
+            return True, result["message"]
+        else:
+            logger.error(f'轉換失敗: {tflite_path} -> {result["message"]}')
+            return False, result["message"]
+            
+    except Exception as e:
+        logger.exception(f'執行轉換時發生例外: {str(e)}')
+        return False, str(e)
+
+
+# 替換原先的轉換函數
+def convert_tflite_to_onnx(tflite_path, onnx_path):
+    # 確保 onnx 目錄存在
+    onnx_dir = os.path.dirname(onnx_path)
+    try:
+        os.makedirs(onnx_dir, exist_ok=True)
+    except Exception as e:
+        return False
+
+    success, msg = convert_tflite_to_onnx_advanced(tflite_path, onnx_path)
+    if not success:
+        # 將錯誤寫入 log 檔，方便後續分析
+        log_path = os.path.join(onnx_dir, 'conversion_errors.log')
+        with open(log_path, 'a') as f:
+            f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {tflite_path} -> {msg}\n")
+    return success
 
 
 def main():
@@ -295,10 +306,10 @@ def main():
         python qai_hub_optimize_full.py <mode>
 
     可用子命令 (mode)：
-        compile                編譯並最佳化模型（自動掃描 org 目錄）
-        profile                進行模型效能分析（自動掃描 org 目錄）
-        compile_profile_jobs   批次編譯並分析多模型（自動處理多個模型）（自動掃描 org 目錄）
-        compile_profile        單一模型編譯與分析（針對單一模型（自動掃描 org 目錄））
+        compile                編譯並最佳化模型（自動掃描 raw 目錄）
+        profile                進行模型效能分析（自動掃描 raw 目錄）
+        compile_profile_jobs   批次編譯並分析多模型（自動處理多個模型）（自動掃描 raw 目錄）
+        compile_profile        單一模型編譯與分析（針對單一模型（自動掃描 raw 目錄））
         infer                  進行模型推論測試
         demo                   啟動互動式 Demo
         official               官方模式（特殊用途）
@@ -310,7 +321,7 @@ def main():
         python qai_hub_optimize_full.py profile
 
     說明：
-        - 所有模型來源已統一自動從 org 目錄取得，無需手動切換來源參數。
+        - 所有模型來源已統一自動從 raw 目錄取得，無需手動切換來源參數。
         - 各模式細節請參考 doc/QAI_HUB_README.md。
     """
         ),
@@ -343,5 +354,29 @@ def main():
         sys.exit(1)
 
 
+# 在主程式中加入目錄檢查
 if __name__ == "__main__":
-    main()
+    # 確保所有必要目錄存在
+    # MODELS_BASE_DIR 必須為絕對路徑
+    MODELS_BASE_DIR = os.path.expanduser(MODELS_BASE_DIR)
+    ONNX_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("ONNX_MODEL_DIR"))
+    RAW_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("MODEL_SOURCE_DIR"))
+    OPTIMIZED_MODEL_DIR = os.path.join(MODELS_BASE_DIR, os.getenv("OPTIMIZED_MODEL_DIR"))
+    
+    ensure_directory_exists(MODELS_BASE_DIR)
+    ensure_directory_exists(os.path.dirname(ONNX_MODEL_DIR) or ONNX_MODEL_DIR)
+    ensure_directory_exists(ONNX_MODEL_DIR)
+    ensure_directory_exists(RAW_MODEL_DIR)
+    ensure_directory_exists(OPTIMIZED_MODEL_DIR)
+
+    # 測試轉換流程
+    tflite_model_path = os.path.join(RAW_MODEL_DIR, "face_detector.tflite")
+    onnx_model_path = os.path.join(ONNX_MODEL_DIR, "face_detector.onnx")
+    convert_tflite_to_onnx(tflite_model_path, onnx_model_path)
+
+    try:
+        main()
+    except FileNotFoundError as e:
+        print(f"❌ 發生錯誤: {e}")
+    except Exception as e:
+        print(f"❌ 未知錯誤: {e}")

@@ -58,7 +58,7 @@ def pick_device(preferred_name: str | None):
     devices = hub.get_devices()
     if not devices:
         raise RuntimeError("無可用設備")
-    if preferred_name:
+    if preferred_name and preferred_name.strip():
         for d in devices:
             if d.name.strip().lower() == preferred_name.strip().lower():
                 logger.info(f"🎯 使用指定設備: {d.name}")
@@ -142,7 +142,7 @@ def run_pipeline(args):
     cls_resp = requests.get(classes_url, stream=True, timeout=30)
     cls_resp.raise_for_status()
     cls_resp.raw.decode_content = True
-    categories = [str(s.strip()) for s in cls_resp.raw]
+    categories = [str(s.strip()) for s in cls_resp.raw if s is not None and s.strip()]
 
     logger.info("🏁 Top-5 On-Device predictions:")
     top5 = np.argsort(on_device_probabilities[0])[-5:][::-1]

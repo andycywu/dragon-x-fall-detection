@@ -3,7 +3,7 @@
 """
 import onnx
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Any
 
 
 class FormatChecker:
@@ -84,6 +84,53 @@ class FormatChecker:
                 print(f"[Warning] 修正 value_info 失敗: {onnx_path.name}")
         
         return results
+
+    def batch_fix_onnx_value_info(self, onnx_dir: Path) -> List[Tuple[Path, bool]]:
+        """
+        批次修復指定目錄下所有 ONNX 模型的 value_info
+        
+        Args:
+            onnx_dir: ONNX 模型目錄
+            
+        Returns:
+            修復結果列表（檔案路徑, 是否成功）
+        """
+        if not onnx_dir.exists():
+            print(f"❌ ONNX 目錄不存在: {onnx_dir}")
+            return []
+            
+        onnx_files = list(onnx_dir.glob('*.onnx'))
+        if not onnx_files:
+            print(f"❌ ONNX 目錄中沒有 .onnx 檔案: {onnx_dir}")
+            return []
+            
+        print(f"🔄 開始批次修復 {len(onnx_files)} 個 ONNX 檔案的 value_info...")
+        return self.batch_fix_onnx_models(onnx_files)
+
+    def check_onnx_models(self, qai_hub_models: Dict[str, Any]) -> List[Tuple[str, str, str]]:
+        """
+        檢查 QAI Hub 模型字典中的所有 ONNX 模型
+        
+        Args:
+            qai_hub_models: QAI Hub 模型字典
+            
+        Returns:
+            異常模型清單（模型名稱, 檔案路徑, 錯誤訊息）
+        """
+        invalid = []
+        
+        for model_name, model_info in qai_hub_models.items():
+            if model_info.get('format') == 'onnx' and model_info.get('loaded'):
+                path = model_info.get('model_path')
+                if path and Path(path).exists():
+                    try:
+                        error = self.check_onnx_model(Path(path))
+                        if error:
+                            invalid.append((model_name, path, error))
+                    except Exception as e:
+                        invalid.append((model_name, path, str(e)))
+        
+        return invalid
     
     def batch_check_onnx_models(self, onnx_files: List[Path]) -> List[Tuple[Path, Optional[str]]]:
         """
