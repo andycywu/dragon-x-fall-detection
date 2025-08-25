@@ -1,6 +1,7 @@
 """
 模型掃描模組 - 負責掃描和檢測模型檔案
 """
+import os
 from pathlib import Path
 from typing import List, Dict, Tuple
 
@@ -21,14 +22,16 @@ class ModelScanner:
     
     def scan_org_directory(self) -> Dict[str, List[Path]]:
         """
-        掃描 org 目錄中的模型檔案
+        掃描 raw 目錄中的模型檔案
         
         Returns:
             包含各種格式模型檔案的字典
         """
-        org_dir = self.base_dir / 'org'
+        # 從環境變數讀取原始模型目錄名稱，預設為 'raw'
+        model_source_dir = os.getenv('MODEL_SOURCE_DIR', 'raw')
+        org_dir = self.base_dir / model_source_dir
         if not org_dir.exists():
-            raise FileNotFoundError(f"找不到 org 目錄: {org_dir}")
+            raise FileNotFoundError(f"找不到 {model_source_dir} 目錄: {org_dir}")
         
         all_files = list(org_dir.glob('*'))
         
@@ -123,7 +126,7 @@ model_scanner = ModelScanner()
 
 def scan_models() -> Dict[str, List[Path]]:
     """
-    快速掃描 org 目錄中的模型檔案
+    快速掃描 raw 目錄中的模型檔案
     
     Returns:
         包含各種格式模型檔案的字典

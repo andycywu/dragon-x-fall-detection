@@ -34,17 +34,41 @@ class QAIHubClient:
         """初始化目標裝置"""
         try:
             from qai_hub.client import Device
+            # 優先從環境變數讀取目標裝置設定
+            target_device_name = os.getenv('TARGET_DEVICE', 'Snapdragon X Elite CRD')
+            
+            # 優先嘗試設定環境變數指定的裝置
+            try:
+                self.target_device = Device(target_device_name)
+                print(f"✅ 目標裝置設定為: {self.target_device.name} (來自環境變數)")
+                return True
+            except Exception as e:
+                print(f"⚠️  無法設定環境變數指定的裝置 '{target_device_name}': {e}")
+            
+            # 備用方案：嘗試設定 Snapdragon X Elite CRD
+            try:
+                self.target_device = Device("Snapdragon X Elite CRD")
+                print(f"✅ 目標裝置設定為: {self.target_device.name} (備用方案)")
+                return True
+            except Exception as e:
+                print(f"⚠️  無法設定 Snapdragon X Elite CRD: {e}")
+            
             # 嘗試取得可用裝置 - 使用不同的方法
             try:
-                # 方法1: 嘗試使用 get_available_devices()
-                devices = Device.get_available_devices()
-            except AttributeError:
-                # 方法2: 如果 get_available_devices 不存在，嘗試其他方法
+                # 方法1: 嘗試使用 hub.get_devices() (官方推薦方法)
+                import qai_hub as hub
+                devices = hub.get_devices()
+            except Exception:
+                # 方法2: 如果 hub.get_devices() 失敗，嘗試使用 Device.get_available_devices()
                 try:
-                    # 嘗試使用已知的裝置名稱
-                    devices = [Device("Samsung Galaxy S23")]
-                except:
-                    devices = []
+                    devices = Device.get_available_devices()
+                except AttributeError:
+                    # 方法3: 如果 get_available_devices 不存在，嘗試其他方法
+                    try:
+                        # 嘗試使用已知的裝置名稱
+                        devices = [Device("Samsung Galaxy S23")]
+                    except:
+                        devices = []
             
             if devices:
                 self.target_device = devices[0]  # 使用第一個可用裝置
@@ -100,6 +124,8 @@ class QAIHubClient:
         loaded_models = {}
         for model_file in model_files:
             model_name = model_file.stem
+            if not model_name or model_name.strip() == '':
+                model_name = f"model_{model_file.name}"
             loaded_models[model_name] = {
                 'model_path': model_file,
                 'source': source,
@@ -119,7 +145,7 @@ class QAIHubClient:
             上傳是否成功
         """
         try:
-            from qai_hub.client import Model
+            import qai_hub as hub
             from qai_hub.client import Dataset
             
             uploaded_count = 0
@@ -130,11 +156,11 @@ class QAIHubClient:
                 model_path = model_info['model_path']
                 try:
                     # 上傳模型
-                    model = Model.upload(model_path)
-                    model_info['qai_hub_model'] = model
-                    model_info['model_id'] = model.model_id
+                    uploaded_model = hub.upload_model(model_path)
+                    model_info['qai_hub_model'] = uploaded_model
+                    model_info['model_id'] = uploaded_model.model_id
                     uploaded_count += 1
-                    print(f"✅ 上傳成功: {model_name} -> Model ID: {model.model_id}")
+                    print(f"✅ 上傳成功: {model_name} -> Model ID: {uploaded_model.model_id}")
                 except Exception as e:
                     print(f"❌ 上傳失敗 {model_name}: {e}")
                     model_info['error'] = str(e)
@@ -146,26 +172,19 @@ class QAIHubClient:
             print(f"❌ 上傳過程發生錯誤: {e}")
             return False
     
-    def submit_compilation_jobs(self, compile_options: Optional[Dict] = None) -> bool:
+    def submit_compilation_jobs(self) -> bool:
         """
         提交編譯任務
         
-        Args:
-            compile_options: 編譯選項
-            
         Returns:
             提交是否成功
         """
         try:
-            from qai_hub.client import Job
+            import qai_hub as hub
             
             if not self.target_device:
                 print("❌ 未設定目標裝置，無法提交編譯任務")
                 return False
-            
-            compile_options = compile_options or {
-                'compile_options': " --target_runtime ort"
-            }
             
             submitted_count = 0
             for model_name, model_info in self.qai_hub_models.items():
@@ -173,12 +192,16 @@ class QAIHubClient:
                     continue
                 
                 try:
-                    # 提交編譯任務
-                    job = Job.submit_compile_job(
+                    # 提交編譯任務 - 不傳遞任何選項參數
+                    # 確保 model_name 不是 None 且不是空字符串
+                    safe_model_name = str(model_name) if model_name is not None else "unknown_model"
+                    if not safe_model_name.strip():
+                        safe_model_name = "unknown_model"
+                    
+                    # 使用最簡單的參數呼叫方式，避免任何可能的參數問題
+                    job = hub.submit_compile_job(
                         model=model_info['qai_hub_model'],
-                        device=self.target_device,
-                        name=f"compile_{model_name}",
-                        options=compile_options
+                        device=self.target_device
                     )
                     model_info['compile_job'] = job
                     model_info['compile_job_id'] = job.job_id
@@ -200,21 +223,17 @@ class QAIHubClient:
         提交效能分析任務
         
         Args:
-            profile_options: 分析選項
+            profile_options: 分析選項 (可選)
             
         Returns:
             提交是否成功
         """
         try:
-            from qai_hub.client import Job
+            import qai_hub as hub
             
             if not self.target_device:
                 print("❌ 未設定目標裝置，無法提交分析任務")
                 return False
-            
-            profile_options = profile_options or {
-                'profile_options': "--num_iterations 100 --warmup_iterations 10"
-            }
             
             submitted_count = 0
             for model_name, model_info in self.qai_hub_models.items():
@@ -222,12 +241,16 @@ class QAIHubClient:
                     continue
                 
                 try:
-                    # 提交分析任務
-                    job = Job.submit_profile_job(
+                    # 提交分析任務 - 不傳遞 options 參數，讓 QAI Hub 使用預設值
+                    # 確保 model_name 不是 None 且不是空字符串
+                    safe_model_name = str(model_name) if model_name is not None else "unknown_model"
+                    if not safe_model_name.strip():
+                        safe_model_name = "unknown_model"
+                    
+                    job = hub.submit_profile_job(
                         model=model_info['qai_hub_model'],
                         device=self.target_device,
-                        name=f"profile_{model_name}",
-                        options=profile_options
+                        name=f"profile_{safe_model_name}"
                     )
                     model_info['profile_job'] = job
                     model_info['profile_job_id'] = job.job_id
@@ -243,6 +266,69 @@ class QAIHubClient:
         except Exception as e:
             print(f"❌ 提交分析任務過程發生錯誤: {e}")
             return False
+
+    def submit_link_job(self, models: List[Any], job_name: str = "link_pipeline") -> Optional[Any]:
+        """
+        提交模型串接任務
+        
+        Args:
+            models: 模型物件列表
+            job_name: 任務名稱
+            
+        Returns:
+            串接任務物件或 None
+        """
+        try:
+            import qai_hub as hub
+            
+            if not self.target_device:
+                print("❌ 未設定目標裝置，無法提交串接任務")
+                return None
+            
+            if not models:
+                print("❌ 沒有提供模型物件，無法提交串接任務")
+                return None
+            
+            print("🔗 提交模型串接任務...")
+            print(f"   - 模型數量: {len(models)}")
+            
+            # 嘗試多種參數組合以兼容不同 SDK 版本
+            attempts = [
+                ("device", {"device": self.target_device, "name": job_name}),
+                ("target_device", {"target_device": self.target_device, "name": job_name}),
+                ("no_device", {"name": job_name}),
+            ]
+            
+            errors = []
+            link_job = None
+            
+            for label, kwargs in attempts:
+                try:
+                    link_job = hub.submit_link_job(models, **kwargs)
+                    print(f"✅ 提交串接任務成功 ({label}): {job_name} -> Job ID: {link_job.job_id}")
+                    break
+                except TypeError as te:
+                    errors.append(f"{label}:{te}")
+                except Exception as e:
+                    errors.append(f"{label}:{e}")
+            
+            if link_job is None:
+                print(f"❌ 所有 submit_link_job 呼叫失敗: {' | '.join(errors)}")
+                return None
+            
+            # 儲存串接任務資訊
+            self.qai_hub_models['link_pipeline'] = {
+                'link_job': link_job,
+                'link_job_id': link_job.job_id,
+                'models_count': len(models),
+                'job_name': job_name
+            }
+            
+            return link_job
+            
+        except Exception as e:
+            print(f"❌ 提交串接任務失敗: {e}")
+            return None
     
     def wait_for_jobs_completion(self, job_type: str = 'compile', 
                                timeout: int = 1800, 
@@ -412,11 +498,23 @@ class QAIHubClient:
             return {}
         
         device_attrs = getattr(self.target_device, 'attributes', [])
-        support_info = {
-            'onnx': any('framework:onnx' in str(a).lower() for a in device_attrs),
-            'tflite': any('framework:tflite' in str(a).lower() for a in device_attrs),
-            'dlc': any('framework:dlc' in str(a).lower() for a in device_attrs)
-        }
+        
+        # 如果設備屬性為空，使用預設支援設定
+        if not device_attrs:
+            print("⚠️  設備屬性為空，使用預設支援設定")
+            # 對於 Snapdragon X Elite CRD，預設支援 ONNX
+            support_info = {
+                'onnx': True,
+                'tflite': False,
+                'dlc': False
+            }
+        else:
+            # 正常檢查設備屬性
+            support_info = {
+                'onnx': any('framework:onnx' in str(a).lower() for a in device_attrs),
+                'tflite': any('framework:tflite' in str(a).lower() for a in device_attrs),
+                'dlc': any('framework:dlc' in str(a).lower() for a in device_attrs)
+            }
         
         print(f"\n📋 裝置支援格式:")
         for framework, supported in support_info.items():

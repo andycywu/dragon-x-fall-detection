@@ -6,6 +6,105 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 import threading
+import onnx
+from onnx import ModelProto
+import torch
+
+
+def sanitize_onnx_inplace(model: ModelProto) -> dict:
+    """
+    修正 1) IO 與 value_info 重複、2) initializer 也列在 input 的問題，
+    並遞迴處理子圖。
+    """
+    report = {"removed_value_info": 0, "removed_input_initializers": 0}
+
+    def _remove_vi_dups(graph):
+        io_names = {t.name for t in list(graph.input) + list(graph.output)}
+        keep = []
+        removed = 0
+        for vi in graph.value_info:
+            if vi.name in io_names:
+                removed += 1
+            else:
+                keep.append(vi)
+        del graph.value_info[:]
+        graph.value_info.extend(keep)
+        return removed
+
+    def _inputs_not_in_initializers(graph):
+        init_names = {init.name for init in graph.initializer}
+        keep = []
+        removed = 0
+        for in_tensor in graph.input:
+            if in_tensor.name in init_names:
+                removed += 1
+            else:
+                keep.append(in_tensor)
+        del graph.input[:]
+        graph.input.extend(keep)
+        return removed
+
+    def _walk_subgraphs(node):
+        subgraphs = []
+        for attr in node.attribute:
+            if attr.g:
+                subgraphs.append(attr.g)
+            for g in attr.graphs:
+                subgraphs.append(g)
+        return subgraphs
+
+    def _sanitize_graph(g):
+        report["removed_value_info"] += _remove_vi_dups(g)
+        report["removed_input_initializers"] += _inputs_not_in_initializers(g)
+        for n in g.node:
+            for sg in _walk_subgraphs(n):
+                _sanitize_graph(sg)
+
+    _sanitize_graph(model.graph)
+    return report
+
+
+def convert_pt_to_onnx(pt_model_path: str, onnx_output_path: str, input_shape: tuple):
+    """
+    將 PyTorch (.pt) 模型轉換為 ONNX 格式。
+
+    Args:
+        pt_model_path (str): PyTorch 模型的路徑。
+        onnx_output_path (str): 輸出的 ONNX 模型路徑。
+        input_shape (tuple): 模型的輸入形狀。
+
+    Returns:
+        dict: 包含轉換狀態和訊息的字典。
+    """
+    try:
+        # 加載 PyTorch 模型
+        model = torch.load(pt_model_path)
+        model.eval()
+
+        # 建立虛擬輸入
+        dummy_input = torch.randn(*input_shape)
+
+        # 將模型導出為 ONNX
+        torch.onnx.export(
+            model,
+            dummy_input,
+            onnx_output_path,
+            export_params=True,
+            opset_version=11,
+            do_constant_folding=True,
+            input_names=['input'],
+            output_names=['output']
+        )
+
+        return {
+            "status": "ok",
+            "message": f"成功將 {pt_model_path} 轉換為 {onnx_output_path}"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"轉換失敗: {str(e)}"
+        }
 
 
 class ModelConverter:
@@ -50,13 +149,20 @@ class ModelConverter:
                 text=True,
                 timeout=self.conversion_timeout
             )
-            
+
             if result.returncode == 0 and onnx_path.exists():
+                # 加入 sanitize 步驟
+                model = onnx.load(onnx_path)
+                sanitize_report = sanitize_onnx_inplace(model)
+                onnx.checker.check_model(model, full_check=True)
+                onnx.save(model, onnx_path)
+
                 return {
                     "status": "ok",
-                    "message": "轉換成功",
+                    "message": "轉換成功並已清理",
                     "onnx_path": onnx_path,
                     "tflite_path": tflite_path,
+                    "sanitize_report": sanitize_report,
                     "stdout": result.stdout,
                     "stderr": result.stderr
                 }
@@ -69,7 +175,7 @@ class ModelConverter:
                     "stdout": result.stdout,
                     "stderr": result.stderr
                 }
-                
+
         except subprocess.TimeoutExpired:
             return {
                 "status": "error",
@@ -149,6 +255,29 @@ class ModelConverter:
             return True
         
         return user_response[0] == 'y'
+    
+    def convert_pt_to_onnx(self, pt_model_path: Path, output_dir: Path, input_shape: tuple) -> Dict:
+        """
+        將 PyTorch (.pt) 模型轉換為 ONNX 格式。
+
+        Args:
+            pt_model_path (Path): PyTorch 模型的路徑。
+            output_dir (Path): 輸出目錄。
+            input_shape (tuple): 模型的輸入形狀。
+
+        Returns:
+            dict: 包含轉換狀態和訊息的字典。
+        """
+        if not pt_model_path.exists():
+            return {
+                "status": "error",
+                "message": f"PyTorch 模型不存在: {pt_model_path}"
+            }
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        onnx_path = output_dir / f"{pt_model_path.stem}.onnx"
+
+        return convert_pt_to_onnx(str(pt_model_path), str(onnx_path), input_shape)
 
 
 # 單例實例
