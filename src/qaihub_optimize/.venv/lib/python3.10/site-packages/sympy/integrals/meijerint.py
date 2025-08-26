@@ -568,7 +568,6 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-
 _dummies: dict[tuple[str, str], Dummy]  = {}
 
 
@@ -589,6 +588,7 @@ def _dummy_(name, token, **kwargs):
     Return a dummy associated to name and token. Same effect as declaring
     it globally.
     """
+    global _dummies
     if not (name, token) in _dummies:
         _dummies[(name, token)] = Dummy(name, **kwargs)
     return _dummies[(name, token)]

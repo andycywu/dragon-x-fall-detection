@@ -37,10 +37,6 @@ class FractionField(Field, CompositeDomain):
     def new(self, element):
         return self.field.field_new(element)
 
-    def of_type(self, element):
-        """Check if ``a`` is of type ``dtype``. """
-        return self.field.is_element(element)
-
     @property
     def zero(self):
         return self.field.zero
@@ -57,13 +53,13 @@ class FractionField(Field, CompositeDomain):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.field, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.dtype.field, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        if not isinstance(other, FractionField):
-            return NotImplemented
-        return self.field == other.field
+        return isinstance(other, FractionField) and \
+            (self.dtype.field, self.domain, self.symbols) ==\
+            (other.dtype.field, other.domain, other.symbols)
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """

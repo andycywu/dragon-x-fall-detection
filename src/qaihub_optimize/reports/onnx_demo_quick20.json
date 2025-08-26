@@ -1,0 +1,9177 @@
+[
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1-_jpg.rf.fd41e155b9b5b7c1783b60b261765b4f.jpg",
+    "type": "image",
+    "timestamp": 1756204685.615648,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 50.14,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 173.8842815367661,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 102.1,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 54.187923054610536,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 73.09,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 126.05309216053851,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 108.65,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.797414984184044,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 87.33,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 15.089423166542009,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 282.05,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 27.987050922829752,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 361.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 28.230470511672817,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 2.1,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 73.05,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 4.0364444806247555,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 72.11,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 4.0364444806247555,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.3,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 84.41,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 14.8691931473303,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 485.74,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 28.230470511672817,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.85,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 84.01,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 4.0364444806247555,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 132.46,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.867206218088626,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.28,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1
+      },
+      "best_model": "mediapipe_face-facedetector-float",
+      "best_angle": 173.8842815367661
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-10-_jpg.rf.e0f6fa76f4bd280e45efdde694a38868.jpg",
+    "type": "image",
+    "timestamp": 1756204687.678594,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 40.09,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 82.3740296885753,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 71.55,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 163.12944154797194,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 49.35,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 3.0745412262254153,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 77.15,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.678326467061524,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 53.26,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.41128968129335,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 180.48,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.66546621681163,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 178.74,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 44.064489241460215,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.56,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 51.74,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.22295927584645,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 53.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.22295927584645,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.21,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 57.53,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.517447640390664,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 196.77,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 44.064489241460215,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.36,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 45.58,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.22295927584645,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 64.26,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.65137985377725,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.03,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 7.802387955754824
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "detection": 2
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 163.12944154797194
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1007-_jpg.rf.6ac861f16af406893559207eaba407c8.jpg",
+    "type": "image",
+    "timestamp": 1756204688.856844,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 33.13,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 158.77735331622927,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 56.1,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 164.51926950567395,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 38.36,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 157.19288337662508,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 50.76,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.586544197570998,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 51.16,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 94.64361203609096,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 182.41,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.188431070311275,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 295.74,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.68570543594149,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.49,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 56.16,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 162.9814438297888,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 47.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 162.9814438297888,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.18,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 47.82,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 94.47276025930661,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 175.17,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.68570543594149,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.28,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 49.62,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 162.9814438297888,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 65.57,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.5168936450095,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 2.03,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 5,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2,
+        "pose_landmarks": 3
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 164.51926950567395
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1008-_jpg.rf.f05a1c3b1f08487461e99b398a32cf16.jpg",
+    "type": "image",
+    "timestamp": 1756204690.04865,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 29.33,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 63.922236705692875,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 52.44,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 176.67683655712838,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 38.65,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 64.10271381154277,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 44.1,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 65.20658615409792,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 39.76,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 114.19634301652349,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 168.75,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.21525350860605,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 162.33,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.08463571866589,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.22,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 48.36,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.55469266785253,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 31.84,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.55469266785253,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.92,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 39.66,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 114.26251700875167,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 188.58,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.08463571866589,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.17,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 35.55,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.55469266785253,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 59.07,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 64.85001798120288,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.92,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 78.49640430889737
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 5,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 8,
+        "detection": 2
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 176.67683655712838
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1029-_jpg.rf.0f3a8273490f80c1cbb079f56c83e62d.jpg",
+    "type": "image",
+    "timestamp": 1756204691.0288892,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 26.88,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 55.594765268380804,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 54.74,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 116.76977016931575,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 42.27,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 9.081417047364878,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 39.89,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 3.851174709391198,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 31.59,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.999025496697037,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 130.1,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.30893436716228,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 140.2,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.909176696332292,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.05,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 30.52,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 11.986782502779159,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 29.88,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 11.986782502779159,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.89,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 33.64,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.515754261492837,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 142.57,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.909176696332292,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.0,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 31.65,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 11.986782502779159,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 57.73,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 3.2978907087182256,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.14,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": true,
+      "angle_mediapipe": 114.13185626331759
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 2,
+      "group_details": {
+        "face": 1,
+        "hand": 1
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 116.76977016931575
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1036-_jpg.rf.f751644562b51e6b942d16564617c0fa.jpg",
+    "type": "image",
+    "timestamp": 1756204691.846381,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 13.12,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 69.45996691933024,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 32.5,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 54.35864258729304,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 29.36,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 62.42475321032258,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 33.86,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.81356026498221,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 33.01,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 62.33989568416783,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 217.71,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 40.32897703641535,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 159.5,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 40.261567016432686,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.2,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 39.52,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 62.067960074986686,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 38.95,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 62.067960074986686,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.07,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 52.23,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 61.260956411263514,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 296.24,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 40.261567016432686,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 3.2,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 108.06,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 62.067960074986686,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 98.84,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.836643388414366,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.42,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 5,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 5,
+        "detection": 2
+      },
+      "best_model": "mediapipe_face-facedetector-float",
+      "best_angle": 69.45996691933024
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1037-_jpg.rf.3c0278912db3697e4c8f5e4e4ec6e66a.jpg",
+    "type": "image",
+    "timestamp": 1756204693.046256,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 46.19,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 40.384788665401906,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 56.31,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 129.1660972676243,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 37.09,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 49.86140175140979,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 41.03,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 128.3205418414164,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 42.85,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 52.744209855131864,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 225.54,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.152062235218466,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 152.54,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 49.74714296013134,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.22,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 41.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 48.67648449156667,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 37.99,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 48.67648449156667,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.07,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 55.29,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 52.73706999106076,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 175.59,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 49.74714296013134,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.36,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 38.76,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 48.67648449156667,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 67.83,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 130.90914558817195,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.35,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 60.547079721841996
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 8,
+        "detection": 2
+      },
+      "best_model": "jgzjmz4op_pose_landmarks_detector_full_optimized",
+      "best_angle": 130.90914558817195
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1042-_jpg.rf.48ec488c622c3e895a0cfe9e6131384f.jpg",
+    "type": "image",
+    "timestamp": 1756204694.1125739,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 34.15,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.165448063883055,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 49.03,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 1.591416074503092,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 32.36,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 155.43632482959515,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 36.68,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 178.0463000158018,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 32.35,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 171.63885334787565,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 145.11,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 74.94560471389279,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 130.43,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 74.51958788348551,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.07,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.57,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.41209596060053,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 29.57,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.41209596060053,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.9,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 33.75,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 171.79268758174783,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 133.71,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 74.51958788348551,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.09,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.2,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.41209596060053,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 42.88,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 179.26442844860352,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.91,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "pose_detector": 1,
+        "pose_landmarks": 5,
+        "detection": 2
+      },
+      "best_model": "jgzjmz4op_pose_landmarks_detector_full_optimized",
+      "best_angle": 179.26442844860352
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1043-_jpg.rf.cd8473572a00bc53287a3bf38b8ed957.jpg",
+    "type": "image",
+    "timestamp": 1756204694.894173,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 15.19,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 58.37214730193558,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 30.07,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 139.4110633518084,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 25.37,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 77.99863832327709,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 34.54,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 18.914394598683835,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 33.95,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 149.03940775473927,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 132.05,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 14.432014026682518,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 121.21,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 16.366513089376014,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.0,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 35.01,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.602754012280656,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 27.02,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.602754012280656,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.84,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 31.24,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 148.95809572803986,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 110.99,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 16.366513089376014,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 0.95,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 25.88,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 23.602754012280656,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 63.92,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 19.3987319643248,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.88,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2
+      },
+      "best_model": "jgj27x8v5_pose_detection_optimized",
+      "best_angle": 149.03940775473927
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1044-_jpg.rf.4d29ff13d6102dc442d821a9bcf74f5a.jpg",
+    "type": "image",
+    "timestamp": 1756204695.599015,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 12.58,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 126.18896776582609,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 39.72,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 128.17276666717848,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 40.21,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 102.04902186315049,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 33.33,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 6.100129891912903,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 30.6,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 153.96129881432213,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 136.48,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.516092659029862,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 122.02,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.359179621774874,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 2.49,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 36.76,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.22676440468488,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 39.98,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.22676440468488,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 4.11,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 39.98,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 153.93230331193172,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 138.08,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.359179621774874,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.16,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 64.52,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.22676440468488,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 75.45,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 5.701055531699945,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 2.23,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2
+      },
+      "best_model": "jgj27x8v5_pose_detection_optimized",
+      "best_angle": 153.96129881432213
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1053-_jpg.rf.99eaef7ad9fe174acdfe9af3a8e7c723.jpg",
+    "type": "image",
+    "timestamp": 1756204696.442365,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 29.54,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 89.02231120349369,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 51.22,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 145.15604571711717,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 33.74,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 109.82986820640457,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 41.56,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.33242742638334,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 36.57,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 77.71301495629879,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 159.79,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.68375736285049,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 147.72,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.99665431810013,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.27,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 32.21,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.10651948016527,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 35.21,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.10651948016527,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.14,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 40.36,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 77.46180418340916,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 138.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.99665431810013,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.6,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 32.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 43.10651948016527,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 58.31,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.31146216580799,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.29,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 31.541616896602708
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 145.15604571711717
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1057-_jpg.rf.cb0ef2633797116dc33f7bb86149aa1f.jpg",
+    "type": "image",
+    "timestamp": 1756204697.329216,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 17.96,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 116.46367790807906,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 32.77,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 87.4769243480136,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 25.7,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 87.28111327331338,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 33.31,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.959645499628408,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 30.6,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.22256324922375,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 138.76,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.20225607353119,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 126.18,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.00761317026049,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.02,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 33.92,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.487276761413113,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 39.29,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.487276761413113,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.04,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 41.41,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.28586246623843,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 138.66,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.00761317026049,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.33,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 42.35,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 29.487276761413113,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 48.13,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.99899845246808,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.01,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1
+      },
+      "best_model": "mediapipe_face-facedetector-float",
+      "best_angle": 116.46367790807906
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-108-_jpg.rf.013aefd15bc0d2872d02d8ec456b9e06.jpg",
+    "type": "image",
+    "timestamp": 1756204698.107178,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 18.48,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 76.20107136865856,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 46.39,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 130.38786315410803,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 25.73,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 173.92675737130557,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 33.42,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 27.545239535841343,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 30.92,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 15.466757398679606,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 142.94,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 33.48997238506215,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 134.08,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 33.74297522359908,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 0.98,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 31.47,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 39.55864071926764,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 29.39,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 39.55864071926764,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.2,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 33.99,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 15.466510470754976,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 125.41,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 33.74297522359908,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.01,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.48,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 39.55864071926764,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 50.68,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 27.25026529378573,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.14,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1
+      },
+      "best_model": "mediapipe_pose-posedetector",
+      "best_angle": 173.92675737130557
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1082-_jpg.rf.9377bd8c493c026eb5d50180d9110a31.jpg",
+    "type": "image",
+    "timestamp": 1756204698.862704,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 13.12,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 148.37568321427509,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 36.38,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 73.68203240068671,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 33.6,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 165.49296383710583,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 40.86,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 55.99954274184409,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 41.53,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 41.92182691720179,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 172.37,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.127668635511945,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 156.02,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.18612577528012,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.16,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 36.58,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.667611255393616,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 33.21,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.667611255393616,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.01,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 35.36,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 42.030686319431325,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 128.71,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.18612577528012,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.04,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 35.25,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 45.667611255393616,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 43.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 55.8691347153012,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.65,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": true,
+      "angle_mediapipe": 156.546473100137
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 8
+      },
+      "best_model": "mediapipe_pose-posedetector",
+      "best_angle": 165.49296383710583
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1099-_jpg.rf.cf1ddbf71f7ce58798685f341785da36.jpg",
+    "type": "image",
+    "timestamp": 1756204699.708898,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 14.42,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 156.31164126959007,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 43.82,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 164.1465585366896,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 28.67,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 157.76212755695173,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 36.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.90103138485279,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 30.44,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.73125785358709,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 136.78,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 34.72933372229864,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 121.99,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 34.76308241668184,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.0,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 32.53,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.29690210768689,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.34,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.29690210768689,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.87,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 34.05,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.68104916778097,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 132.19,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 34.76308241668184,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.16,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 33.12,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.29690210768689,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 54.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 50.708892990011485,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.17,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 5,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 2,
+        "detection": 2
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 164.1465585366896
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1102-_jpg.rf.81fcde98529aca4ae8319a8b44510150.jpg",
+    "type": "image",
+    "timestamp": 1756204700.46178,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 35.92,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 179.55475994839512,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 55.1,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 113.34122750765964,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 35.43,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 123.93094055884787,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 35.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 26.427314265771304,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 32.03,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 56.97857960310713,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 160.85,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 21.226373998300232,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 138.48,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 21.152697201268282,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.12,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 34.63,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 8.218749447448783,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 36.92,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 8.218749447448783,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.91,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 35.02,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 57.00722340281914,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 135.38,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 21.152697201268282,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.01,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.45,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 8.218749447448783,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 44.11,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 25.803856881872857,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.95,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 10.619463609434167
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2
+      },
+      "best_model": "mediapipe_face-facedetector-float",
+      "best_angle": 179.55475994839512
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1106-_jpg.rf.3b0649907a316b131eee81f15eacaf37.jpg",
+    "type": "image",
+    "timestamp": 1756204701.3223732,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 14.14,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 136.9280196267684,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 31.35,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 178.57226139618135,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 25.51,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 13.64844105604989,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 34.36,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.90047455978614,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 31.02,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 65.09597216257404,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 137.65,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 52.16036180302607,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 130.6,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.99595735185745,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 0.93,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.52,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 53.84874209681876,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 31.48,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 53.84874209681876,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.93,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 33.98,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 64.98788723850292,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 146.0,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.99595735185745,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.23,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 46.31,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 53.84874209681876,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 53.01,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.916596548911016,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 1.02,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": null
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 4,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_landmarks": 8,
+        "detection": 2
+      },
+      "best_model": "mediapipe_hand-handdetector",
+      "best_angle": 178.57226139618135
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-111-_jpg.rf.b588d39d733f845549d71615f1e340e2.jpg",
+    "type": "image",
+    "timestamp": 1756204702.09525,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 29.19,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.73505953869909,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 34.62,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 82.32376938456234,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 26.92,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 64.75773373044746,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 34.42,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 38.81231364385498,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 32.06,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 167.65724967638312,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 166.1,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 41.59074511378879,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 137.12,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 41.59755145905775,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 4.88,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 44.97,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.321707053032455,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 50.05,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.321707053032455,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.04,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 48.76,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 166.6561802843057,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 132.31,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 41.59755145905775,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.03,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 34.0,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 36.321707053032455,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 45.78,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 38.777652110554534,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.96,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 6.516512268976275
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 3,
+      "group_details": {
+        "hand": 1,
+        "pose_detector": 1,
+        "detection": 2
+      },
+      "best_model": "jgj27x8v5_pose_detection_optimized",
+      "best_angle": 167.65724967638312
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1112-_jpg.rf.db5c6e0bb0b7df7175539693a1c9a4be.jpg",
+    "type": "image",
+    "timestamp": 1756204702.9625769,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 13.78,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 27.55188463823788,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 31.04,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 158.07069061259176,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 26.13,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 20.573153611265873,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 43.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 33.456632727653556,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 37.15,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 169.44771683970637,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 167.88,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 38.73054578464409,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 129.7,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 38.73485523542851,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.05,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 29.74,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.66031779319867,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 32.4,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.66031779319867,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 0.92,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 37.61,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 170.7974493511917,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 133.12,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 38.73485523542851,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.38,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 41.44,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 37.66031779319867,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 48.5,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 33.585397013635465,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.97,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 42.7794656527
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 2,
+      "group_details": {
+        "hand": 1,
+        "detection": 2
+      },
+      "best_model": "jp8mxodk5_pose_detection_optimized",
+      "best_angle": 170.7974493511917
+    }
+  },
+  {
+    "path": "/Users/andycyw/mvp_fall_detection_starter/src/test_data/img/people-1128-_jpg.rf.eb162e7a7675af8b0441331183c0ae5b.jpg",
+    "type": "image",
+    "timestamp": 1756204703.7647831,
+    "onnx": {
+      "mediapipe_face-facedetector-float": {
+        "time_ms": 30.23,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            16
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 171.5850485813364,
+          "used_landmarks": 896
+        }
+      },
+      "mediapipe_hand-handdetector": {
+        "time_ms": 50.92,
+        "raw_output_shapes": [
+          [
+            1,
+            2944,
+            18
+          ],
+          [
+            1,
+            2944,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 64.82386406121776,
+          "used_landmarks": 2944
+        }
+      },
+      "mediapipe_pose-posedetector": {
+        "time_ms": 26.41,
+        "raw_output_shapes": [
+          [
+            1,
+            896,
+            12
+          ],
+          [
+            1,
+            896,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 179.86304048392734,
+          "used_landmarks": 896
+        }
+      },
+      "jp1wj0k8g_pose_landmarks_detector_full_optimized": {
+        "time_ms": 34.53,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.50539818790443,
+          "used_landmarks": 65
+        }
+      },
+      "jgj27x8v5_pose_detection_optimized": {
+        "time_ms": 31.1,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 69.91644051557702,
+          "used_landmarks": 2254
+        }
+      },
+      "j56z76m6g_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 148.81,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 47.745793772824165,
+          "used_landmarks": 65
+        }
+      },
+      "jg9ymoxw5_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 123.62,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 46.33067691654481,
+          "used_landmarks": 65
+        }
+      },
+      "jp1wjov8g_test_simple_model_fixed_optimized": {
+        "time_ms": 1.05,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jpr20km05_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 28.12,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.500765975117012,
+          "used_landmarks": 65
+        }
+      },
+      "j5qry81np_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 31.77,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.500765975117012,
+          "used_landmarks": 65
+        }
+      },
+      "jp02jy895_test_simple_model_fixed_optimized": {
+        "time_ms": 1.13,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jp8mxodk5_pose_detection_optimized": {
+        "time_ms": 37.18,
+        "raw_output_shapes": [
+          [
+            1,
+            2254,
+            12
+          ],
+          [
+            1,
+            2254,
+            1
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 69.74614035142918,
+          "used_landmarks": 2254
+        }
+      },
+      "jgj273z85_pose_landmarks_detector_heavy_optimized": {
+        "time_ms": 122.94,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 46.33067691654481,
+          "used_landmarks": 65
+        }
+      },
+      "jgonrywqp_test_simple_model_fixed_optimized": {
+        "time_ms": 1.11,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      },
+      "jgonrdkdp_pose_landmarks_detector_lite_optimized": {
+        "time_ms": 30.86,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": 30.500765975117012,
+          "used_landmarks": 65
+        }
+      },
+      "jgzjmz4op_pose_landmarks_detector_full_optimized": {
+        "time_ms": 51.18,
+        "raw_output_shapes": [
+          [
+            1,
+            195
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            256,
+            256,
+            1
+          ],
+          [
+            1,
+            64,
+            64,
+            39
+          ],
+          [
+            1,
+            117
+          ]
+        ],
+        "onnx_fall": {
+          "detected": true,
+          "angle": 51.45219383203262,
+          "used_landmarks": 65
+        }
+      },
+      "jgkq4z0wg_test_simple_model_fixed.quant_optimized": {
+        "time_ms": 0.91,
+        "raw_output_shapes": [
+          [
+            1,
+            3,
+            224,
+            224
+          ]
+        ],
+        "onnx_fall": {
+          "detected": false,
+          "angle": null,
+          "used_landmarks": 3
+        }
+      }
+    },
+    "fall": {
+      "detected_mediapipe": false,
+      "angle_mediapipe": 2.731523870999167
+    },
+    "ensemble": {
+      "detected": true,
+      "groups_voted": 5,
+      "group_details": {
+        "face": 1,
+        "hand": 1,
+        "pose_detector": 1,
+        "pose_landmarks": 5,
+        "detection": 2
+      },
+      "best_model": "mediapipe_pose-posedetector",
+      "best_angle": 179.86304048392734
+    }
+  }
+]

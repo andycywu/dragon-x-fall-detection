@@ -11,8 +11,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals.integrals import integrate
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
-from sympy.physics.quantum.kind import KetKind, BraKind
-
 
 __all__ = [
     'KetBase',
@@ -210,8 +208,6 @@ class KetBase(StateBase):
     use Ket.
     """
 
-    kind = KetKind
-
     lbracket = _straight_bracket
     rbracket = _rbracket
     lbracket_ucode = _straight_bracket_ucode
@@ -226,6 +222,22 @@ class KetBase(StateBase):
     @classmethod
     def dual_class(self):
         return BraBase
+
+    def __mul__(self, other):
+        """KetBase*other"""
+        from sympy.physics.quantum.operator import OuterProduct
+        if isinstance(other, BraBase):
+            return OuterProduct(self, other)
+        else:
+            return Expr.__mul__(self, other)
+
+    def __rmul__(self, other):
+        """other*KetBase"""
+        from sympy.physics.quantum.innerproduct import InnerProduct
+        if isinstance(other, BraBase):
+            return InnerProduct(other, self)
+        else:
+            return Expr.__rmul__(self, other)
 
     #-------------------------------------------------------------------------
     # _eval_* methods
@@ -275,8 +287,6 @@ class BraBase(StateBase):
     instead use Bra.
     """
 
-    kind = BraKind
-
     lbracket = _lbracket
     rbracket = _straight_bracket
     lbracket_ucode = _lbracket_ucode
@@ -303,6 +313,22 @@ class BraBase(StateBase):
     @classmethod
     def dual_class(self):
         return KetBase
+
+    def __mul__(self, other):
+        """BraBase*other"""
+        from sympy.physics.quantum.innerproduct import InnerProduct
+        if isinstance(other, KetBase):
+            return InnerProduct(self, other)
+        else:
+            return Expr.__mul__(self, other)
+
+    def __rmul__(self, other):
+        """other*BraBase"""
+        from sympy.physics.quantum.operator import OuterProduct
+        if isinstance(other, KetBase):
+            return OuterProduct(other, self)
+        else:
+            return Expr.__rmul__(self, other)
 
     def _represent(self, **options):
         """A default represent that uses the Ket's version."""
@@ -600,7 +626,7 @@ class TimeDepBra(TimeDepState, BraBase):
         return TimeDepKet
 
 
-class OrthogonalState(State):
+class OrthogonalState(State, StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
 
@@ -799,6 +825,10 @@ class Wavefunction(Function):
 
     def _eval_transpose(self):
         return self
+
+    @property
+    def free_symbols(self):
+        return self.expr.free_symbols
 
     @property
     def is_commutative(self):

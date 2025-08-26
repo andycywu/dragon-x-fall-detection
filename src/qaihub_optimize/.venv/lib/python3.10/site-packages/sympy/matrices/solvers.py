@@ -357,7 +357,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(m):
         for j in range(min(i, n)):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
+            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
 
     # consistency check for overdetermined systems
     if m > n:
@@ -372,10 +372,10 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(n - 1, -1, -1):
         for j in range(i + 1, n):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
+            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
 
         scale = A[i, i]
-        b.row_op(i, lambda x, _: dps(scale**-1 * x))
+        b.row_op(i, lambda x, _: dps(x / scale))
 
     return rhs.__class__(b)
 

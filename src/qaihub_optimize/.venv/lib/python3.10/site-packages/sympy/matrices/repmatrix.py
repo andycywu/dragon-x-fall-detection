@@ -10,7 +10,7 @@ from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, GF, EXRAW
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.exceptions import DMNonInvertibleMatrixError
-from sympy.polys.polyerrors import CoercionFailed, NotInvertible
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent, as_int
@@ -451,20 +451,11 @@ class RepMatrix(MatrixBase):
         except CoercionFailed:
             raise ValueError("inv_mod: matrix entries must be integers")
 
-        if K.is_Field:
-            try:
-                dMi = dM.inv()
-            except DMNonInvertibleMatrixError as exc:
-                msg = f'Matrix is not invertible (mod {m})'
-                raise NonInvertibleMatrixError(msg) from exc
-        else:
-            dMadj, det = dM.adj_det()
-            try:
-                detinv = 1 / det
-            except NotInvertible:
-                msg = f'Matrix is not invertible (mod {m})'
-                raise NonInvertibleMatrixError(msg)
-            dMi = dMadj * detinv
+        try:
+            dMi = dM.inv()
+        except DMNonInvertibleMatrixError as exc:
+            msg = f'Matrix is not invertible (mod {m})'
+            raise NonInvertibleMatrixError(msg) from exc
 
         return dMi.to_Matrix()
 

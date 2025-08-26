@@ -1,0 +1,55 @@
+{
+  "created_by": "automated_script",
+  "models": [
+    {
+      "name": "pose_landmarks_detector_lite.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.onnx",
+      "size": 1844240
+    },
+    {
+      "name": "pose_landmarks_detector_heavy.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.onnx",
+      "size": 14918048
+    },
+    {
+      "name": "pose_landmarks_detector_full.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.onnx",
+      "size": 3708907
+    },
+    {
+      "name": "pose_detection.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.onnx",
+      "size": 6984920
+    },
+    {
+      "name": "face_detector.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.onnx",
+      "size": 165548
+    },
+    {
+      "name": "hand_landmarks_detector.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.onnx",
+      "size": 3084098
+    },
+    {
+      "name": "pose_landmarks_detector_lite.static_QInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/static_quant_models/pose_landmarks_detector_lite.static_QInt8.onnx",
+      "size": 1838344
+    },
+    {
+      "name": "pose_landmarks_detector_heavy.static_QInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/static_quant_models/pose_landmarks_detector_heavy.static_QInt8.onnx",
+      "size": 15520727
+    },
+    {
+      "name": "pose_landmarks_detector_full.static_QInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/static_quant_models/pose_landmarks_detector_full.static_QInt8.onnx",
+      "size": 3815764
+    },
+    {
+      "name": "model.static_QInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/static_quant_models/model.static_QInt8.onnx",
+      "size": 3820521
+    }
+  ]
+}

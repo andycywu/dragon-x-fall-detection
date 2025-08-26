@@ -378,6 +378,8 @@ def igcdex(a, b):
     4
 
     """
+    if (not a) and (not b):
+        return (0, 1, 0)
     g, x, y = gcdext(int(a), int(b))
     return x, y, g
 

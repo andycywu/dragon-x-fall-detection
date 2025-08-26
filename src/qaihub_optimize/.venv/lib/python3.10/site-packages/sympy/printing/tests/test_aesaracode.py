@@ -10,7 +10,7 @@ cache instead.
 import logging
 
 from sympy.external import import_module
-from sympy.testing.pytest import raises, SKIP, warns_deprecated_sympy
+from sympy.testing.pytest import raises, SKIP
 
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -56,14 +56,12 @@ f_t = sy.Function('f')(t)
 def aesara_code_(expr, **kwargs):
     """ Wrapper for aesara_code that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    with warns_deprecated_sympy():
-        return aesara_code(expr, **kwargs)
+    return aesara_code(expr, **kwargs)
 
 def aesara_function_(inputs, outputs, **kwargs):
     """ Wrapper for aesara_function that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    with warns_deprecated_sympy():
-        return aesara_function(inputs, outputs, **kwargs)
+    return aesara_function(inputs, outputs, **kwargs)
 
 
 def fgraph_of(*exprs):
@@ -517,9 +515,8 @@ def test_global_cache():
         global_cache.clear()
 
         for s in [x, X, f_t]:
-            with warns_deprecated_sympy():
-                st = aesara_code(s)
-                assert aesara_code(s) is st
+            st = aesara_code(s)
+            assert aesara_code(s) is st
 
     finally:
         # Restore global cache
@@ -546,8 +543,7 @@ def test_cache_types_distinct():
 
     # Check retrieving
     for s, st in printed.items():
-        with warns_deprecated_sympy():
-            assert aesara_code(s, cache=cache) is st
+        assert aesara_code(s, cache=cache) is st
 
 def test_symbols_are_created_once():
     """
@@ -617,17 +613,14 @@ def test_Relationals():
 
 def test_complexfunctions():
     dtypes = {x:'complex128', y:'complex128'}
-    with warns_deprecated_sympy():
-        xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
+    xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
     from sympy.functions.elementary.complexes import conjugate
     from aesara.tensor import as_tensor_variable as atv
     from aesara.tensor import complex as cplx
-    with warns_deprecated_sympy():
-        assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
-        assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
+    assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
+    assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
 
 
 def test_constantfunctions():
-    with warns_deprecated_sympy():
-        tf = aesara_function([],[1+1j])
+    tf = aesara_function([],[1+1j])
     assert(tf()==1+1j)

@@ -22,14 +22,16 @@
 # is somewhere in the path and that it can compile ANSI C code.
 
 from sympy.abc import x, y, z
-from sympy.testing.pytest import IS_WASM, skip
+from sympy.external import import_module
+from sympy.testing.pytest import skip
 from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
 import tempfile
 import subprocess
-from pathlib import Path
 
+
+pyodide_js = import_module('pyodide_js')
 
 # templates for the main program that will test the generated code.
 
@@ -113,9 +115,10 @@ combinations_lang_compiler = [
     ('F95', 'g95')
 ]
 
+
 def try_run(commands):
     """Run a series of commands and only return True if all ran fine."""
-    if IS_WASM:
+    if pyodide_js:
         return False
     with open(os.devnull, 'w') as null:
         for command in commands:
@@ -183,8 +186,9 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         raise NotImplementedError(
             "FIXME: filename extension unknown for language: %s" % language)
 
-    Path(f_name).write_text(
-        main_template[language] % {'statements': "".join(test_strings)})
+    with open(f_name, "w") as f:
+        f.write(
+            main_template[language] % {'statements': "".join(test_strings)})
 
     # 4) Compile and link
     compiled = try_run(commands)

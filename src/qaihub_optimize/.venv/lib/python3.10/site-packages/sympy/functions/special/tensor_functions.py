@@ -1,7 +1,7 @@
 from math import prod
 
 from sympy.core import S, Integer
-from sympy.core.function import DefinedFunction
+from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
@@ -39,7 +39,7 @@ def eval_levicivita(*args):
     # converting factorial(i) to int is slightly faster
 
 
-class LeviCivita(DefinedFunction):
+class LeviCivita(Function):
     """
     Represent the Levi-Civita symbol.
 
@@ -87,7 +87,7 @@ class LeviCivita(DefinedFunction):
         return eval_levicivita(*self.args)
 
 
-class KroneckerDelta(DefinedFunction):
+class KroneckerDelta(Function):
     """
     The discrete, or Kronecker, delta function.
 

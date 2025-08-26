@@ -2,7 +2,6 @@ import os
 from os.path import join
 import shutil
 import tempfile
-from pathlib import Path
 
 try:
     from subprocess import STDOUT, CalledProcessError, check_output
@@ -299,7 +298,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     debug("Latex code:")
     debug(latex_main)
     with tempfile.TemporaryDirectory() as workdir:
-        Path(join(workdir, 'texput.tex')).write_text(latex_main, encoding='utf-8')
+        with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
+            fh.write(latex_main)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
@@ -376,8 +376,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             shutil.move(join(workdir, src), filename)
         elif viewer == "BytesIO":
-            s = Path(join(workdir, src)).read_bytes()
-            outputbuffer.write(s)
+            with open(join(workdir, src), 'rb') as fh:
+                outputbuffer.write(fh.read())
         elif callable(viewer):
             viewer(join(workdir, src), fmt=output)
         else:

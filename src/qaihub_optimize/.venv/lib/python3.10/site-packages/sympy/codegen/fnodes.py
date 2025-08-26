@@ -5,7 +5,6 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 """
 
-from __future__ import annotations
 from sympy.codegen.ast import (
     Attribute, CodeBlock, FunctionCall, Node, none, String,
     Token, _mk_Tuple, Variable
@@ -621,8 +620,8 @@ class merge(F95Function):
 
 
 class _literal(Float):
-    _token: str
-    _decimals: int
+    _token = None  # type: str
+    _decimals = None  # type: int
 
     def _fcode(self, printer, *args, **kwargs):
         mantissa, sgnd_ex = ('%.{}e'.format(self._decimals) % self).split('e')

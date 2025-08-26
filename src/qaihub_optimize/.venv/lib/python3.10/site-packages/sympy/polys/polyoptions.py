@@ -4,9 +4,7 @@ from __future__ import annotations
 
 __all__ = ["Options"]
 
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
+from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups, is_sequence
@@ -124,9 +122,6 @@ class Options(dict):
 
     __order__ = None
     __options__: dict[str, type[Option]] = {}
-
-    gens: tuple[Expr, ...]
-    domain: sympy.polys.domains.Domain
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)

@@ -1,4 +1,3 @@
-import string
 from itertools import zip_longest
 
 from sympy.utilities.enumerative import (
@@ -86,7 +85,7 @@ def compare_multiset_w_baseline(multiplicities):
     baseline implementation, and compare the results.
 
     """
-    letters = string.ascii_lowercase
+    letters = "abcdefghijklmnopqrstuvwxyz"
     bl_partitions = multiset_partitions_baseline(multiplicities, letters)
 
     # The partitions returned by the different algorithms may have

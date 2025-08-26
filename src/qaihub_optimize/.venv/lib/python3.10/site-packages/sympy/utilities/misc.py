@@ -188,7 +188,8 @@ def debug_decorator(func):
         return func
 
     def maketree(f, *args, **kw):
-        global _debug_tmp, _debug_iter
+        global _debug_tmp
+        global _debug_iter
         oldtmp = _debug_tmp
         _debug_tmp = []
         _debug_iter += 1
@@ -359,7 +360,7 @@ def _replace(reps):
         return lambda x: x
     D = lambda match: reps[match.group(0)]
     pattern = _re.compile("|".join(
-        [_re.escape(k) for k, v in reps.items()]), _re.MULTILINE)
+        [_re.escape(k) for k, v in reps.items()]), _re.M)
     return lambda string: pattern.sub(D, string)
 
 

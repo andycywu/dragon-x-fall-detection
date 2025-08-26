@@ -1,6 +1,5 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-import platform
 import sys
 import re
 import functools
@@ -25,7 +24,6 @@ try:
 except ImportError:
     USE_PYTEST = False
 
-IS_WASM: bool = sys.platform == 'emscripten' or platform.machine() in ["wasm32", "wasm64"]
 
 raises: Callable[[Any, Any], Any]
 XFAIL: Callable[[Any], Any]
@@ -261,7 +259,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     for w in warnrec:
         # Should always be true due to the filters above
         assert issubclass(w.category, warningcls)
-        if not re.compile(match, re.IGNORECASE).match(str(w.message)):
+        if not re.compile(match, re.I).match(str(w.message)):
             raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
 
     if test_stacklevel:
@@ -297,7 +295,8 @@ calls the deprecated code (the current stacklevel is showing code from
         targets = []
         for w in warnrec:
             targets.append(w.message.active_deprecations_target)
-        text = pathlib.Path(active_deprecations_file).read_text(encoding="utf-8")
+        with open(active_deprecations_file, encoding="utf-8") as f:
+            text = f.read()
         for target in targets:
             if f'({target})=' not in text:
                 raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
@@ -380,12 +379,22 @@ def warns_deprecated_sympy():
         yield
 
 
+def _running_under_pyodide():
+    """Test if running under pyodide."""
+    try:
+        import pyodide_js  # type: ignore  # noqa
+    except ImportError:
+        return False
+    else:
+        return True
+
+
 def skip_under_pyodide(message):
-    """Decorator to skip a test if running under Pyodide/WASM."""
+    """Decorator to skip a test if running under pyodide."""
     def decorator(test_func):
         @functools.wraps(test_func)
         def test_wrapper():
-            if IS_WASM:
+            if _running_under_pyodide():
                 skip(message)
             return test_func()
         return test_wrapper

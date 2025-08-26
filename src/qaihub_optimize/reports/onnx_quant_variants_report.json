@@ -1,0 +1,142 @@
+{
+  "face_detector.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'conv2d_quant'"
+    }
+  },
+  "pose_landmarks_detector_full.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_53/FusedBatchNormV3;model_1/model/depthwise_conv2d_19/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "pose_landmarks_detector_lite.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_51/FusedBatchNormV3;model_1/model/depthwise_conv2d_18/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_51/FusedBatchNormV3;model_1/model/depthwise_conv2d_18/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "pose_landmarks_detector_heavy.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_181/FusedBatchNormV3;model_1/model/depthwise_conv2d_76/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_181/FusedBatchNormV3;model_1/model/depthwise_conv2d_76/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "face_detector.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'conv2d_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'conv2d_quant'"
+    }
+  },
+  "pose_detection.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/regressor_person_16_NO_PRUNING/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/regressor_person_16_NO_PRUNING/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "pose_landmarks_detector_full.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_53/FusedBatchNormV3;model_1/model/depthwise_conv2d_19/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_53/FusedBatchNormV3;model_1/model/depthwise_conv2d_19/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "test_simple_model_fixed.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 1 : FAIL : Load model from /Users/andycyw/mvp_fall_detection_starter/src/models/onnx/test_simple_model_fixed.quant.onnx failed:/Users/runner/work/1/s/onnxruntime/core/graph/model.cc:150 onnxruntime::Model::Model(onnx::ModelProto &&, const onnxruntime::PathString &, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList *, const logging::Logger &, const onnxruntime::ModelOptions &) Unsupported model IR version: 10, max supported IR version: 9\n"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 1 : FAIL : Load model from /Users/andycyw/mvp_fall_detection_starter/src/models/onnx/test_simple_model_fixed.quant.onnx failed:/Users/runner/work/1/s/onnxruntime/core/graph/model.cc:150 onnxruntime::Model::Model(onnx::ModelProto &&, const onnxruntime::PathString &, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList *, const logging::Logger &, const onnxruntime::ModelOptions &) Unsupported model IR version: 10, max supported IR version: 9\n"
+    }
+  },
+  "pose_landmarks_detector_lite.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_51/FusedBatchNormV3;model_1/model/depthwise_conv2d_18/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "hand_landmarks_detector.quant.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'TFLITE2ONNX_FAF_model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/conv2d_5/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'TFLITE2ONNX_FAF_model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/conv2d_5/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "pose_landmarks_detector_heavy.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_181/FusedBatchNormV3;model_1/model/depthwise_conv2d_76/depthwise;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "test_simple_model_fixed.onnx": {
+    "dynamic_QUInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 1 : FAIL : Load model from /Users/andycyw/mvp_fall_detection_starter/src/models/onnx/test_simple_model_fixed.onnx failed:/Users/runner/work/1/s/onnxruntime/core/graph/model.cc:150 onnxruntime::Model::Model(onnx::ModelProto &&, const onnxruntime::PathString &, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList *, const logging::Logger &, const onnxruntime::ModelOptions &) Unsupported model IR version: 10, max supported IR version: 9\n"
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 1 : FAIL : Load model from /Users/andycyw/mvp_fall_detection_starter/src/models/onnx/test_simple_model_fixed.onnx failed:/Users/runner/work/1/s/onnxruntime/core/graph/model.cc:150 onnxruntime::Model::Model(onnx::ModelProto &&, const onnxruntime::PathString &, const onnxruntime::IOnnxRuntimeOpSchemaRegistryList *, const logging::Logger &, const onnxruntime::ModelOptions &) Unsupported model IR version: 10, max supported IR version: 9\n"
+    }
+  },
+  "pose_detection.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/regressor_person_16_NO_PRUNING/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    }
+  },
+  "hand_landmarks_detector.onnx": {
+    "dynamic_QUInt8": {
+      "ok": true,
+      "error": null
+    },
+    "dynamic_QInt8": {
+      "ok": false,
+      "error": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'TFLITE2ONNX_FAF_model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/conv2d_5/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+    }
+  }
+}

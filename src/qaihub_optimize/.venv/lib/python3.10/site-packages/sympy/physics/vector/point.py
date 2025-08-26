@@ -99,7 +99,7 @@ class Point:
         outlist = [[self]]
         oldlist = [[]]
         while outlist != oldlist:
-            oldlist = outlist.copy()
+            oldlist = outlist[:]
             for v in outlist:
                 templist = v[-1]._pdlist[num].keys()
                 for v2 in templist:

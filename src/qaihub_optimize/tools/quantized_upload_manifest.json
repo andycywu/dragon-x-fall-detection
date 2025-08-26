@@ -1,0 +1,85 @@
+{
+  "generated_at": "2025-08-25T00:00:00Z",
+  "criteria": {
+    "max_rel_l2_mean_threshold": 0.5,
+    "require_ort_ok": true,
+    "notes": "Decision: upload if ORT can load converted model and numeric regression avg rel_l2_mean <= threshold. If original model failed to load locally, mark pending_review."
+  },
+  "models": [
+    {
+      "name": "pose_landmarks_detector_lite.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "original_load_failed",
+        "detail": "Original model failed to load with ConvInteger NOT_IMPLEMENTED; numeric regression not available"
+      },
+      "decision": "pending_review",
+      "reason": "原始模型在本地無法載入（ConvInteger 未實作），無法比較數值差異；建議人工審查或提供可載入的原始模型以完成評估。"
+    },
+    {
+      "name": "pose_landmarks_detector_heavy.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "original_load_failed",
+        "detail": "Original model failed to load with ConvInteger NOT_IMPLEMENTED; numeric regression not available"
+      },
+      "decision": "pending_review",
+      "reason": "同上：原始模型無法於本地載入，建議人工審查或提供原始模型。"
+    },
+    {
+      "name": "pose_landmarks_detector_full.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "evaluated",
+        "outputs": [
+          { "mae_mean": 58.5170773267746, "rel_l2_mean": 0.8979723020390034 },
+          { "mae_mean": 0.5071657681837678, "rel_l2_mean": 0.9515757564279428 },
+          { "mae_mean": 72.08574950695038, "rel_l2_mean": 0.9868489662975692 },
+          { "mae_mean": 3.8707776814699173, "rel_l2_mean": 0.5296212640973555 },
+          { "mae_mean": 0.7104565240442753, "rel_l2_mean": 4.07965022110303 }
+        ]
+      },
+      "decision": "skip",
+      "reason": "數值回歸顯示 rel_l2_mean 明顯超過閾值（平均 rel_l2 ≈ 1.49），建議不要上傳此替換模型或需進一步調整/驗證。"
+    },
+    {
+      "name": "pose_detection.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "original_load_failed",
+        "detail": "Original model failed to load with ConvInteger NOT_IMPLEMENTED; numeric regression not available"
+      },
+      "decision": "pending_review",
+      "reason": "原始模型無法於本地載入，建議人工審查或提供原始模型以完成評估。"
+    },
+    {
+      "name": "face_detector.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "evaluated",
+        "outputs": [
+          { "mae_mean": 1.6362461410462856, "rel_l2_mean": 0.11004641622722239 },
+          { "mae_mean": 2.7467966470867395, "rel_l2_mean": 0.29011787352509555 }
+        ]
+      },
+      "decision": "upload",
+      "reason": "數值回歸在閾值之下（avg rel_l2 ≈ 0.20），可上傳替換模型以供 QAI Hub 進一步處理。"
+    },
+    {
+      "name": "hand_landmarks_detector.dynamic_QUInt8.onnx",
+      "converted_out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.conv_replaced.onnx",
+      "ort_ok": true,
+      "eval": {
+        "status": "original_load_failed",
+        "detail": "Original model failed to load with ConvInteger NOT_IMPLEMENTED; numeric regression not available"
+      },
+      "decision": "pending_review",
+      "reason": "原始模型無法於本地載入，建議人工審查或提供原始模型以完成評估。"
+    }
+  ]
+}

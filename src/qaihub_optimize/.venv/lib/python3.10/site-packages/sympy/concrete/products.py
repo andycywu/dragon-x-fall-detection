@@ -1,4 +1,4 @@
-from __future__ import annotations
+from typing import Tuple as tTuple
 
 from .expr_with_intlimits import ExprWithIntLimits
 from .summations import Sum, summation, _dummy_with_inherited_properties_concrete
@@ -191,7 +191,7 @@ class Product(ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tuple[tuple[Symbol, Expr, Expr]]
+    limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
@@ -284,6 +284,11 @@ class Product(ExprWithIntLimits):
             return f.doit(**hints)
         else:
             return powsimp(f)
+
+    def _eval_adjoint(self):
+        if self.is_commutative:
+            return self.func(self.function.adjoint(), *self.limits)
+        return None
 
     def _eval_conjugate(self):
         return self.func(self.function.conjugate(), *self.limits)

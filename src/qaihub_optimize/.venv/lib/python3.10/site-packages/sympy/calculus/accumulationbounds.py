@@ -184,7 +184,7 @@ class AccumulationBounds(Expr):
     is_extended_real = True
     is_number = False
 
-    def __new__(cls, min, max) -> Expr: # type: ignore
+    def __new__(cls, min, max):
 
         min = _sympify(min)
         max = _sympify(max)

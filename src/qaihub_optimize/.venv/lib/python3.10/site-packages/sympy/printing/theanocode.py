@@ -7,7 +7,6 @@
 
 """
 from __future__ import annotations
-import math
 from typing import Any
 
 from sympy.external import import_module
@@ -230,7 +229,7 @@ class TheanoPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return math.pi
+        return 3.141592653589793
 
     def _print_Exp1(self, expr, **kwargs):
         return ts.exp(1)

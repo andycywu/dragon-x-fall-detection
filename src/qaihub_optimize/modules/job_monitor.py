@@ -19,6 +19,9 @@ except ImportError:
     QAI_HUB_AVAILABLE = False
     print("⚠️  qai_hub 套件未安裝，將使用模擬模式")
 
+from .job_monitor_storage import save_jobs, load_jobs
+import json
+
 
 class JobMonitor:
     """QAI Hub 任務狀態監控類別"""
@@ -43,6 +46,15 @@ class JobMonitor:
             'on_job_error': [],
             'on_timeout': []
         }
+
+        # 嘗試載入先前儲存的任務狀態
+        try:
+            loaded = load_jobs()
+            if isinstance(loaded, dict) and loaded:
+                self.monitored_jobs.update(loaded)
+                print(f"🔁 載入已儲存任務數: {len(loaded)}")
+        except Exception:
+            pass
     
     def add_job(self, job_id: str, job_type: str, model_name: str, 
                 timeout: int = 1800, metadata: Optional[Dict] = None):
@@ -71,11 +83,21 @@ class JobMonitor:
         
         # 觸發任務開始回調
         self._trigger_callbacks('on_job_start', self.monitored_jobs[job_id])
+
+        # 儲存變更
+        try:
+            save_jobs(self.monitored_jobs)
+        except Exception:
+            pass
     
     def remove_job(self, job_id: str):
         """移除監控的任務"""
         if job_id in self.monitored_jobs:
             del self.monitored_jobs[job_id]
+            try:
+                save_jobs(self.monitored_jobs)
+            except Exception:
+                pass
     
     def update_job_status(self, job_id: str, status: str, progress: int = 0, 
                          error: Optional[str] = None):
@@ -114,6 +136,12 @@ class JobMonitor:
                 self._trigger_callbacks('on_job_complete', job)
             elif status_upper in error_upper:
                 self._trigger_callbacks('on_job_error', job)
+        
+        # 儲存變更
+        try:
+            save_jobs(self.monitored_jobs)
+        except Exception:
+            pass
     
     def get_job_status(self, job_id: str) -> Optional[Dict]:
         """取得任務狀態"""
@@ -125,7 +153,24 @@ class JobMonitor:
     
     def get_jobs_by_status(self, status: str) -> List[Dict]:
         """根據狀態篩選任務"""
-        return [job for job in self.monitored_jobs.values() if job['status'] == status]
+        # 支援大小寫不敏感比對，並支援特殊關鍵字群組
+        if not status:
+            return []
+
+        status_upper = status.upper()
+        completed_upper = [s.upper() for s in self.COMPLETED_STATUS]
+        error_upper = [s.upper() for s in self.ERROR_STATUS]
+
+        # 如果請求的是已完成群組，匹配所有已完成相關狀態
+        if status_upper in ('COMPLETED', 'SUCCESS', 'SUCCEEDED', 'FINISHED', 'RESULTS_READY'):
+            return [job for job in self.monitored_jobs.values() if str(job.get('status', '')).upper() in completed_upper]
+
+        # 如果請求的是錯誤/失敗群組，匹配所有錯誤相關狀態
+        if status_upper in ('FAILED', 'ERROR', 'CANCELLED', 'TIMEOUT'):
+            return [job for job in self.monitored_jobs.values() if str(job.get('status', '')).upper() in error_upper]
+
+        # 一般情況下，做大小寫不敏感的精確匹配
+        return [job for job in self.monitored_jobs.values() if str(job.get('status', '')).upper() == status_upper]
     
     def get_jobs_by_type(self, job_type: str) -> List[Dict]:
         """根據類型篩選任務"""

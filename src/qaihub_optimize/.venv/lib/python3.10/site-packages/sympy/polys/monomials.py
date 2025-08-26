@@ -4,7 +4,6 @@
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
-from sympy.core.cache import cacheit
 from sympy.core import Mul, S, Tuple, sympify
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
@@ -85,8 +84,8 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), reverse=True, key=monomial_key('lex', [x, y]))
         [x**2*y**4, x**2*y**3, x**2*y**2, x*y**4, x*y**3, x*y**2]
     """
+    n = len(variables)
     if is_sequence(max_degrees):
-        n = len(variables)
         if len(max_degrees) != n:
             raise ValueError('Argument sizes do not match')
         if min_degrees is None:
@@ -98,13 +97,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                 raise ValueError('Argument sizes do not match')
             if any(i < 0 for i in min_degrees):
                 raise ValueError("min_degrees cannot contain negative numbers")
-        if any(min_degrees[i] > max_degrees[i] for i in range(n)):
-            raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
-        power_lists = []
-        for var, min_d, max_d in zip(variables, min_degrees, max_degrees):
-            power_lists.append([var**i for i in range(min_d, max_d + 1)])
-        for powers in product(*power_lists):
-            yield Mul(*powers)
+        total_degree = False
     else:
         max_degree = max_degrees
         if max_degree < 0:
@@ -115,6 +108,8 @@ def itermonomials(variables, max_degrees, min_degrees=None):
             if min_degrees < 0:
                 raise ValueError("min_degrees cannot be negative")
             min_degree = min_degrees
+        total_degree = True
+    if total_degree:
         if min_degree > max_degree:
             return
         if not variables or max_degree == 0:
@@ -123,21 +118,33 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         # Force to list in case of passed tuple or other incompatible collection
         variables = list(variables) + [S.One]
         if all(variable.is_commutative for variable in variables):
-            it = combinations_with_replacement(variables, max_degree)
+            monomials_list_comm = []
+            for item in combinations_with_replacement(variables, max_degree):
+                powers = dict.fromkeys(variables, 0)
+                for variable in item:
+                    if variable != 1:
+                        powers[variable] += 1
+                if sum(powers.values()) >= min_degree:
+                    monomials_list_comm.append(Mul(*item))
+            yield from set(monomials_list_comm)
         else:
-            it = product(variables, repeat=max_degree)
-        monomials_set = set()
-        d = max_degree - min_degree
-        for item in it:
-            count = 0
-            for variable in item:
-                if variable == 1:
-                    count += 1
-                    if d < count:
-                        break
-            else:
-                monomials_set.add(Mul(*item))
-        yield from monomials_set
+            monomials_list_non_comm = []
+            for item in product(variables, repeat=max_degree):
+                powers = dict.fromkeys(variables, 0)
+                for variable in item:
+                    if variable != 1:
+                        powers[variable] += 1
+                if sum(powers.values()) >= min_degree:
+                    monomials_list_non_comm.append(Mul(*item))
+            yield from set(monomials_list_non_comm)
+    else:
+        if any(min_degrees[i] > max_degrees[i] for i in range(n)):
+            raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
+        power_lists = []
+        for var, min_d, max_d in zip(variables, min_degrees, max_degrees):
+            power_lists.append([var**i for i in range(min_d, max_d + 1)])
+        for powers in product(*power_lists):
+            yield Mul(*powers)
 
 def monomial_count(V, N):
     r"""
@@ -387,14 +394,8 @@ def term_div(a, b, domain):
 class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
-    @cacheit
-    def __new__(cls, ngens):
-        obj = super().__new__(cls)
-        obj.ngens = ngens
-        return obj
-
-    def __getnewargs__(self):
-        return (self.ngens,)
+    def __init__(self, ngens):
+        self.ngens = ngens
 
     def _build(self, code, name):
         ns = {}
@@ -404,7 +405,6 @@ class MonomialOps:
     def _vars(self, name):
         return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
-    @cacheit
     def mul(self):
         name = "monomial_mul"
         template = dedent("""\
@@ -419,7 +419,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
-    @cacheit
     def pow(self):
         name = "monomial_pow"
         template = dedent("""\
@@ -432,7 +431,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "Ak": ", ".join(Ak)}
         return self._build(code, name)
 
-    @cacheit
     def mulpow(self):
         name = "monomial_mulpow"
         template = dedent("""\
@@ -447,7 +445,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "ABk": ", ".join(ABk)}
         return self._build(code, name)
 
-    @cacheit
     def ldiv(self):
         name = "monomial_ldiv"
         template = dedent("""\
@@ -462,7 +459,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
-    @cacheit
     def div(self):
         name = "monomial_div"
         template = dedent("""\
@@ -479,7 +475,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "RAB": "\n    ".join(RAB), "R": ", ".join(R)}
         return self._build(code, name)
 
-    @cacheit
     def lcm(self):
         name = "monomial_lcm"
         template = dedent("""\
@@ -494,7 +489,6 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
-    @cacheit
     def gcd(self):
         name = "monomial_gcd"
         template = dedent("""\

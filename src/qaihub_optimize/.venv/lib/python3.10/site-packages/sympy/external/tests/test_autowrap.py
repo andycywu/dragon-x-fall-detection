@@ -1,7 +1,6 @@
 import sympy
 import tempfile
 import os
-from pathlib import Path
 from sympy.core.mod import Mod
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
@@ -289,7 +288,8 @@ def test_autowrap_custom_printer():
 
     tmpdir = tempfile.mkdtemp()
     # write a trivial header file to use in the generated code
-    Path(os.path.join(tmpdir, 'shortpi.h')).write_text('#define S_PI 3.14')
+    with open(os.path.join(tmpdir, 'shortpi.h'), 'w') as f:
+        f.write('#define S_PI 3.14')
 
     func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
 

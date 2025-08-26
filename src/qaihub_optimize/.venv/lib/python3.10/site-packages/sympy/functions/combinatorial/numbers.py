@@ -6,16 +6,15 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
-from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Callable
+from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
+from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
@@ -56,7 +55,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class carmichael(DefinedFunction):
+class carmichael(Function):
     r"""
     Carmichael Numbers:
 
@@ -186,7 +185,7 @@ directly instead.
 #----------------------------------------------------------------------------#
 
 
-class fibonacci(DefinedFunction):
+class fibonacci(Function):
     r"""
     Fibonacci numbers / Fibonacci polynomials
 
@@ -274,7 +273,7 @@ class fibonacci(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class lucas(DefinedFunction):
+class lucas(Function):
     """
     Lucas numbers
 
@@ -315,8 +314,8 @@ class lucas(DefinedFunction):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-        from sympy.functions.elementary.miscellaneous import sqrt
-        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+       from sympy.functions.elementary.miscellaneous import sqrt
+       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -326,7 +325,7 @@ class lucas(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class tribonacci(DefinedFunction):
+class tribonacci(Function):
     r"""
     Tribonacci numbers / Tribonacci polynomials
 
@@ -416,7 +415,7 @@ class tribonacci(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class bernoulli(DefinedFunction):
+class bernoulli(Function):
     r"""
     Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
@@ -517,7 +516,7 @@ class bernoulli(DefinedFunction):
 
     """
 
-    args: tuple[Integer]
+    args: tTuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
@@ -606,7 +605,7 @@ class bernoulli(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class bell(DefinedFunction):
+class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
@@ -759,7 +758,7 @@ class bell(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class harmonic(DefinedFunction):
+class harmonic(Function):
     r"""
     Harmonic numbers
 
@@ -891,9 +890,6 @@ class harmonic(DefinedFunction):
 
     """
 
-    # This prevents redundant recalculations and speeds up harmonic number computations.
-    harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
-
     @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
@@ -918,14 +914,7 @@ class harmonic(DefinedFunction):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
-                if m.is_Integer:
-                    if m not in cls.harmonic_cache:
-                        @recurrence_memo([0])
-                        def f(n, prev):
-                            return prev[-1] + S.One / n**m
-                        cls.harmonic_cache[m] = f
-                    return cls.harmonic_cache[m](int(n))
-                return Add(*(k**(-m) for k in range(1, int(n) + 1)))
+                return Add(*(k**(-m) for k in range(1, int(n)+1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
@@ -1034,7 +1023,7 @@ class harmonic(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class euler(DefinedFunction):
+class euler(Function):
     r"""
     Euler numbers / Euler polynomials / Euler function
 
@@ -1138,16 +1127,6 @@ class euler(DefinedFunction):
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
-            from sympy.core.evalf import pure_complex
-            n = int(n)
-            reim = pure_complex(x, or_real=True)
-            if reim and all(a.is_Float or a.is_Integer for a in reim) \
-                    and any(a.is_Float for a in reim):
-                from mpmath import mp
-                prec = min([a._prec for a in reim if a.is_Float])
-                with workprec(prec):
-                    res = mp.eulerpoly(n, x)
-                return Expr._from_mpmath(res, prec)
             return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
@@ -1201,7 +1180,7 @@ class euler(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class catalan(DefinedFunction):
+class catalan(Function):
     r"""
     Catalan numbers
 
@@ -1347,7 +1326,7 @@ class catalan(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class genocchi(DefinedFunction):
+class genocchi(Function):
     r"""
     Genocchi numbers / Genocchi polynomials / Genocchi function
 
@@ -1487,7 +1466,7 @@ class genocchi(DefinedFunction):
 #----------------------------------------------------------------------------#
 
 
-class andre(DefinedFunction):
+class andre(Function):
     r"""
     Andre numbers / Andre function
 
@@ -1601,7 +1580,8 @@ class andre(DefinedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class partition(DefinedFunction):
+
+class partition(Function):
     r"""
     Partition numbers
 
@@ -1651,15 +1631,8 @@ class partition(DefinedFunction):
         if self.args[0].is_nonnegative is True:
             return True
 
-    def _eval_Mod(self, q):
-        # Ramanujan's congruences
-        n = self.args[0]
-        for p, rem in [(5, 4), (7, 5), (11, 6)]:
-            if q == p and n % q == rem:
-                return S.Zero
 
-
-class divisor_sigma(DefinedFunction):
+class divisor_sigma(Function):
     r"""
     Calculate the divisor function `\sigma_k(n)` for positive integer n
 
@@ -1726,7 +1699,7 @@ class divisor_sigma(DefinedFunction):
                 return Mul(*[cancel((p**(k*(e + 1)) - 1) / (p**k - 1)) for p, e in factorint(n).items()])
 
 
-class udivisor_sigma(DefinedFunction):
+class udivisor_sigma(Function):
     r"""
     Calculate the unitary divisor function `\sigma_k^*(n)` for positive integer n
 
@@ -1798,7 +1771,7 @@ class udivisor_sigma(DefinedFunction):
             return Mul(*[1+p**(k*e) for p, e in factorint(n).items()])
 
 
-class legendre_symbol(DefinedFunction):
+class legendre_symbol(Function):
     r"""
     Returns the Legendre symbol `(a / p)`.
 
@@ -1846,7 +1819,7 @@ class legendre_symbol(DefinedFunction):
             return S(legendre(as_int(a), as_int(p)))
 
 
-class jacobi_symbol(DefinedFunction):
+class jacobi_symbol(Function):
     r"""
     Returns the Jacobi symbol `(m / n)`.
 
@@ -1917,7 +1890,7 @@ class jacobi_symbol(DefinedFunction):
             return S(jacobi(as_int(m), as_int(n)))
 
 
-class kronecker_symbol(DefinedFunction):
+class kronecker_symbol(Function):
     r"""
     Returns the Kronecker symbol `(a / n)`.
 
@@ -1956,7 +1929,7 @@ class kronecker_symbol(DefinedFunction):
             return S(kronecker(as_int(a), as_int(n)))
 
 
-class mobius(DefinedFunction):
+class mobius(Function):
     """
     Mobius function maps natural number to {-1, 0, 1}
 
@@ -2036,7 +2009,7 @@ class mobius(DefinedFunction):
         return result
 
 
-class primenu(DefinedFunction):
+class primenu(Function):
     r"""
     Calculate the number of distinct prime factors for a positive integer n.
 
@@ -2088,7 +2061,7 @@ class primenu(DefinedFunction):
             return S(len(factorint(n)))
 
 
-class primeomega(DefinedFunction):
+class primeomega(Function):
     r"""
     Calculate the number of prime factors counting multiplicities for a
     positive integer n.
@@ -2141,7 +2114,7 @@ class primeomega(DefinedFunction):
             return S(sum(factorint(n).values()))
 
 
-class totient(DefinedFunction):
+class totient(Function):
     r"""
     Calculate the Euler totient function phi(n)
 
@@ -2191,7 +2164,7 @@ class totient(DefinedFunction):
             return S(prod(p**(k-1)*(p-1) for p, k in factorint(n).items()))
 
 
-class reduced_totient(DefinedFunction):
+class reduced_totient(Function):
     r"""
     Calculate the Carmichael reduced totient function lambda(n)
 
@@ -2249,7 +2222,7 @@ class reduced_totient(DefinedFunction):
             return S(lcm(t, *((p-1)*p**(k-1) for p, k in factorint(n).items())))
 
 
-class primepi(DefinedFunction):
+class primepi(Function):
     r""" Represents the prime counting function pi(n) = the number
     of prime numbers less than or equal to n.
 
@@ -2313,7 +2286,7 @@ class primepi(DefinedFunction):
 
 
 class _MultisetHistogram(tuple):
-    __slots__ = ()
+    pass
 
 
 _N = -1
@@ -2952,7 +2925,7 @@ def nT(n, k=None):
 #-----------------------------------------------------------------------------#
 
 
-class motzkin(DefinedFunction):
+class motzkin(Function):
     """
     The nth Motzkin number is the number
     of ways of drawing non-intersecting chords
@@ -2996,22 +2969,22 @@ class motzkin(DefinedFunction):
         except ValueError:
             return False
         if n > 0:
-            if n in (1, 2):
+             if n in (1, 2):
                 return True
 
-            tn1 = 1
-            tn = 2
-            i = 3
-            while tn < n:
-                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
-                i += 1
-                tn1 = tn
-                tn = a
+             tn1 = 1
+             tn = 2
+             i = 3
+             while tn < n:
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                 i += 1
+                 tn1 = tn
+                 tn = a
 
-            if tn == n:
-                return True
-            else:
-                return False
+             if tn == n:
+                 return True
+             else:
+                 return False
 
         else:
             return False

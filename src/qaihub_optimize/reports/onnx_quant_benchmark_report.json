@@ -1,0 +1,154 @@
+{
+  "face_detector.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/face_detector.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 2.1505491799325682,
+      "quant": 3.3245675000944175
+    },
+    "accuracy": [
+      {
+        "mae": 2.4706084728240967,
+        "rel_l2": 0.1765209825955074
+      },
+      {
+        "mae": 1.3448569774627686,
+        "rel_l2": 0.3959243420983306
+      }
+    ]
+  },
+  "pose_landmarks_detector_full.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/pose_landmarks_detector_full.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 41.86202165990835,
+      "quant": 53.8903333399503
+    },
+    "accuracy": [
+      {
+        "mae": 54.939884185791016,
+        "rel_l2": 0.722274658646743
+      },
+      {
+        "mae": 0.00760883092880249,
+        "rel_l2": 34804.50650456979
+      },
+      {
+        "mae": 53.4575080871582,
+        "rel_l2": 0.9803847642322487
+      },
+      {
+        "mae": 4.52246618270874,
+        "rel_l2": 0.6286273510658583
+      },
+      {
+        "mae": 0.7101530432701111,
+        "rel_l2": 3.643316777128815
+      }
+    ]
+  },
+  "pose_landmarks_detector_lite.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/pose_landmarks_detector_lite.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 27.24200333992485,
+      "quant": 31.775133319897577
+    },
+    "accuracy": [
+      {
+        "mae": 21.649208068847656,
+        "rel_l2": 0.46150863272496784
+      },
+      {
+        "mae": 0.9999984502792358,
+        "rel_l2": 653628.6006989398
+      },
+      {
+        "mae": 25.822349548339844,
+        "rel_l2": 0.7734752672849728
+      },
+      {
+        "mae": 4.187572956085205,
+        "rel_l2": 0.6113943363083603
+      },
+      {
+        "mae": 0.10820088535547256,
+        "rel_l2": 0.5144027249775575
+      }
+    ]
+  },
+  "pose_landmarks_detector_heavy.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/pose_landmarks_detector_heavy.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 93.07886832000804,
+      "quant": 154.96504167997045
+    },
+    "accuracy": [
+      {
+        "mae": 83.57816314697266,
+        "rel_l2": 1.743185475994585
+      },
+      {
+        "mae": 0.9999908208847046,
+        "rel_l2": 108471.60831051826
+      },
+      {
+        "mae": 43.56312561035156,
+        "rel_l2": 1.5132369984775211
+      },
+      {
+        "mae": 10.85361385345459,
+        "rel_l2": 0.7990616473228421
+      },
+      {
+        "mae": 0.39417579770088196,
+        "rel_l2": 0.8722011361141382
+      }
+    ]
+  },
+  "pose_detection.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/pose_detection.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 27.298188339918852,
+      "quant": 40.757905000064056
+    },
+    "accuracy": [
+      {
+        "mae": 50.425113677978516,
+        "rel_l2": 0.7252956315574725
+      },
+      {
+        "mae": 219.52098083496094,
+        "rel_l2": 0.35354046672080697
+      }
+    ]
+  },
+  "hand_landmarks_detector.onnx": {
+    "src_path": "/Users/andycyw/mvp_fall_detection_starter/src/models/onnx/hand_landmarks_detector.onnx",
+    "quant_path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.onnx",
+    "latency_ms": {
+      "orig": 25.987386659980984,
+      "quant": 38.311048339965055
+    },
+    "accuracy": [
+      {
+        "mae": 13.154792785644531,
+        "rel_l2": 0.17962718442735473
+      },
+      {
+        "mae": 0.016059070825576782,
+        "rel_l2": 4.353370867610824
+      },
+      {
+        "mae": 0.09385490417480469,
+        "rel_l2": 0.17600094632566352
+      },
+      {
+        "mae": 0.02829488180577755,
+        "rel_l2": 1.2056977238929638
+      }
+    ]
+  }
+}

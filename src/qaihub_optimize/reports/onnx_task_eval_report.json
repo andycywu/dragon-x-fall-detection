@@ -1,0 +1,104 @@
+{
+  "pose_landmarks_detector_lite.dynamic_QUInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_51/FusedBatchNormV3;model_1/model/depthwise_conv2d_18/depthwise;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "pose_landmarks_detector_heavy.dynamic_QUInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_181/FusedBatchNormV3;model_1/model/depthwise_conv2d_76/depthwise;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "pose_landmarks_detector_full.dynamic_QUInt8.onnx": {
+    "samples_used": 32,
+    "outputs": [
+      {
+        "mae_mean": 58.5170773267746,
+        "rel_l2_mean": 0.8979723020390034,
+        "samples": 32
+      },
+      {
+        "mae_mean": 0.5071657681837678,
+        "rel_l2_mean": 0.9515757564279428,
+        "samples": 32
+      },
+      {
+        "mae_mean": 72.08574950695038,
+        "rel_l2_mean": 0.9868489662975692,
+        "samples": 32
+      },
+      {
+        "mae_mean": 3.8707776814699173,
+        "rel_l2_mean": 0.5296212640973555,
+        "samples": 32
+      },
+      {
+        "mae_mean": 0.7104565240442753,
+        "rel_l2_mean": 4.07965022110303,
+        "samples": 32
+      }
+    ]
+  },
+  "pose_detection.dynamic_QUInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/regressor_person_16_NO_PRUNING/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "face_detector.dynamic_QUInt8.onnx": {
+    "samples_used": 32,
+    "outputs": [
+      {
+        "mae_mean": 1.6362461410462856,
+        "rel_l2_mean": 0.11004641622722239,
+        "samples": 32
+      },
+      {
+        "mae_mean": 2.7467966470867395,
+        "rel_l2_mean": 0.29011787352509555,
+        "samples": 32
+      }
+    ]
+  },
+  "hand_landmarks_detector.dynamic_QUInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'TFLITE2ONNX_FAF_model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_1/FusedBatchNormV3;model_1/model/depthwise_conv2d/depthwise;model_1/model/conv2d_5/Conv2D;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "pose_landmarks_detector_lite.static_QInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_51/FusedBatchNormV3;model_1/model/depthwise_conv2d_18/depthwise;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "pose_landmarks_detector_heavy.static_QInt8.onnx": {
+    "error": "load_orig_failed",
+    "detail": "[ONNXRuntimeError] : 9 : NOT_IMPLEMENTED : Could not find an implementation for ConvInteger(10) node with name 'model_1/model/re_lu/Relu6;model_1/model/batch_normalization/FusedBatchNormV3;model_1/model/batch_normalization_181/FusedBatchNormV3;model_1/model/depthwise_conv2d_76/depthwise;model_1/model/conv2d/Conv2D_quant'"
+  },
+  "pose_landmarks_detector_full.static_QInt8.onnx": {
+    "samples_used": 32,
+    "outputs": [
+      {
+        "mae_mean": 22.743991047143936,
+        "rel_l2_mean": 0.3797524809015705,
+        "samples": 32
+      },
+      {
+        "mae_mean": 0.4210274356883019,
+        "rel_l2_mean": 173.4418616176801,
+        "samples": 32
+      },
+      {
+        "mae_mean": 47.47181856632233,
+        "rel_l2_mean": 0.7223833274737432,
+        "samples": 32
+      },
+      {
+        "mae_mean": 1.1398273147642612,
+        "rel_l2_mean": 0.1573372305388374,
+        "samples": 32
+      },
+      {
+        "mae_mean": 0.8532080687582493,
+        "rel_l2_mean": 4.557537060120549,
+        "samples": 32
+      }
+    ]
+  },
+  "model.static_QInt8.onnx": {
+    "error": "no valid outputs"
+  }
+}

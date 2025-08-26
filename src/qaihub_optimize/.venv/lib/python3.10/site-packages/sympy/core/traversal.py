@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import Iterator
-
 from .basic import Basic
 from .sorting import ordered
 from .sympify import sympify
@@ -160,7 +156,7 @@ class preorder_traversal:
     def __next__(self):
         return next(self._pt)
 
-    def __iter__(self) -> Iterator[Basic]:
+    def __iter__(self):
         return self
 
 

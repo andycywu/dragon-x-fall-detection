@@ -1,0 +1,54 @@
+# Requirements for running the full QAI Hub Optimize workflows
+# Notes:
+# - This set targets macOS (Apple/Intel) and general Linux; TensorFlow has platform-specific packages.
+# - We pin numpy < 2 to avoid ABI issues with native extensions built for NumPy 1.x.
+# - If you're on macOS Apple Silicon, prefer the `tensorflow-macos` entry (uncomment it and comment out `tensorflow`).
+
+# Core numeric / protobuf
+numpy<2
+# Use a protobuf range compatible with modern onnx releases
+protobuf>=4.25.1,<5
+
+# ONNX and runtime
+onnx==1.18.0
+onnxruntime
+# Optional provider for macOS CoreML (install if you need CoreMLExecutionProvider)
+# Note: `onnxruntime-coreml` is not available via pip on many macOS setups and
+# may cause pip to fail. Install CoreML/Metal execution providers manually if
+# required by your platform (see ONNX Runtime docs).
+# onnxruntime-coreml; platform_system == "Darwin"
+
+# Computer vision / image I/O
+opencv-python
+Pillow
+
+# ML frameworks / dependencies
+torch
+# Pick one TensorFlow package depending on platform. For macOS (Apple Silicon) prefer tensorflow-macos.
+# tensorflow
+tensorflow-macos; platform_system == "Darwin"
+
+# Mediapipe (may require system wheels or special install on macOS/linux)
+mediapipe
+
+# Utilities used across the repo
+streamlit
+tqdm
+gdown
+huggingface-hub
+pyyaml
+humanfriendly
+
+# Optional: tools for ONNX model processing
+# Use a pinned onnx-simplifier wheel known to work on macOS CPython 3.10/3.11.
+# Note: a separate project named `onnx-slim` does not appear to be available on PyPI
+# (causes `ERROR: No matching distribution found for onnx-slim`). If you intended
+# a different package, replace it here. The `onnx-simplifier` package provides
+# model simplification functionality commonly used in ONNX workflows.
+onnx-simplifier==0.4.36
+
+# Developer convenience
+pytest
+
+# If you hit build/compilation errors on macOS, consider using a Python from pyenv or conda and
+# follow package-specific install guides (e.g., tensorflow-macos installation notes).

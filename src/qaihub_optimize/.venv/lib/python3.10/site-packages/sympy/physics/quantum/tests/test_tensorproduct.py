@@ -2,7 +2,6 @@ from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
-from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -10,16 +9,12 @@ from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qubit import Qubit, QubitBra
-from sympy.physics.quantum.operator import OuterProduct, Operator
+from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.trace import Tr
 
-A = Operator('A')
-B = Operator('B')
-C = Operator('C')
-D = Operator('D')
+A, B, C, D = symbols('A,B,C,D', commutative=False)
 x = symbols('x')
-y = symbols('y', integer=True, positive=True)
 
 mat1 = Matrix([[1, 2*I], [1 + I, 3]])
 mat2 = Matrix([[2*I, 3], [4*I, 2]])
@@ -66,14 +61,12 @@ def test_tensor_product_commutator():
 
 
 def test_tensor_product_simp():
-    with warns_deprecated_sympy():
-        assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
-        # tests for Pow-expressions
-        assert TP(A, B)**y == TP(A**y, B**y)
-        assert tensor_product_simp(TP(A, B)**y) == TP(A**y, B**y)
-        assert tensor_product_simp(x*TP(A, B)**2) == x*TP(A**2,B**2)
-        assert tensor_product_simp(x*(TP(A, B)**2)*TP(C,D)) == x*TP(A**2*C,B**2*D)
-        assert tensor_product_simp(TP(A,B)-TP(C,D)**y) == TP(A,B)-TP(C**y,D**y)
+    assert tensor_product_simp(TP(A, B)*TP(B, C)) == TP(A*B, B*C)
+    # tests for Pow-expressions
+    assert tensor_product_simp(TP(A, B)**x) == TP(A**x, B**x)
+    assert tensor_product_simp(x*TP(A, B)**2) == x*TP(A**2,B**2)
+    assert tensor_product_simp(x*(TP(A, B)**2)*TP(C,D)) == x*TP(A**2*C,B**2*D)
+    assert tensor_product_simp(TP(A,B)-TP(C,D)**x) == TP(A,B)-TP(C**x,D**x)
 
 
 def test_issue_5923():
@@ -88,6 +81,8 @@ def test_eval_trace():
     # This test includes tests with dependencies between TensorProducts
     #and density operators. Since, the test is more to test the behavior of
     #TensorProducts it remains here
+
+    A, B, C, D, E, F = symbols('A B C D E F', commutative=False)
 
     # Density with simple tensor products as args
     t = TensorProduct(A, B)

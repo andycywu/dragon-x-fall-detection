@@ -1,0 +1,11 @@
+numpy<2
+protobuf>=4.25.1,<5
+onnx==1.18.0
+onnxruntime
+onnx-simplifier==0.4.36
+opencv-python
+Pillow
+
+# Optional (only if your ONNX models require them):
+# torch
+# onnxruntime-tools

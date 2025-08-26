@@ -1,7 +1,6 @@
 import os
 import logging
 import re
-from pathlib import Path
 
 from sympy.external import import_module
 from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
@@ -44,9 +43,11 @@ class LarkLaTeXParser:
         grammar_dir_path = os.path.join(os.path.dirname(__file__), "grammar/")
 
         if grammar_file is None:
-            latex_grammar = Path(os.path.join(grammar_dir_path, "latex.lark")).read_text(encoding="utf-8")
+            with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
+                latex_grammar = f.read()
         else:
-            latex_grammar = Path(grammar_file).read_text(encoding="utf-8")
+            with open(grammar_file, encoding="utf-8") as f:
+                latex_grammar = f.read()
 
         self.parser = _lark.Lark(
             latex_grammar,

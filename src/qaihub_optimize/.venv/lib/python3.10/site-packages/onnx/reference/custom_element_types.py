@@ -3,15 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import numpy as np
-
 try:
     import ml_dtypes
 except ImportError:
     ml_dtypes = None  # type: ignore[assignment]
 
+from typing import TYPE_CHECKING
+
 from onnx._custom_element_types import (
     bfloat16,
+    float4e2m1,
     float8e4m3fn,
     float8e4m3fnuz,
     float8e5m2,
@@ -20,8 +21,12 @@ from onnx._custom_element_types import (
     uint4,
 )
 
+if TYPE_CHECKING:
+    import numpy as np
+
 _supported_types = [
     (bfloat16, "bfloat16", "bfloat16"),
+    (float4e2m1, "float4e2m1", "float4_e2m1"),
     (float8e4m3fn, "e4m3fn", "float8_e4m3fn"),
     (float8e4m3fnuz, "e4m3fnuz", "float8_e4m3fnuz"),
     (float8e5m2, "e5m2", "float8_e5m2"),
@@ -44,7 +49,8 @@ def convert_from_ml_dtypes(array: np.ndarray) -> np.ndarray:
     if not ml_dtypes:
         return array
     for dtype, _, ml_name in _supported_types:
-        if array.dtype == getattr(ml_dtypes, ml_name):
+        ml_dtype = getattr(ml_dtypes, ml_name, None)
+        if ml_dtype is not None and array.dtype == ml_dtype:
             return array.view(dtype=dtype)
     return array
 

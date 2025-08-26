@@ -1,0 +1,62 @@
+{
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.onnx": {
+    "converted": true,
+    "out": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.conv_replaced.onnx",
+    "ort_ok": true,
+    "ort_error": null
+  },
+  "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.conv_replaced.onnx": {
+    "converted": false,
+    "reason": "no ConvInteger"
+  }
+}

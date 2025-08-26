@@ -101,6 +101,15 @@ class PracticalQAIHubONNX:
         self.onnx_sessions = {}
         self.target_device = None
         self.target_device_name = target_device_name
+        # 預設 ONNX providers：安全取得可用 providers，否則回退到 CPU
+        try:
+            available = ort.get_available_providers()
+            if available:
+                self.onnx_providers = available
+            else:
+                self.onnx_providers = ['CPUExecutionProvider']
+        except Exception:
+            self.onnx_providers = ['CPUExecutionProvider']
         # 依名稱自動選擇目標設備
         try:
             devices = hub.get_devices()
@@ -171,6 +180,19 @@ class PracticalQAIHubONNX:
         default_input_size = (224, 224)
         for model_path in found_models:
             model_name = model_path.stem
+            # If the found path is a directory (some models are unpacked into folders
+            # named with a .onnx suffix), try to resolve an actual .onnx file inside.
+            if model_path.is_dir():
+                candidate = model_path / 'model.onnx'
+                if candidate.exists():
+                    model_path = candidate
+                else:
+                    inner = list(model_path.glob('*.onnx'))
+                    if inner:
+                        model_path = inner[0]
+                    else:
+                        # leave as-is; later loading will warn/error
+                        logger.warning(f"⚠️ {model_path} appears to be a directory but contains no .onnx files")
             # 嘗試自動對應 input_size
             key = model_name.lower().replace('mediapipe-', '').replace('_w8a8', '').replace('_with_attention', '').replace('_full', '').replace('_heavy', '').replace('_lite', '').replace('_detector', '').replace('_landmark', 'landmark')
             # 例如 MediaPipe-FaceDetector -> facedetector
@@ -513,11 +535,20 @@ class PracticalQAIHubONNX:
             pipeline_results["steps"]["convert_onnx"] = "completed"
             
             # 生成最終狀態報告
+            # 使用 job_monitor 的統一計數來避免不同來源的狀態不一致
+            try:
+                from .modules.job_monitor import get_job_monitor
+                jm = get_job_monitor()
+                compile_jobs_count = len(jm.get_jobs_by_type('compile'))
+            except Exception:
+                # 回退到原先的計算方法
+                compile_jobs_count = len([m for m in self.qai_hub_models.values() if m.get('compile_job')])
+
             pipeline_results["final_status"] = {
                 "loaded_models": list(self.qai_hub_models.keys()),
                 "onnx_sessions": list(self.onnx_sessions.keys()),
                 "qai_hub_uploads": len([m for m in self.qai_hub_models.values() if m.get('model_id')]),
-                "compile_jobs": len([m for m in self.qai_hub_models.values() if m.get('compile_job')])
+                "compile_jobs": compile_jobs_count
             }
             
             logger.info("✅ 完整流水線執行成功！")

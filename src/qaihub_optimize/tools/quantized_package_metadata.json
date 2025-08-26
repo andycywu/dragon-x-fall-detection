@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "name": "pose_landmarks_detector_lite.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_lite.dynamic_QUInt8.conv_replaced.onnx"
+    },
+    {
+      "name": "pose_landmarks_detector_heavy.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_heavy.dynamic_QUInt8.conv_replaced.onnx"
+    },
+    {
+      "name": "pose_landmarks_detector_full.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_landmarks_detector_full.dynamic_QUInt8.conv_replaced.onnx"
+    },
+    {
+      "name": "pose_detection.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/pose_detection.dynamic_QUInt8.conv_replaced.onnx"
+    },
+    {
+      "name": "face_detector.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/face_detector.dynamic_QUInt8.conv_replaced.onnx"
+    },
+    {
+      "name": "hand_landmarks_detector.dynamic_QUInt8.onnx",
+      "path": "/Users/andycyw/mvp_fall_detection_starter/src/qaihub_optimize/quantized_models/hand_landmarks_detector.dynamic_QUInt8.conv_replaced.onnx"
+    }
+  ]
+}

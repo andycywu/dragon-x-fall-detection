@@ -104,7 +104,7 @@ std = standard_deviation
 
 def entropy(expr, condition=None, **kwargs):
     """
-    Calculates entropy of a probability distribution.
+    Calculuates entropy of a probability distribution.
 
     Parameters
     ==========
@@ -390,7 +390,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
 
 def median(X, evaluate=True, **kwargs):
     r"""
-    Calculates the median of the probability distribution.
+    Calculuates the median of the probability distribution.
 
     Explanation
     ===========

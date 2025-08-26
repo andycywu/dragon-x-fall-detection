@@ -15,7 +15,8 @@
             }
         },
         "terminal.integrated.shellIntegration.enabled": true,
-        "python.envFile": "${workspaceFolder}/.env"
+        "python.envFile": "${workspaceFolder}/.env",
+        "git.ignoreLimitWarning": true
     },
     "extensions": {
         "recommendations": [

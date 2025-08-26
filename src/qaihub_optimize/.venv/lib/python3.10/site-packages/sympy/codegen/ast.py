@@ -511,7 +511,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
-    binop: str | None
+    binop = None  # type: str
 
     @property
     def op(self):
