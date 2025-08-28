@@ -836,46 +836,102 @@ def main():
                                 rep = json.load(f)
                         except Exception:
                             rep = None
-                        resolved = []
+
+                        # restrict auto-resolve search bases to known model directories to avoid scanning unrelated paths
+                        search_bases = [
+                            os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'src', 'models', 'deploy')),
+                            os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'src', 'models', 'qaihub_optimized')),
+                        ]
+
+                        def find_candidates_for_missing(p):
+                            """Given a reported path p, look for plausible .onnx candidates inside the known search bases.
+                            Returns a list of absolute candidate paths (may be empty)."""
+                            candidates = []
+                            try:
+                                # if p points to a directory, prefer model.onnx or the first inner .onnx
+                                if os.path.isdir(p):
+                                    cand = os.path.join(p, 'model.onnx')
+                                    if os.path.isfile(cand):
+                                        candidates.append(cand)
+                                        return candidates
+                                    inner = sorted(glob.glob(os.path.join(p, '**', '*.onnx'), recursive=True))
+                                    for ip in inner:
+                                        if os.path.isfile(ip):
+                                            candidates.append(ip)
+                                            break
+
+                                # try matching basename inside our known model folders
+                                base = os.path.basename(p)
+                                name_no_ext = os.path.splitext(base)[0]
+                                for base_dir in search_bases:
+                                    if not os.path.isdir(base_dir):
+                                        continue
+                                    # look for files matching the basename or name_no_ext
+                                    pattern1 = os.path.join(base_dir, '**', base)
+                                    pattern2 = os.path.join(base_dir, '**', f'{name_no_ext}*.onnx')
+                                    for ip in sorted(glob.glob(pattern1, recursive=True) + glob.glob(pattern2, recursive=True)):
+                                        if os.path.isfile(ip) and ip not in candidates:
+                                            candidates.append(ip)
+                                    # also accept explicit inner model.onnx files under any candidate directories
+                                    for d in glob.glob(os.path.join(base_dir, '**', ''), recursive=True):
+                                        if os.path.isdir(d):
+                                            cand = os.path.join(d, 'model.onnx')
+                                            if os.path.isfile(cand) and cand not in candidates:
+                                                candidates.append(cand)
+                            except Exception:
+                                pass
+                            return candidates
+
+                        resolved = []  # list of tuples (reported_path, candidate_path)
                         if rep:
                             for e in rep.get('models_tested', []):
                                 if e.get('file_ok') is False:
                                     p = e.get('model')
                                     try:
-                                        # if path is a directory, look for model.onnx or first inner .onnx
-                                        if os.path.isdir(p):
-                                            cand = os.path.join(p, 'model.onnx')
-                                            if os.path.isfile(cand):
-                                                resolved.append((p, cand))
-                                                continue
-                                            inner = sorted(glob.glob(os.path.join(p, '**', '*.onnx'), recursive=True))
-                                            for ip in inner:
-                                                if os.path.isfile(ip):
-                                                    resolved.append((p, ip))
-                                                    break
-                                        else:
-                                            # maybe the report listed a path that doesn't exist but sibling model exists
-                                            base = os.path.basename(p)
-                                            parent = os.path.dirname(p)
-                                            if os.path.isdir(parent):
-                                                inner = sorted(glob.glob(os.path.join(parent, '**', '*.onnx'), recursive=True))
-                                                for ip in inner:
-                                                    if os.path.isfile(ip):
-                                                        resolved.append((p, ip))
-                                                        break
+                                        cands = find_candidates_for_missing(p)
+                                        for c in cands:
+                                            resolved.append((p, c))
                                     except Exception:
                                         continue
-                        # present results and allow per-item run
+
+                        # present results and allow per-item run + batch re-test
                         if not resolved:
-                            st.sidebar.info('No auto-resolve candidates found')
+                            st.sidebar.info('No auto-resolve candidates found in model folders')
                         else:
-                            st.sidebar.markdown('**Auto-resolve suggestions**')
-                            for orig, newp in resolved:
+                            st.sidebar.markdown('**Auto-resolve suggestions (searched src/models/deploy and src/models/qaihub_optimized)**')
+                            # show up to 50 suggestions to keep UI usable
+                            for idx, (orig, newp) in enumerate(resolved[:50]):
                                 st.sidebar.write(f'{os.path.basename(orig)} -> {os.path.basename(newp)}')
-                                if st.sidebar.button(f'Run smoke test for {os.path.basename(newp)}'):
+                                key = f'run_single_resolve_{idx}'
+                                if st.sidebar.button(f'Run smoke test for {os.path.basename(newp)}', key=key):
                                     # start background run using existing runner
                                     th = threading.Thread(target=_run_smoke_test, args=(newp,), daemon=True)
                                     th.start()
+
+                            # batch re-test button: run sequentially in background and update a session_state progress key
+                            if st.sidebar.button('Batch auto-resolve & re-test'):
+                                def _batch_runner(lst):
+                                    total = len(lst)
+                                    st.session_state['smoke_test_batch_progress'] = {'done': 0, 'total': total}
+                                    for i, (_orig, cand) in enumerate(lst):
+                                        # abort flag support
+                                        if st.session_state.get('smoke_test_cancel'):
+                                            break
+                                        try:
+                                            _run_smoke_test(cand)
+                                        except Exception:
+                                            # record error into stdout stash so UI user can inspect
+                                            prev = st.session_state.get('smoke_test_stdout', '') or ''
+                                            st.session_state['smoke_test_stdout'] = prev + f"\nFailed batch item: {cand}\n"
+                                        st.session_state['smoke_test_batch_progress']['done'] = i + 1
+                                        time.sleep(0.5)
+                                    # clear progress after short delay
+                                    time.sleep(0.4)
+                                    st.session_state.pop('smoke_test_batch_progress', None)
+
+                                # launch background thread
+                                th = threading.Thread(target=_batch_runner, args=(resolved[:50],), daemon=True)
+                                th.start()
                 except Exception:
                     pass
     except Exception:
