@@ -1,0 +1,146 @@
+[
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/j56z76m6g_pose_landmarks_detector_heavy_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/j56z76m6g_pose_landmarks_detector_heavy_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/j5m6mr1dg_pose_landmarks_detector_full.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/j5m6mr1dg_pose_landmarks_detector_full.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/j5qry81np_pose_landmarks_detector_lite_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/j5qry81np_pose_landmarks_detector_lite_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jg9ymoxw5_pose_landmarks_detector_heavy_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jg9ymoxw5_pose_landmarks_detector_heavy_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgdq3wyr5_pose_landmarks_detector_lite.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgdq3wyr5_pose_landmarks_detector_lite.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgj273z85_pose_landmarks_detector_heavy_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgj273z85_pose_landmarks_detector_heavy_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgj27x8v5_pose_detection_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgj27x8v5_pose_detection_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgkq4z0wg_test_simple_model_fixed.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgkq4z0wg_test_simple_model_fixed.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgonrdkdp_pose_landmarks_detector_lite_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgonrdkdp_pose_landmarks_detector_lite_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgonrywqp_test_simple_model_fixed_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgonrywqp_test_simple_model_fixed_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jgzjmz4op_pose_landmarks_detector_full_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jgzjmz4op_pose_landmarks_detector_full_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp02jy895_test_simple_model_fixed_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp02jy895_test_simple_model_fixed_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp02jy995_pose_detection.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp02jy995_pose_detection.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp1wj0k8g_pose_landmarks_detector_full_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp1wj0k8g_pose_landmarks_detector_full_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp1wjov8g_test_simple_model_fixed_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp1wjov8g_test_simple_model_fixed_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp29w8drg_pose_landmarks_detector_heavy.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp29w8drg_pose_landmarks_detector_heavy.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp8mxodk5_pose_detection_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp8mxodk5_pose_detection_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jp8mxork5_pose_landmarks_detector_full.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jp8mxork5_pose_landmarks_detector_full.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jpr20km05_pose_landmarks_detector_lite_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jpr20km05_pose_landmarks_detector_lite_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jpx64v83p_pose_detection.quant_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jpx64v83p_pose_detection.quant_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/jpyjxek8p_pose_landmarks_detector_heavy_optimized.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/jpyjxek8p_pose_landmarks_detector_heavy_optimized.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/mediapipe_face-facedetector-float.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/mediapipe_face-facedetector-float.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/mediapipe_hand-handdetector.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/mediapipe_hand-handdetector.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  },
+  {
+    "source": "/Users/andycyw/mvp_fall_detection_starter/src/models/qaihub_optimized/mediapipe_pose-posedetector.onnx/model.onnx",
+    "deployed_copy": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/mediapipe_pose-posedetector.onnx__model.onnx__dir/model.onnx",
+    "meta": null,
+    "stdout": "\n"
+  }
+]

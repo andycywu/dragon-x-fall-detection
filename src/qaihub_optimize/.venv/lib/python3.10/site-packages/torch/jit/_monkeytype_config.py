@@ -1,14 +1,13 @@
 # mypy: allow-untyped-defs
 import inspect
+import pathlib
 import sys
 import typing
 from collections import defaultdict
-from pathlib import Path
 from types import CodeType
 from typing import Dict, Iterable, List, Optional
 
 import torch
-
 
 _IS_MONKEYTYPE_INSTALLED = True
 try:
@@ -89,7 +88,7 @@ if _IS_MONKEYTYPE_INSTALLED:
             self.traces.append(trace)
 
     class JitTypeTraceStore(CallTraceStore):
-        def __init__(self) -> None:
+        def __init__(self):
             super().__init__()
             # A dictionary keeping all collected CallTrace
             # key is fully qualified name of called function
@@ -159,15 +158,15 @@ else:
     # When MonkeyType is not installed, we provide dummy class definitions
     # for the below classes.
     class JitTypeTraceStoreLogger:  # type:  ignore[no-redef]
-        def __init__(self) -> None:
+        def __init__(self):
             pass
 
     class JitTypeTraceStore:  # type:  ignore[no-redef]
-        def __init__(self) -> None:
+        def __init__(self):
             self.trace_records = None
 
     class JitTypeTraceConfig:  # type:  ignore[no-redef]
-        def __init__(self) -> None:
+        def __init__(self):
             pass
 
     monkeytype_trace = None  # type: ignore[assignment]  # noqa: F811
@@ -190,5 +189,5 @@ def jit_code_filter(code: CodeType) -> bool:
     ):
         return False
 
-    filename = Path(code.co_filename).resolve()
+    filename = pathlib.Path(code.co_filename).resolve()
     return not any(_startswith(filename, lib_path) for lib_path in LIB_PATHS)

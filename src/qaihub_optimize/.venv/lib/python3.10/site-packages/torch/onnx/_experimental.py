@@ -9,9 +9,10 @@ import torch._C._onnx as _C_onnx
 
 @dataclasses.dataclass
 class ExportOptions:
-    """Arguments used by :func:`torch.onnx.export`."""
+    """Arguments used by :func:`torch.onnx.export`.
 
-    # TODO(justinchuby): Deprecate and remove this class.
+    TODO: Adopt this in `torch.onnx.export` api to replace keyword arguments.
+    """
 
     export_params: bool = True
     verbose: bool = False

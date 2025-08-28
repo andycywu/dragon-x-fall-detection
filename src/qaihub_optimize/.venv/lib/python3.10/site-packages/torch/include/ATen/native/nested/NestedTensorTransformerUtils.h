@@ -1,6 +1,9 @@
 #include <ATen/ATen.h>
 
-namespace at::native::preprocessing {
+
+namespace at {
+namespace native {
+namespace preprocessing {
 
 /**
  * This function will take nested query, key, and value
@@ -36,4 +39,6 @@ sdpa_nested_preprocessing_backward(
     const int64_t max_seqlen_batch_q,
     const int64_t max_seqlen_batch_kv);
 
-} // namespace at::native::preprocessing
+} // namespace preprocessing
+} // namespace native
+} // namespace at

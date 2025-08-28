@@ -1,9 +1,7 @@
 # mypy: allow-untyped-defs
-r"""Autograd anomaly mode."""
 import warnings
 
 import torch
-
 
 __all__ = ["detect_anomaly", "set_detect_anomaly"]
 
@@ -24,6 +22,7 @@ class detect_anomaly:
         will slow down your program execution.
 
     Example:
+
         >>> # xdoctest: +REQUIRES(env:TORCH_DOCTEST_ANOMALY)
         >>> import torch
         >>> from torch import autograd
@@ -74,7 +73,7 @@ class detect_anomaly:
 
     """
 
-    def __init__(self, check_nan=True) -> None:  # noqa: D107
+    def __init__(self, check_nan=True) -> None:
         self.prev = torch.is_anomaly_enabled()
         self.check_nan = check_nan
         self.prev_check_nan = torch.is_anomaly_check_nan_enabled()
@@ -85,10 +84,10 @@ class detect_anomaly:
             stacklevel=2,
         )
 
-    def __enter__(self) -> None:  # noqa: D105
+    def __enter__(self) -> None:
         torch.set_anomaly_enabled(True, self.check_nan)
 
-    def __exit__(self, *args: object) -> None:  # noqa: D105
+    def __exit__(self, *args: object) -> None:
         torch.set_anomaly_enabled(self.prev, self.prev_check_nan)
 
 
@@ -109,13 +108,13 @@ class set_detect_anomaly:
 
     """
 
-    def __init__(self, mode: bool, check_nan: bool = True) -> None:  # noqa: D107
+    def __init__(self, mode: bool, check_nan: bool = True) -> None:
         self.prev = torch.is_anomaly_enabled()
         self.prev_check_nan = torch.is_anomaly_check_nan_enabled()
         torch.set_anomaly_enabled(mode, check_nan)
 
-    def __enter__(self) -> None:  # noqa: D105
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, *args: object) -> None:  # noqa: D105
+    def __exit__(self, *args: object) -> None:
         torch.set_anomaly_enabled(self.prev, self.prev_check_nan)

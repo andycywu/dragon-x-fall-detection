@@ -11,7 +11,6 @@ from typing import Dict, List
 
 from torch.distributed.elastic.utils.logging import get_logger
 
-
 logger = get_logger(__name__)
 
 __all__ = ["log_debug_info_for_expired_timers"]

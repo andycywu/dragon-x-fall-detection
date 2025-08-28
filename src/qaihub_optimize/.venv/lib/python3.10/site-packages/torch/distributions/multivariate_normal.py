@@ -5,8 +5,6 @@ import torch
 from torch.distributions import constraints
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import _standard_normal, lazy_property
-from torch.types import _size
-
 
 __all__ = ["MultivariateNormal"]
 
@@ -239,7 +237,7 @@ class MultivariateNormal(Distribution):
             .expand(self._batch_shape + self._event_shape)
         )
 
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+    def rsample(self, sample_shape=torch.Size()):
         shape = self._extended_shape(sample_shape)
         eps = _standard_normal(shape, dtype=self.loc.dtype, device=self.loc.device)
         return self.loc + _batch_mv(self._unbroadcasted_scale_tril, eps)

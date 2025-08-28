@@ -6,7 +6,6 @@
 
 import importlib
 
-
 __all__ = [
     "intrinsic",
     "qat",
@@ -14,7 +13,6 @@ __all__ = [
     "quantized",
     "sparse",
 ]
-
 
 def __getattr__(name):
     if name in __all__:

@@ -22,7 +22,6 @@ from warnings import WarningMessage
 import torch._numpy as np
 from torch._numpy import arange, asarray as asanyarray, empty, float32, intp, ndarray
 
-
 __all__ = [
     "assert_equal",
     "assert_almost_equal",
@@ -1967,11 +1966,11 @@ class suppress_warnings:
                 self._clear_registries()
 
             self._tmp_suppressions.append(
-                (category, message, re.compile(message, re.IGNORECASE), module, record)
+                (category, message, re.compile(message, re.I), module, record)
             )
         else:
             self._suppressions.append(
-                (category, message, re.compile(message, re.IGNORECASE), module, record)
+                (category, message, re.compile(message, re.I), module, record)
             )
 
         return record
@@ -2319,8 +2318,7 @@ def _parse_size(size_str):
     }
 
     size_re = re.compile(
-        r"^\s*(\d+|\d+\.\d+)\s*({})\s*$".format("|".join(suffixes.keys())),
-        re.IGNORECASE,
+        r"^\s*(\d+|\d+\.\d+)\s*({})\s*$".format("|".join(suffixes.keys())), re.I
     )
 
     m = size_re.match(size_str.lower())

@@ -5,7 +5,6 @@ from typing import Dict, List, Set, TYPE_CHECKING
 
 from torch.distributed.checkpoint.planner import SavePlan, WriteItem
 
-
 if TYPE_CHECKING:
     from torch.distributed.checkpoint.metadata import MetadataIndex
 

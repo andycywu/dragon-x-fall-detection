@@ -20,14 +20,12 @@ from typing_extensions import deprecated
 
 import torch
 
-
 try:
     import numpy as np
 
-    HAS_NUMPY = True
+    NUMPY_AVAILABLE = True
 except ModuleNotFoundError:
-    HAS_NUMPY = False
-    np = None  # type: ignore[assignment]
+    NUMPY_AVAILABLE = False
 
 
 class ErrorMeta(Exception):
@@ -454,7 +452,7 @@ class BooleanPair(Pair):
     @property
     def _supported_types(self) -> Tuple[Type, ...]:
         cls: List[Type] = [bool]
-        if HAS_NUMPY:
+        if NUMPY_AVAILABLE:
             cls.append(np.bool_)
         return tuple(cls)
 
@@ -548,7 +546,7 @@ class NumberPair(Pair):
     @property
     def _supported_types(self) -> Tuple[Type, ...]:
         cls = list(self._NUMBER_TYPES)
-        if HAS_NUMPY:
+        if NUMPY_AVAILABLE:
             cls.append(np.number)
         return tuple(cls)
 
@@ -564,7 +562,7 @@ class NumberPair(Pair):
     def _to_number(
         self, number_like: Any, *, id: Tuple[Any, ...]
     ) -> Union[int, float, complex]:
-        if HAS_NUMPY and isinstance(number_like, np.number):
+        if NUMPY_AVAILABLE and isinstance(number_like, np.number):
             return number_like.item()
         elif isinstance(number_like, self._NUMBER_TYPES):
             return number_like  # type: ignore[return-value]
@@ -689,7 +687,6 @@ class TensorLikePair(Pair):
     def _check_supported(self, tensor: torch.Tensor, *, id: Tuple[Any, ...]) -> None:
         if tensor.layout not in {
             torch.strided,
-            torch.jagged,
             torch.sparse_coo,
             torch.sparse_csr,
             torch.sparse_csc,
@@ -832,9 +829,6 @@ class TensorLikePair(Pair):
             torch.sparse_bsc,
         }:
             compare_fn = self._compare_sparse_compressed_values
-        elif actual.layout == torch.jagged:
-            actual, expected = actual.values(), expected.values()
-            compare_fn = self._compare_regular_values_close
         else:
             compare_fn = self._compare_regular_values_close
 

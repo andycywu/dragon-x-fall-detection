@@ -13,7 +13,7 @@
 #include <c10/core/Storage.h>
 #include <c10/core/TensorOptions.h>
 #include <c10/util/Deprecated.h>
-#include <optional>
+#include <c10/util/Optional.h>
 
 
 
@@ -22,9 +22,9 @@
 namespace at {
 
 
-// aten::_scaled_dot_product_attention_math(Tensor query, Tensor key, Tensor value, Tensor? attn_mask=None, float dropout_p=0.0, bool is_causal=False, Tensor? dropout_mask=None, *, float? scale=None, bool enable_gqa=False) -> (Tensor, Tensor)
-inline ::std::tuple<at::Tensor,at::Tensor> _scaled_dot_product_attention_math(const at::Tensor & query, const at::Tensor & key, const at::Tensor & value, const ::std::optional<at::Tensor> & attn_mask={}, double dropout_p=0.0, bool is_causal=false, const ::std::optional<at::Tensor> & dropout_mask={}, ::std::optional<double> scale=::std::nullopt, bool enable_gqa=false) {
-    return at::_ops::_scaled_dot_product_attention_math::call(query, key, value, attn_mask, dropout_p, is_causal, dropout_mask, scale, enable_gqa);
+// aten::_scaled_dot_product_attention_math(Tensor query, Tensor key, Tensor value, Tensor? attn_mask=None, float dropout_p=0.0, bool is_causal=False, Tensor? dropout_mask=None, *, float? scale=None) -> (Tensor, Tensor)
+inline ::std::tuple<at::Tensor,at::Tensor> _scaled_dot_product_attention_math(const at::Tensor & query, const at::Tensor & key, const at::Tensor & value, const ::std::optional<at::Tensor> & attn_mask={}, double dropout_p=0.0, bool is_causal=false, const ::std::optional<at::Tensor> & dropout_mask={}, ::std::optional<double> scale=::std::nullopt) {
+    return at::_ops::_scaled_dot_product_attention_math::call(query, key, value, attn_mask, dropout_p, is_causal, dropout_mask, scale);
 }
 
 }

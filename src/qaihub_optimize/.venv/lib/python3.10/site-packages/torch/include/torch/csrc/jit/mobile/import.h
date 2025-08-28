@@ -7,7 +7,10 @@
 
 #include <caffe2/serialize/file_adapter.h>
 
-namespace torch::jit {
+namespace torch {
+namespace jit {
+using caffe2::serialize::FileAdapter;
+using caffe2::serialize::IStreamAdapter;
 using caffe2::serialize::ReadAdapterInterface;
 using ExtraFilesMap = std::unordered_map<std::string, std::string>;
 
@@ -42,15 +45,15 @@ TORCH_API mobile::Module _load_for_mobile(
 
 TORCH_API mobile::Module _load_for_mobile(
     std::istream& in,
-    std::optional<at::Device> device = std::nullopt);
+    std::optional<at::Device> device = c10::nullopt);
 
 TORCH_API mobile::Module _load_for_mobile(
     const std::string& filename,
-    std::optional<at::Device> device = std::nullopt);
+    std::optional<at::Device> device = c10::nullopt);
 
 TORCH_API mobile::Module _load_for_mobile(
     std::unique_ptr<ReadAdapterInterface> rai,
-    std::optional<c10::Device> device = std::nullopt);
+    std::optional<c10::Device> device = c10::nullopt);
 
 /**
  * Load only the contents of the "extra/" files whose names are
@@ -74,7 +77,7 @@ void _load_extra_only_for_mobile(
 // version type_resolver and obj_loader.
 at::TypePtr resolveTypeNameMobile(
     const c10::QualifiedName& qn,
-    const std::shared_ptr<CompilationUnit>& compilation_unit);
+    std::shared_ptr<CompilationUnit> compilation_unit);
 c10::StrongTypePtr typeResolverMobile(
     const c10::QualifiedName& qn,
     const std::shared_ptr<CompilationUnit>& compilation_unit);
@@ -105,4 +108,5 @@ TORCH_API std::set<std::string> _export_operator_list(
 
 } // namespace mobile
 
-} // namespace torch::jit
+} // namespace jit
+} // namespace torch

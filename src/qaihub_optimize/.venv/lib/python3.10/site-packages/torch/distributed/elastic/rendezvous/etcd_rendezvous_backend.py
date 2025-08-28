@@ -7,18 +7,17 @@
 
 import binascii
 from base64 import b64decode, b64encode
-from typing import cast, Optional, Tuple
+from typing import Optional, Tuple, cast
 
 import urllib3.exceptions  # type: ignore[import]
-from etcd import (  # type: ignore[import]
-    Client as EtcdClient,
+from etcd import Client as EtcdClient  # type: ignore[import]
+from etcd import (
     EtcdAlreadyExist,
     EtcdCompareFailed,
     EtcdException,
     EtcdKeyNotFound,
     EtcdResult,
 )
-
 from torch.distributed import Store
 
 from .api import RendezvousConnectionError, RendezvousParameters, RendezvousStateError
@@ -208,9 +207,7 @@ def create_backend(params: RendezvousParameters) -> Tuple[EtcdRendezvousBackend,
     """
     client = _create_etcd_client(params)
 
-    backend = EtcdRendezvousBackend(
-        client, params.run_id, key_prefix="/torch/elastic/rendezvous"
-    )
+    backend = EtcdRendezvousBackend(client, params.run_id, key_prefix="/torch/elastic/rendezvous")
 
     store = EtcdStore(client, "/torch/elastic/store")
 

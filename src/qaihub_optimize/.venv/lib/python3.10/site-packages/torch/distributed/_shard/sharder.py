@@ -1,7 +1,5 @@
 import abc
-
 import torch.nn as nn
-
 
 class Sharder(abc.ABC):
     """
@@ -13,7 +11,6 @@ class Sharder(abc.ABC):
     take an object of the `Sharder` and call `shard` to shard the module,
     then replace the original module with sharded module returned.
     """
-
     @abc.abstractmethod
     def shard(self, module: nn.Module) -> nn.Module:
         """
@@ -27,3 +24,4 @@ class Sharder(abc.ABC):
             A :class:`torch.nn.Module` object that represents a module
             that's already been sharded.
         """
+        pass

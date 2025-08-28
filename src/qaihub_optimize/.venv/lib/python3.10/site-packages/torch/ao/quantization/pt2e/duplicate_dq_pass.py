@@ -3,10 +3,12 @@ import logging
 import operator
 
 import torch
+
 from torch.ao.quantization.pt2e.utils import (
     _filter_sym_size_users,
     _is_valid_annotation,
 )
+
 from torch.fx.node import map_arg
 from torch.fx.passes.infra.pass_base import PassBase, PassResult
 
@@ -46,8 +48,8 @@ def _maybe_duplicate_dq(
 
         new_args = map_arg(user.args, maybe_replace_node)
         new_kwargs = map_arg(user.kwargs, maybe_replace_node)
-        user.args = new_args  # type: ignore[assignment]
-        user.kwargs = new_kwargs  # type: ignore[assignment]
+        user.args = new_args
+        user.kwargs = new_kwargs
 
 
 class DuplicateDQPass(PassBase):

@@ -1,0 +1,9 @@
+onnx-graphsurgeon==0.5.2
+onnx==1.17.0
+numpy==1.24.3
+qai-hub-models
+
+onnx-graphsurgeon==0.5.2
+onnx==1.17.0
+numpy==1.24.3
+qai-hub-models

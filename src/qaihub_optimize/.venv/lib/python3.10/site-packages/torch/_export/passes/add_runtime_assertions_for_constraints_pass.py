@@ -10,7 +10,6 @@ import sympy
 import torch
 import torch.fx
 from torch.utils._sympy.value_ranges import ValueRanges
-from torch.utils._sympy.numbers import int_oo
 from torch.fx.experimental.symbolic_shapes import free_unbacked_symbols
 from torch.fx.passes.infra.pass_base import PassBase, PassResult
 
@@ -24,9 +23,9 @@ class InputDim(NamedTuple):
 
 def _convert_to_int(val):
     # Convert simple sympy Integers into concrete int
-    if val in (sympy.oo, int_oo):
+    if val == sympy.oo:
         return math.inf
-    if val in (-sympy.oo, -int_oo):
+    if val == -sympy.oo:
         return -math.inf
     if isinstance(val, sympy.Integer):
         return int(val)
@@ -187,41 +186,53 @@ def _get_existing_inline_assertions(
                 continue
 
             compare_op = compare_arg.target
-            lhs, rhs = compare_arg.args
+            maybe_symint_arg, compare_int = compare_arg.args
 
-            def maybe_get_symint(x):
-                if (
-                    isinstance(x, torch.fx.Node) and
-                    "val" in x.meta and
-                    isinstance(x.meta["val"], torch.SymInt)
+            # x >= 0 will sometimes be canonicalized to -x <= 0, so in some
+            # cases the operation before the comparison is to multiply by -1. We
+            # can undo the canonicalization here
+            if (
+                maybe_symint_arg.op == "call_function" and
+                maybe_symint_arg.target == operator.mul and
+                maybe_symint_arg.args[0] == -1
+            ):
+                maybe_symint_arg = maybe_symint_arg.args[1]
+                compare_op = operator.ge
+                compare_int = -1 * compare_int
+
+                if not (
+                    "val" in maybe_symint_arg.meta and
+                    isinstance(maybe_symint_arg.meta["val"], torch.SymInt)
                 ):
-                    return x.meta["val"].node.expr
-                return x
+                    continue
 
-            lhs = maybe_get_symint(lhs)
-            rhs = maybe_get_symint(rhs)
+                symint = maybe_symint_arg.meta["val"].node.expr
+                symint = -1 * symint
 
-            if compare_op == operator.ge:
-                lhs, rhs = rhs, lhs
-
-            if isinstance(lhs, sympy.Symbol) and isinstance(rhs, int):
-                symint = lhs
-                scalar = rhs
-            elif isinstance(rhs, sympy.Symbol) and isinstance(lhs, int):
-                symint = rhs
-                scalar = lhs
             else:
+                if not (
+                    "val" in maybe_symint_arg.meta and
+                    isinstance(maybe_symint_arg.meta["val"], torch.SymInt)
+                ):
+                    continue
+
+                symint = maybe_symint_arg.meta["val"].node.expr
+
+            if not isinstance(symint, sympy.Symbol):
                 continue
 
             if symint not in range_constraints:
                 raise RuntimeError(f"Unable to find symint {symint} in {range_constraints}")
 
-            previous_range = existing_inline_assertions.get(symint, ValueRanges(-math.inf, math.inf))
+            found_range = existing_inline_assertions.get(symint, ValueRanges(-math.inf, math.inf))
 
-            if symint is lhs:
-                bounds = ValueRanges(-math.inf, scalar)
-            else:
-                bounds = ValueRanges(scalar, math.inf)
-            existing_inline_assertions[symint] = previous_range & bounds
+            if compare_arg.target == operator.le:
+                existing_inline_assertions[symint] = ValueRanges(
+                    lower=found_range.lower, upper=compare_int
+                )
+            elif compare_arg.target == operator.ge:
+                existing_inline_assertions[symint] = ValueRanges(
+                    lower=compare_int, upper=found_range.upper
+                )
 
     return existing_inline_assertions

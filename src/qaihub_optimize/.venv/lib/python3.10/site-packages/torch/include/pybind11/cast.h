@@ -740,13 +740,6 @@ class type_caster<std::pair<T1, T2>> : public tuple_caster<std::pair, T1, T2> {}
 template <typename... Ts>
 class type_caster<std::tuple<Ts...>> : public tuple_caster<std::tuple, Ts...> {};
 
-template <>
-class type_caster<std::tuple<>> : public tuple_caster<std::tuple> {
-public:
-    // PEP 484 specifies this syntax for an empty tuple
-    static constexpr auto name = const_name("tuple[()]");
-};
-
 /// Helper class which abstracts away certain actions. Users can provide specializations for
 /// custom holders, but it's only necessary if the type has a non-standard interface.
 template <typename T>
@@ -794,11 +787,11 @@ protected:
         }
     }
 
-    void load_value(value_and_holder &&v_h) {
+    bool load_value(value_and_holder &&v_h) {
         if (v_h.holder_constructed()) {
             value = v_h.value_ptr();
             holder = v_h.template holder<holder_type>();
-            return;
+            return true;
         }
         throw cast_error("Unable to cast from non-held to held instance (T& to Holder<T>) "
 #if !defined(PYBIND11_DETAILED_ERROR_MESSAGES)
@@ -1346,24 +1339,13 @@ enable_if_t<!cast_is_temporary_value_reference<T>::value, T> cast_ref(object &&,
 // static_assert, even though if it's in dead code, so we provide a "trampoline" to pybind11::cast
 // that only does anything in cases where pybind11::cast is valid.
 template <typename T>
-enable_if_t<cast_is_temporary_value_reference<T>::value
-                && !detail::is_same_ignoring_cvref<T, PyObject *>::value,
-            T>
-cast_safe(object &&) {
+enable_if_t<cast_is_temporary_value_reference<T>::value, T> cast_safe(object &&) {
     pybind11_fail("Internal error: cast_safe fallback invoked");
 }
 template <typename T>
 enable_if_t<std::is_void<T>::value, void> cast_safe(object &&) {}
 template <typename T>
-enable_if_t<detail::is_same_ignoring_cvref<T, PyObject *>::value, PyObject *>
-cast_safe(object &&o) {
-    return o.release().ptr();
-}
-template <typename T>
-enable_if_t<detail::none_of<cast_is_temporary_value_reference<T>,
-                            detail::is_same_ignoring_cvref<T, PyObject *>,
-                            std::is_void<T>>::value,
-            T>
+enable_if_t<detail::none_of<cast_is_temporary_value_reference<T>, std::is_void<T>>::value, T>
 cast_safe(object &&o) {
     return pybind11::cast<T>(std::move(o));
 }

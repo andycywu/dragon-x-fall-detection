@@ -1,6 +1,5 @@
 from torchgen.model import NativeFunctionsGroup
 
-
 # Follows dispatcher calling convention, but:
 #   - Mutable arguments not allowed.  Meta functions are always
 #     written in functional form.  Look at FunctionSchema.signature()

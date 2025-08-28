@@ -5,7 +5,7 @@ from typing_extensions import deprecated
 
 import torch
 import torch._utils
-from torch.autograd.function import Function
+from ..function import Function
 
 
 class Type(Function):

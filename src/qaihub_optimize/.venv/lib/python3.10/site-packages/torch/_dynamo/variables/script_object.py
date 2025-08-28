@@ -1,11 +1,10 @@
-# mypy: allow-untyped-decorators
 # mypy: allow-untyped-defs
 import functools
 from typing import Dict
 
 import torch
-
 from ..exc import unimplemented, UnsafeScriptObjectError, Unsupported
+
 from .base import VariableTracker
 from .user_defined import UserDefinedObjectVariable
 
@@ -35,7 +34,7 @@ class TorchScriptObjectVariable(UserDefinedObjectVariable):
     def create(proxy, value, **options):
         return TorchScriptObjectVariable(proxy, value, **options)
 
-    def __init__(self, proxy, value, source, **kwargs) -> None:
+    def __init__(self, proxy, value, source, **kwargs):
         super().__init__(value, **kwargs)
         self.proxy = proxy
         self.proxy.node.meta["example_value"] = value
@@ -49,7 +48,6 @@ class TorchScriptObjectVariable(UserDefinedObjectVariable):
     )
     def var_getattr(self, tx, name: str) -> VariableTracker:
         from torch._higher_order_ops.torchbind import call_torchbind
-
         from ..source import AttrSource
         from .higher_order_ops import TorchHigherOrderOperatorVariable
 

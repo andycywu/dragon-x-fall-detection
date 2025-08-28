@@ -14,6 +14,8 @@ import torch
 import torch.distributed as dist
 from torch.distributed._shard.sharded_tensor import ShardedTensor
 from torch.distributed._shard.sharded_tensor.shard import Shard
+from torch.distributed._tensor import DTensor
+from torch.distributed.checkpoint.planner import _Checkpointable
 
 from .api import (
     _is_wrapped_exception,
@@ -22,7 +24,6 @@ from .api import (
     WRAPPED_EXCEPTION,
 )
 from .metadata import MetadataIndex, STATE_DICT_TYPE
-
 
 __all__ = ["find_tensor_shard", "find_state_dict_object"]
 
@@ -44,7 +45,7 @@ def _all_gather_keys(
 ) -> List[Any]:
     """Gathers all keys, and returns them sorted."""
     keys = list(local_dict.keys())
-    gathered_keys: List[List[Any]] = [None] * dist.get_world_size(group)  # type: ignore[list-item]
+    gathered_keys: List[List[Any]] = [None] * dist.get_world_size()  # type: ignore[list-item]
 
     dist.all_gather_object(gathered_keys, keys, group=group)
     return sorted(set(itertools.chain.from_iterable(gathered_keys)))
@@ -302,9 +303,13 @@ def _find_shard(tensor: ShardedTensor, index: MetadataIndex) -> Shard:
 
 
 def find_tensor_shard(tensor: torch.Tensor, index: MetadataIndex) -> torch.Tensor:
-    if hasattr(tensor, "__get_tensor_shard__"):
-        # DTensor implements _Checkpointable
-        return tensor.__get_tensor_shard__(index)  # type: ignore[attr-defined]
+    if isinstance(tensor, _Checkpointable):
+        return tensor._get_tensor_shard(tensor, index)
+    elif isinstance(tensor, DTensor):
+        # DTensor can contain a local tensor that is a tensor subclass
+        if isinstance(tensor.to_local(), _Checkpointable):
+            return tensor.to_local()._get_tensor_shard(tensor, index)  # type: ignore[arg-type]
+        return tensor.to_local()
     if isinstance(tensor, ShardedTensor):
         return _find_shard(tensor, index).tensor
     if index.offset is not None:

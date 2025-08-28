@@ -9,8 +9,9 @@
 import logging
 from typing import List, Tuple
 
-from torch.distributed._shard.sharded_tensor.logging_handlers import _log_handlers
-
+from torch.distributed._shard.sharded_tensor.logging_handlers import (
+    _log_handlers,
+)
 
 __all__: List[str] = []
 

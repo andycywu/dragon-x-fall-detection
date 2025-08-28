@@ -9,7 +9,7 @@
 import os
 import socket
 from string import Template
-from typing import Any, List
+from typing import List, Any
 
 
 def get_env_variable_or_raise(env_name: str) -> str:

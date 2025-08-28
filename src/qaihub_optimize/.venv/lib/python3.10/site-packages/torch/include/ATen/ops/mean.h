@@ -13,7 +13,7 @@
 #include <c10/core/Storage.h>
 #include <c10/core/TensorOptions.h>
 #include <c10/util/Deprecated.h>
-#include <optional>
+#include <c10/util/Optional.h>
 
 
 
@@ -25,15 +25,6 @@ namespace at {
 // aten::mean(Tensor self, *, ScalarType? dtype=None) -> Tensor
 inline at::Tensor mean(const at::Tensor & self, ::std::optional<at::ScalarType> dtype=::std::nullopt) {
     return at::_ops::mean::call(self, dtype);
-}
-
-// aten::mean.dtype_out(Tensor self, *, ScalarType? dtype=None, Tensor(a!) out) -> Tensor(a!)
-inline at::Tensor & mean_out(at::Tensor & out, const at::Tensor & self, ::std::optional<at::ScalarType> dtype=::std::nullopt) {
-    return at::_ops::mean_dtype_out::call(self, dtype, out);
-}
-// aten::mean.dtype_out(Tensor self, *, ScalarType? dtype=None, Tensor(a!) out) -> Tensor(a!)
-inline at::Tensor & mean_outf(const at::Tensor & self, ::std::optional<at::ScalarType> dtype, at::Tensor & out) {
-    return at::_ops::mean_dtype_out::call(self, dtype, out);
 }
 
 // aten::mean.dim(Tensor self, int[1]? dim, bool keepdim=False, *, ScalarType? dtype=None) -> Tensor

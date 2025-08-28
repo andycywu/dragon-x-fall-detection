@@ -10,7 +10,10 @@
 #include <torch/csrc/jit/tensorexpr/ir_visitor.h>
 #include <torch/csrc/jit/tensorexpr/stmt.h>
 
-namespace torch::jit::tensorexpr::analysis {
+namespace torch {
+namespace jit {
+namespace tensorexpr {
+namespace analysis {
 
 enum class AccessType {
   Input,
@@ -196,15 +199,15 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
   // about it.
 
   // Returns true if any read in A has a direct dependence on a write in B.
-  bool dependsDirectly(const StmtPtr& A, const StmtPtr& B);
-  bool dependsDirectly(const ExprPtr& A, const StmtPtr& B);
+  bool dependsDirectly(StmtPtr A, StmtPtr B);
+  bool dependsDirectly(ExprPtr A, StmtPtr B);
 
   // Returns true of the output depends directly on a write contained in B.
-  bool dependsDirectly(const BufPtr& output, const StmtPtr& B);
+  bool dependsDirectly(BufPtr output, StmtPtr B);
 
   // Returns true if a read in A depends directly on the provided input.
-  bool dependsDirectly(const StmtPtr& A, const BufPtr& input);
-  bool dependsDirectly(const ExprPtr& A, const BufPtr& input);
+  bool dependsDirectly(StmtPtr A, BufPtr input);
+  bool dependsDirectly(ExprPtr A, BufPtr input);
 
   // Outputs/inputs cannot depend directly.
 
@@ -214,18 +217,18 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
       const std::shared_ptr<AccessInfo>& B);
 
   // Returns true if any read in A has an ancestor write contained in B.
-  bool dependsIndirectly(const StmtPtr& A, const StmtPtr& B);
-  bool dependsIndirectly(const ExprPtr& A, const StmtPtr& B);
+  bool dependsIndirectly(StmtPtr A, StmtPtr B);
+  bool dependsIndirectly(ExprPtr A, StmtPtr B);
 
   // Returns true of the output depends indirectly on a write contained in B.
-  bool dependsIndirectly(const BufPtr& output, const StmtPtr& B);
+  bool dependsIndirectly(BufPtr output, StmtPtr B);
 
   // Returns true if a read in A depends indirectly on the provided input.
-  bool dependsIndirectly(const StmtPtr& A, const BufPtr& input);
-  bool dependsIndirectly(const ExprPtr& A, const BufPtr& input);
+  bool dependsIndirectly(StmtPtr A, BufPtr input);
+  bool dependsIndirectly(ExprPtr A, BufPtr input);
 
   // returns true if the output uses any load of the input.
-  bool dependsIndirectly(const BufPtr& output, const BufPtr& input);
+  bool dependsIndirectly(BufPtr output, BufPtr input);
 
   // Returns true if the access A has a dependency chain to access B.
   bool dependsIndirectly(
@@ -233,21 +236,21 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
       const std::shared_ptr<AccessInfo>& B);
 
   // Returns the AccessInfo
-  std::shared_ptr<AccessInfo> accessFor(const StmtPtr& A) const;
-  std::shared_ptr<AccessInfo> accessFor(const ExprPtr& A) const;
+  std::shared_ptr<AccessInfo> accessFor(StmtPtr A) const;
+  std::shared_ptr<AccessInfo> accessFor(ExprPtr A) const;
 
   // Returns all AccessInfos.
   std::unordered_set<std::shared_ptr<AccessInfo>> accessesWithin(
-      const StmtPtr& A) const;
+      StmtPtr A) const;
   // TODO: this will return only the AccessInfo for A. It's included for
   // completeness but be aware it wont return accesses used in the computation
   // of A.
   std::unordered_set<std::shared_ptr<AccessInfo>> accessesWithin(
-      const ExprPtr& A) const;
+      ExprPtr A) const;
 
   // Accesses relating to input and output buffers.
-  std::shared_ptr<AccessInfo> input(const BufPtr& B) const;
-  std::shared_ptr<AccessInfo> output(const BufPtr& B) const;
+  std::shared_ptr<AccessInfo> input(BufPtr B) const;
+  std::shared_ptr<AccessInfo> output(BufPtr B) const;
 
   // Returns the full history of reads and writes.
   const std::vector<std::shared_ptr<AccessInfo>>& getHistory() const;
@@ -257,17 +260,17 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
 
  private:
   // Node visitors.
-  void visit(const StorePtr& v) override;
-  void visit(const LoadPtr& v) override;
-  void visit(const ForPtr& v) override;
-  void visit(const CondPtr& v) override;
-  void visit(const IfThenElsePtr& v) override;
-  void visit(const CompareSelectPtr& v) override;
-  void visit(const BlockPtr& v) override;
-  void visit(const LetPtr& v) override;
-  void visit(const AtomicAddPtr& v) override;
-  void visit(const AllocatePtr& v) override;
-  void visit(const FreePtr& v) override;
+  void visit(StorePtr v) override;
+  void visit(LoadPtr v) override;
+  void visit(ForPtr v) override;
+  void visit(CondPtr v) override;
+  void visit(IfThenElsePtr v) override;
+  void visit(CompareSelectPtr v) override;
+  void visit(BlockPtr v) override;
+  void visit(LetPtr v) override;
+  void visit(AtomicAddPtr v) override;
+  void visit(AllocatePtr v) override;
+  void visit(FreePtr v) override;
 
   using BoundRelationship = std::pair<IndexBounds, std::shared_ptr<AccessInfo>>;
 
@@ -299,7 +302,7 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
 
   // Finds all accesses that are reads within the scope of v.
   template <typename StmtOrExprPtr>
-  DependencySet getAllReadsWithin(const StmtOrExprPtr& v) {
+  DependencySet getAllReadsWithin(StmtOrExprPtr v) {
     DependencySet reads;
     auto insertAllReads = [&](const auto& nodes) {
       for (const auto& l : nodes) {
@@ -322,11 +325,11 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
 
   // Finds all accesses that are writes within the scope of v.
   // Writes cannot occur in Exprs, so this is a little simpler.
-  DependencySet getAllWritesWithin(const StmtPtr& v) {
+  DependencySet getAllWritesWithin(StmtPtr v) {
     DependencySet writes;
 
     // writes just Store currently.
-    auto stores = NodeFinder<Store>::find(v);
+    auto stores = NodeFinder<Store>::find(std::move(v));
     for (const auto& s : stores) {
       auto bound = stmtToAccess_.equal_range(s);
       for (auto it = bound.first; it != bound.second; ++it) {
@@ -340,7 +343,7 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
 
   // Templated helpers to work on either Exprs or Stmts.
   template <typename StmtOrExprPtr>
-  bool dependsDirectlyHelper(const StmtOrExprPtr& A, const StmtPtr& B) {
+  bool dependsDirectlyHelper(StmtOrExprPtr A, StmtPtr B) {
     auto aReads = getAllReadsWithin(A);
     auto bWrites = getAllWritesWithin(B);
 
@@ -356,7 +359,7 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
   }
 
   template <typename StmtOrExprPtr>
-  bool dependsIndirectlyHelper(StmtOrExprPtr A, const StmtPtr& B) {
+  bool dependsIndirectlyHelper(StmtOrExprPtr A, StmtPtr B) {
     auto aReads = getAllReadsWithin(A);
     auto bWrites = getAllWritesWithin(B);
 
@@ -406,4 +409,7 @@ class TORCH_API MemDependencyChecker : public IRVisitor {
   StmtPtr lastStmt_{nullptr};
 };
 
-} // namespace torch::jit::tensorexpr::analysis
+} // namespace analysis
+} // namespace tensorexpr
+} // namespace jit
+} // namespace torch

@@ -17,9 +17,9 @@ namespace at {
 
 namespace cpu {
 
-TORCH_API at::Tensor _empty_affine_quantized(at::IntArrayRef size, at::TensorOptions options={}, double scale=1, int64_t zero_point=0, ::std::optional<at::MemoryFormat> memory_format=c10::MemoryFormat::Contiguous);
+TORCH_API at::Tensor _empty_affine_quantized(at::IntArrayRef size, at::TensorOptions options={}, double scale=1, int64_t zero_point=0, ::std::optional<at::MemoryFormat> memory_format=MemoryFormat::Contiguous);
 TORCH_API at::Tensor _empty_affine_quantized(at::IntArrayRef size, ::std::optional<at::ScalarType> dtype, ::std::optional<at::Layout> layout, ::std::optional<at::Device> device, ::std::optional<bool> pin_memory, double scale, int64_t zero_point, ::std::optional<at::MemoryFormat> memory_format);
-TORCH_API at::Tensor _empty_affine_quantized_symint(c10::SymIntArrayRef size, at::TensorOptions options={}, double scale=1, int64_t zero_point=0, ::std::optional<at::MemoryFormat> memory_format=c10::MemoryFormat::Contiguous);
+TORCH_API at::Tensor _empty_affine_quantized_symint(c10::SymIntArrayRef size, at::TensorOptions options={}, double scale=1, int64_t zero_point=0, ::std::optional<at::MemoryFormat> memory_format=MemoryFormat::Contiguous);
 TORCH_API at::Tensor _empty_affine_quantized_symint(c10::SymIntArrayRef size, ::std::optional<at::ScalarType> dtype, ::std::optional<at::Layout> layout, ::std::optional<at::Device> device, ::std::optional<bool> pin_memory, double scale, int64_t zero_point, ::std::optional<at::MemoryFormat> memory_format);
 
 } // namespace cpu

@@ -1,7 +1,6 @@
 # mypy: allow-untyped-defs
-import dataclasses
 import glob
-import inspect
+import importlib
 from os.path import basename, dirname, isfile, join
 
 import torch
@@ -10,24 +9,17 @@ from torch._export.db.case import (
     _EXAMPLE_CONFLICT_CASES,
     _EXAMPLE_REWRITE_CASES,
     SupportLevel,
-    export_case,
-    ExportCase,
 )
 
 
-def _collect_examples():
-    case_names = glob.glob(join(dirname(__file__), "*.py"))
-    case_names = [
-        basename(f)[:-3] for f in case_names if isfile(f) and not f.endswith("__init__.py")
-    ]
+modules = glob.glob(join(dirname(__file__), "*.py"))
+__all__ = [
+    basename(f)[:-3] for f in modules if isfile(f) and not f.endswith("__init__.py")
+]
 
-    case_fields = {f.name for f in dataclasses.fields(ExportCase)}
-    for case_name in case_names:
-        case = __import__(case_name, globals(), locals(), [], 1)
-        variables = [name for name in dir(case) if name in case_fields]
-        export_case(**{v: getattr(case, v) for v in variables})(case.model)
+# Import all module in the current directory.
+from . import *  # noqa: F403
 
-_collect_examples()
 
 def all_examples():
     return _EXAMPLE_CASES

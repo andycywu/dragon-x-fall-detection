@@ -1,9 +1,12 @@
 # mypy: allow-untyped-defs
 from functools import partial
-from typing import Optional, Tuple, Union
+
+from typing import List, Optional, Tuple, Union
 
 import torch
+
 import torch._prims as prims
+
 import torch._prims_common as utils
 import torch._refs as refs
 import torch._refs.linalg as linalg
@@ -15,6 +18,7 @@ from torch._prims_common import (
     DimsType,
     ELEMENTWISE_TYPE_PROMOTION_KIND,
     IntLike,
+    NumberType,
     TensorLikeType,
 )
 from torch._prims_common.wrappers import (
@@ -283,7 +287,7 @@ def norm(
     else:
         if ord is None:
             ord = 2.0
-        return vector_norm(A, ord, dim, keepdim, dtype=dtype)  # type: ignore[arg-type]
+        return vector_norm(A, ord, dim, keepdim, dtype=dtype)
 
 
 # CompositeImplicitAutograd

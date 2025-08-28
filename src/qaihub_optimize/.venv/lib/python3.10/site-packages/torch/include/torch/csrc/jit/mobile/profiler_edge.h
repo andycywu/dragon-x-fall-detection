@@ -2,7 +2,9 @@
 #include <torch/csrc/autograd/profiler_kineto.h>
 #include <torch/csrc/jit/mobile/module.h>
 
-namespace torch::jit::mobile {
+namespace torch {
+namespace jit {
+namespace mobile {
 
 // If we dont have kineto available then edge profiler does not
 // work since it relies on Kineto
@@ -112,4 +114,6 @@ TORCH_API KinetoEdgeCPUProfiler* getCurrentEdgeProfiler();
 #define RECORD_BACKEND_MEMORY_EVENT_TO_EDGE_PROFILER( \
     ptr, alloc_size, total_allocated, total_reserved, device)
 #endif
-} // namespace torch::jit::mobile
+} // namespace mobile
+} // namespace jit
+} // namespace torch

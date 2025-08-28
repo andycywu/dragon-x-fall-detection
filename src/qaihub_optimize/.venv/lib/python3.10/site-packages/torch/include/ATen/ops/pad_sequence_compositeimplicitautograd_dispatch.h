@@ -17,7 +17,7 @@ namespace at {
 
 namespace compositeimplicitautograd {
 
-TORCH_API at::Tensor pad_sequence(at::TensorList sequences, bool batch_first=false, double padding_value=0.0, c10::string_view padding_side="right");
+TORCH_API at::Tensor pad_sequence(at::TensorList sequences, bool batch_first=false, double padding_value=0.0);
 
 } // namespace compositeimplicitautograd
 } // namespace at

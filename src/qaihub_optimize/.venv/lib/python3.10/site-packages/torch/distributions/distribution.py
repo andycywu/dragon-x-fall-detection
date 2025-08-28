@@ -1,13 +1,12 @@
 # mypy: allow-untyped-defs
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 from typing_extensions import deprecated
 
 import torch
 from torch.distributions import constraints
 from torch.distributions.utils import lazy_property
 from torch.types import _size
-
 
 __all__ = ["Distribution"]
 
@@ -77,7 +76,7 @@ class Distribution:
                     )
         super().__init__()
 
-    def expand(self, batch_shape: _size, _instance=None):
+    def expand(self, batch_shape: torch.Size, _instance=None):
         """
         Returns a new distribution instance (or populates an existing instance
         provided by a derived class) with batch dimensions expanded to
@@ -158,7 +157,7 @@ class Distribution:
         """
         return self.variance.sqrt()
 
-    def sample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+    def sample(self, sample_shape: torch.Size = torch.Size()) -> torch.Tensor:
         """
         Generates a sample_shape shaped sample or sample_shape shaped batch of
         samples if the distribution parameters are batched.
@@ -166,7 +165,7 @@ class Distribution:
         with torch.no_grad():
             return self.rsample(sample_shape)
 
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+    def rsample(self, sample_shape: torch.Size = torch.Size()) -> torch.Tensor:
         """
         Generates a sample_shape shaped reparameterized sample or sample_shape
         shaped batch of reparameterized samples if the distribution parameters
@@ -257,7 +256,7 @@ class Distribution:
         """
         return torch.exp(self.entropy())
 
-    def _extended_shape(self, sample_shape: _size = torch.Size()) -> torch.Size:
+    def _extended_shape(self, sample_shape: _size = torch.Size()) -> Tuple[int, ...]:
         """
         Returns the size of the sample returned by the distribution, given
         a `sample_shape`. Note, that the batch and event shapes of a distribution

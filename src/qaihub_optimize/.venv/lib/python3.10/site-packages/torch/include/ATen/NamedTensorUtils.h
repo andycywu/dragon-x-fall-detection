@@ -5,6 +5,7 @@
 
 #include <ATen/core/DimVector.h>
 #include <ATen/core/Tensor.h>
+#include <functional>
 
 namespace at {
 

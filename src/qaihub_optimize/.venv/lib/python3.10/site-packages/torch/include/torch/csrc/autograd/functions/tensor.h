@@ -6,12 +6,13 @@
 
 #include <ATen/TensorGeometry.h>
 #include <ATen/core/DeprecatedTypeProperties.h>
-#include <optional>
+#include <c10/util/Optional.h>
 
 #include <cstdint>
 #include <memory>
 
-namespace torch::autograd {
+namespace torch {
+namespace autograd {
 
 struct TORCH_API CopyBackwards : public Node {
   variable_list apply(variable_list&& grads) override;
@@ -181,4 +182,5 @@ struct TORCH_API CopySlices : public Node {
   std::shared_ptr<Node> fn;
 };
 
-} // namespace torch::autograd
+} // namespace autograd
+} // namespace torch

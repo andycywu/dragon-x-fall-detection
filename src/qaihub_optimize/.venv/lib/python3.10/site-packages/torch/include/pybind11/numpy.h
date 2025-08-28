@@ -901,11 +901,7 @@ public:
 
     template <typename T>
     array(ShapeContainer shape, StridesContainer strides, const T *ptr, handle base = handle())
-        : array(pybind11::dtype::of<T>(),
-                std::move(shape),
-                std::move(strides),
-                reinterpret_cast<const void *>(ptr),
-                base) {}
+        : array(pybind11::dtype::of<T>(), std::move(shape), std::move(strides), ptr, base) {}
 
     template <typename T>
     array(ShapeContainer shape, const T *ptr, handle base = handle())
@@ -1557,9 +1553,7 @@ PYBIND11_NOINLINE void register_structured_dtype(any_container<field_descriptor>
 
     auto tindex = std::type_index(tinfo);
     numpy_internals.registered_dtypes[tindex] = {dtype_ptr, std::move(format_str)};
-    with_internals([tindex, &direct_converter](internals &internals) {
-        internals.direct_conversions[tindex].push_back(direct_converter);
-    });
+    get_internals().direct_conversions[tindex].push_back(direct_converter);
 }
 
 template <typename T, typename SFINAE>
@@ -1990,7 +1984,7 @@ private:
         // Pointers to values the function was called with; the vectorized ones set here will start
         // out as array_t<T> pointers, but they will be changed them to T pointers before we make
         // call the wrapped function.  Non-vectorized pointers are left as-is.
-        std::array<void *, N> params{{reinterpret_cast<void *>(&args)...}};
+        std::array<void *, N> params{{&args...}};
 
         // The array of `buffer_info`s of vectorized arguments:
         std::array<buffer_info, NVectorized> buffers{

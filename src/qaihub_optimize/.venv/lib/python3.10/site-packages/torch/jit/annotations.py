@@ -7,10 +7,12 @@ import inspect
 import re
 import typing
 import warnings
+
 from textwrap import dedent
 from typing import Type
 
 import torch
+
 from torch._C import (
     _GeneratorType,
     AnyType,
@@ -34,7 +36,8 @@ from torch._C import (
     TupleType,
     UnionType,
 )
-from torch._jit_internal import (  # type: ignore[attr-defined]
+from torch._sources import get_source_lines_and_file
+from .._jit_internal import (  # type: ignore[attr-defined]
     _Await,
     _qualified_name,
     Any,
@@ -56,14 +59,11 @@ from torch._jit_internal import (  # type: ignore[attr-defined]
     Tuple,
     Union,
 )
-from torch._sources import get_source_lines_and_file
-
 from ._state import _get_script_class
-
 
 if torch.distributed.rpc.is_available():
     from torch._C import RRefType
-    from torch._jit_internal import is_rref, RRef
+    from .._jit_internal import is_rref, RRef
 
 from torch._ops import OpOverloadPacket
 

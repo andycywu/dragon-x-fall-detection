@@ -1,0 +1,2 @@
+[console_scripts]
+pascal2coco = podm.pascal2coco:main

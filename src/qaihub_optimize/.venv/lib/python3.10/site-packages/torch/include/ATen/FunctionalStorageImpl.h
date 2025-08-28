@@ -2,8 +2,6 @@
 
 #include <ATen/Tensor.h>
 
-#include <utility>
-
 namespace at::functionalization {
 
 // See Note [Functionalization Pass In Core]
@@ -149,7 +147,7 @@ struct TORCH_API FunctionalStorageImpl : public c10::StorageImpl {
 
   void mark_inductor_storage_resize(c10::SymInt new_size) {
     inductor_storage_resized_ = true;
-    curr_storage_size_ = std::move(new_size);
+    curr_storage_size_ = new_size;
   }
 
   bool was_inductor_storage_resized() {

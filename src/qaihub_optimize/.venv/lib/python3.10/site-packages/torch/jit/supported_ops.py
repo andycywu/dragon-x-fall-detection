@@ -5,7 +5,6 @@ import textwrap
 import torch.jit
 from torch.jit._builtins import _find_builtin
 
-
 # this file is for generating documentation using sphinx autodoc
 # > help(torch.jit.supported_ops) will also give a nice listed of the
 # supported ops programmatically
@@ -166,6 +165,7 @@ def _get_torchscript_builtins():
             schemas = torch._C._jit_get_schemas_for_operator(builtin)
             for schema in schemas:
                 functions.append(_emit_schema(mod.__name__, fn.__name__, schema))
+                pass
 
     return "TorchScript Builtin Functions", functions
 
@@ -189,6 +189,7 @@ def _get_math_builtins():
                     # (they will show up in the tensor methods section)
                     continue
                 functions.append(schema)
+                pass
 
     return "``math`` Module", functions
 

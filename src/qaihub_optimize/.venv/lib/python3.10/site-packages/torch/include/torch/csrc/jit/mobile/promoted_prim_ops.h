@@ -2,7 +2,8 @@
 #include <torch/csrc/jit/mobile/prim_ops_registery.h>
 #include <torch/csrc/jit/mobile/register_ops_common_utils.h>
 
-namespace torch::jit {
+namespace torch {
+namespace jit {
 
 void tupleIndex(Stack& stack);
 
@@ -58,4 +59,5 @@ void dictIndex(Stack& stack);
 
 void raiseExceptionWithMessage(Stack& stack);
 
-} // namespace torch::jit
+} // namespace jit
+} // namespace torch

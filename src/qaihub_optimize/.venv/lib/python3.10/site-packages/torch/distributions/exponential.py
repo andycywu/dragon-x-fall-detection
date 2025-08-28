@@ -5,8 +5,6 @@ import torch
 from torch.distributions import constraints
 from torch.distributions.exp_family import ExponentialFamily
 from torch.distributions.utils import broadcast_all
-from torch.types import _size
-
 
 __all__ = ["Exponential"]
 
@@ -59,7 +57,7 @@ class Exponential(ExponentialFamily):
         new._validate_args = self._validate_args
         return new
 
-    def rsample(self, sample_shape: _size = torch.Size()) -> torch.Tensor:
+    def rsample(self, sample_shape=torch.Size()):
         shape = self._extended_shape(sample_shape)
         return self.rate.new(shape).exponential_() / self.rate
 

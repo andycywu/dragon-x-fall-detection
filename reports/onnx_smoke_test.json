@@ -1,0 +1,16 @@
+{
+  "models_tested": [
+    {
+      "model": "rc/models/deploy/litehrnet.onnx/model.onnx",
+      "provider_used": null,
+      "attempted_providers": [],
+      "provider_errors": {},
+      "inference_ok": false,
+      "adapt_ok": false,
+      "kps_shape": null,
+      "error": "Model file not found: rc/models/deploy/litehrnet.onnx/model.onnx",
+      "file_ok": false,
+      "onnx_parse_error": null
+    }
+  ]
+}

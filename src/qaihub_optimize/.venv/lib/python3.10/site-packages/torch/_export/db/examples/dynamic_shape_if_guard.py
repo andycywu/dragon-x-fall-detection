@@ -1,6 +1,13 @@
 # mypy: allow-untyped-defs
 import torch
 
+from torch._export.db.case import export_case
+
+
+@export_case(
+    example_inputs=(torch.randn(3, 2, 2),),
+    tags={"torch.dynamic-shape", "python.control-flow"},
+)
 class DynamicShapeIfGuard(torch.nn.Module):
     """
     `if` statement with backed dynamic shape predicate will be specialized into
@@ -13,7 +20,3 @@ class DynamicShapeIfGuard(torch.nn.Module):
             return x.cos()
 
         return x.sin()
-
-example_args = (torch.randn(3, 2, 2),)
-tags = {"torch.dynamic-shape", "python.control-flow"}
-model = DynamicShapeIfGuard()

@@ -1,13 +1,15 @@
 # mypy: allow-untyped-defs
-"""Locally Optimal Block Preconditioned Conjugate Gradient methods."""
+"""Locally Optimal Block Preconditioned Conjugate Gradient methods.
+"""
 # Author: Pearu Peterson
 # Created: February 2020
 
 from typing import Dict, Optional, Tuple
 
 import torch
-from torch import _linalg_utils as _utils, Tensor
-from torch.overrides import handle_torch_function, has_torch_function
+from torch import Tensor
+from . import _linalg_utils as _utils
+from .overrides import handle_torch_function, has_torch_function
 
 
 __all__ = ["lobpcg"]
@@ -787,7 +789,7 @@ class LOBPCG:
             torch.norm(R, 2, (0,))
             * (torch.norm(X, 2, (0,)) * (A_norm + E[: X.shape[-1]] * B_norm)) ** -1
         )
-        converged = rerr.real < tol  # this is a norm so imag is 0.0
+        converged = rerr < tol
         count = 0
         for b in converged:
             if not b:
@@ -841,6 +843,7 @@ class LOBPCG:
         compiling functions using lobpcg.
         """
         # do nothing when in TorchScript mode
+        pass
 
     # Internal methods
 
@@ -918,7 +921,13 @@ class LOBPCG:
             # Update E, X, P
             self.X[:, nc:] = mm(S_, Z[:, : n - nc])
             self.E[nc:] = E_[: n - nc]
-            P = mm(S_, mm(Z[:, n - nc :], _utils.basis(Z[: n - nc, n - nc :].mT)))
+            P = mm(
+                S_,
+                mm(
+                    Z[:, n - nc :],
+                    _utils.basis(Z[: n - nc, n - nc :].mT),
+                ),
+            )
             np = P.shape[-1]
 
             # check convergence
@@ -988,7 +997,9 @@ class LOBPCG:
             R, d_row.diag_embed(), upper=True, left=False
         )
 
-    def _get_svqb(self, U: Tensor, drop: bool, tau: float) -> Tensor:
+    def _get_svqb(
+        self, U: Tensor, drop: bool, tau: float  # Tensor  # bool  # float
+    ) -> Tensor:
         """Return B-orthonormal U.
 
         .. note:: When `drop` is `False` then `svqb` is based on the

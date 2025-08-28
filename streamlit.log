@@ -1,0 +1,122 @@
+[infer_demo] project: /Users/andycyw/mvp_fall_detection_starter
+[infer_demo] python: python3
+虛擬環境已存在: /Users/andycyw/mvp_fall_detection_starter/.venv_infer
+啟動 live demo... (streamlit run /Users/andycyw/mvp_fall_detection_starter/src/infer_demo_Mac/live_demo_mac.py)
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.50.204:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1756355885.468397 4515811 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1756355885.565262 4515900 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756355885.581741 4515898 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:38:39.638278 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 94 number of nodes in the graph: 745 number of nodes supported by CoreML: 452[m
+I0000 00:00:1756355921.304597 4516781 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756355921.395065 4516942 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756355921.408480 4516942 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756355968.322381 4518937 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756355968.419774 4518938 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756355968.440391 4518944 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756355984.250667 4519381 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756355984.391325 4519385 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756355984.419246 4519388 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756355992.585747 4519607 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756355992.724411 4519610 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756355992.747177 4519611 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:40:03.248434 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 94 number of nodes in the graph: 745 number of nodes supported by CoreML: 452[m
+I0000 00:00:1756356005.213299 4519894 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356005.289276 4520043 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356005.310984 4520044 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:40:40.320294 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 167 number of nodes in the graph: 456 number of nodes supported by CoreML: 261[m
+[1;31m2025-08-28 12:40:42.855666 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+[1;31m2025-08-28 12:40:42.877177 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+I0000 00:00:1756356043.170809 4521311 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356043.255606 4521525 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356043.277373 4521526 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756356047.084694 4521688 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356047.170034 4521691 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356047.197575 4521694 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756356065.442961 4522231 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356065.617978 4522244 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356065.646914 4522249 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756356066.292768 4522294 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356066.385171 4522303 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356066.402251 4522303 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:41:08.127326 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 167 number of nodes in the graph: 456 number of nodes supported by CoreML: 261[m
+[1;31m2025-08-28 12:41:10.311227 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+[1;31m2025-08-28 12:41:10.328350 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+I0000 00:00:1756356070.535518 4522437 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356070.601049 4522643 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356070.614031 4522647 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:42:25.786968 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 117 number of nodes in the graph: 691 number of nodes supported by CoreML: 356[m
+I0000 00:00:1756356147.400245 4524616 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356147.473302 4524790 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356147.487286 4524790 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:42:38.604941 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 66 number of nodes in the graph: 215 number of nodes supported by CoreML: 126[m
+[1;31m2025-08-28 12:42:39.562847 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+[1;31m2025-08-28 12:42:39.572180 [E:onnxruntime:, inference_session.cc:2280 operator()] Exception during initialization: filesystem error: in file_size: No such file or directory ["/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/model.data"][m
+I0000 00:00:1756356159.678911 4525140 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356159.751303 4525245 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356159.770243 4525247 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:42:42.945449 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 6 number of nodes in the graph: 199 number of nodes supported by CoreML: 192[m
+I0000 00:00:1756356163.594596 4525330 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356163.658453 4525375 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356163.672726 4525379 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756356170.668302 4525562 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356170.790628 4525564 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356170.807638 4525568 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 12:42:54.995062 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 6 number of nodes in the graph: 199 number of nodes supported by CoreML: 192[m
+I0000 00:00:1756356175.712663 4525759 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756356175.807221 4525799 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756356175.821888 4525803 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 13:04:34.853670 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 7 number of nodes in the graph: 456 number of nodes supported by CoreML: 447[m
+I0000 00:00:1756357477.475245 4564559 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357477.603857 4564817 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357477.619167 4564823 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 13:05:17.933646 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 73 number of nodes in the graph: 691 number of nodes supported by CoreML: 401[m
+I0000 00:00:1756357520.068336 4566315 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357520.158231 4566502 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357520.174058 4566508 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357656.684615 4570950 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357656.796788 4570971 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357656.821715 4570976 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357662.280691 4571091 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357662.384171 4571119 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357662.399643 4571119 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 13:07:48.694104 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 94 number of nodes in the graph: 745 number of nodes supported by CoreML: 452[m
+I0000 00:00:1756357670.271605 4571305 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357670.344518 4571431 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357670.360453 4571431 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357684.026226 4571796 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357684.173376 4571801 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357684.191405 4571798 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357690.668711 4571979 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357690.756738 4571986 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357690.771929 4571989 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 13:08:40.789684 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 94 number of nodes in the graph: 745 number of nodes supported by CoreML: 452[m
+I0000 00:00:1756357722.612947 4572955 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357722.686100 4573107 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357722.700757 4573101 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357725.361973 4573224 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357725.469601 4573231 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357725.491538 4573231 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[0;93m2025-08-28 13:08:51.898496 [W:onnxruntime:, coreml_execution_provider.cc:113 GetCapability] CoreMLExecutionProvider::GetCapability, number of partitions supported by CoreML: 94 number of nodes in the graph: 745 number of nodes supported by CoreML: 452[m
+I0000 00:00:1756357734.592165 4573553 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357734.668633 4573893 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357734.679675 4573889 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357756.097204 4574812 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357756.220253 4574815 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357756.270382 4574814 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1756357774.166567 4575565 gl_context.cc:369] GL version: 2.1 (2.1 Metal - 89.4), renderer: Apple M3
+W0000 00:00:1756357774.370874 4575580 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1756357774.388002 4575579 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+  Stopping...
+./start.sh: line 98: ded: command not found

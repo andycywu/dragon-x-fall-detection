@@ -1,0 +1,76 @@
+{
+  "model.onnx": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "face_detector.onnx": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "hand_landmarks_detector.onnx": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "pose_detection.onnx": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "pose_landmarks_detector_full.onnx": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "pose_landmarks_detector_heavy.onnx": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "pose_landmarks_detector_lite.onnx": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "test_simple_model_fixed.onnx": {
+    "kps": [
+      "output_0",
+      "keypoints",
+      "heatmap"
+    ],
+    "scores": []
+  },
+  "test_simple_model_fixed.quant.onnx": {
+    "kps": [
+      "output_0",
+      "keypoints",
+      "heatmap"
+    ],
+    "scores": []
+  }
+}

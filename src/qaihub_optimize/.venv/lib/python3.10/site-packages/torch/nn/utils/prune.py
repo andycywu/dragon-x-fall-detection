@@ -49,6 +49,7 @@ class BasePruningMethod(ABC):
         Returns:
             mask (torch.Tensor): mask to apply to ``t``, of same dims as ``t``
         """
+        pass
 
     def apply_mask(self, module):
         r"""Simply handles the multiplication between the parameter being pruned and the generated mask.
@@ -64,9 +65,7 @@ class BasePruningMethod(ABC):
         """
         # to carry out the multiplication, the mask needs to have been computed,
         # so the pruning method must know what tensor it's operating on
-        assert (
-            self._tensor_name is not None
-        ), f"Module {module} has to be pruned"  # this gets set in apply()
+        assert self._tensor_name is not None, f"Module {module} has to be pruned"  # this gets set in apply()
         mask = getattr(module, self._tensor_name + "_mask")
         orig = getattr(module, self._tensor_name + "_orig")
         pruned_tensor = mask.to(dtype=orig.dtype) * orig
@@ -270,7 +269,7 @@ class PruningContainer(BasePruningMethod):
     """
 
     def __init__(self, *args):
-        self._pruning_methods: Tuple[BasePruningMethod, ...] = ()
+        self._pruning_methods: Tuple[BasePruningMethod, ...] = tuple()
         if not isinstance(args, Iterable):  # only 1 item
             self._tensor_name = args._tensor_name
             self.add_pruning_method(args)
@@ -290,7 +289,9 @@ class PruningContainer(BasePruningMethod):
         """
         # check that we're adding a pruning method to the container
         if not isinstance(method, BasePruningMethod) and method is not None:
-            raise TypeError(f"{type(method)} is not a BasePruningMethod subclass")
+            raise TypeError(
+                f"{type(method)} is not a BasePruningMethod subclass"
+            )
         elif method is not None and self._tensor_name != method._tensor_name:
             raise ValueError(
                 "Can only add pruning methods acting on "
@@ -392,7 +393,9 @@ class PruningContainer(BasePruningMethod):
                 slc = [slice(None)] * n_dims
 
             else:
-                raise ValueError(f"Unrecognized PRUNING_TYPE {method.PRUNING_TYPE}")
+                raise ValueError(
+                    f"Unrecognized PRUNING_TYPE {method.PRUNING_TYPE}"
+                )
 
             # compute the new mask on the unpruned slice of the tensor t
             partial_mask = method.compute_mask(t[slc], default_mask=mask[slc])
@@ -790,6 +793,7 @@ class LnStructured(BasePruningMethod):
 
 
 class CustomFromMask(BasePruningMethod):
+
     PRUNING_TYPE = "global"
 
     def __init__(self, mask):
@@ -1126,6 +1130,7 @@ def global_unstructured(parameters, pruning_method, importance_scores=None, **kw
     # Pointer for slicing the mask to match the shape of each parameter
     pointer = 0
     for module, name in parameters:
+
         param = getattr(module, name)
         # The length of the parameter
         num_param = param.numel()
@@ -1250,7 +1255,9 @@ def _validate_pruning_amount_init(amount):
         tensor to be pruned, which is known only at prune.
     """
     if not isinstance(amount, numbers.Real):
-        raise TypeError(f"Invalid type for amount: {amount}. Must be int or float.")
+        raise TypeError(
+            f"Invalid type for amount: {amount}. Must be int or float."
+        )
 
     if (isinstance(amount, numbers.Integral) and amount < 0) or (
         not isinstance(amount, numbers.Integral)  # so it's a float

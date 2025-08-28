@@ -1,5 +1,8 @@
 #pragma once
 
+#include <tuple>
+#include <unordered_map>
+
 #include <ATen/core/function_schema.h>
 #include <ATen/core/ivalue.h>
 #include <ATen/core/jit_type.h>
@@ -10,7 +13,8 @@
 #include <torch/csrc/jit/runtime/interpreter.h>
 #include <torch/csrc/jit/serialization/type_name_uniquer.h>
 
-namespace torch::jit {
+namespace torch {
+namespace jit {
 
 struct TORCH_API CompilationOptions {
   bool incl_interface_call = false;
@@ -38,4 +42,5 @@ TORCH_API IValue convertMobileFunctionToCodeTable(
     const mobile::Function& func,
     const CompilationOptions& compilation_options);
 
-} // namespace torch::jit
+} // namespace jit
+} // namespace torch

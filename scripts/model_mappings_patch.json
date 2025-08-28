@@ -1,0 +1,76 @@
+{
+  "model": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "face_detector": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "hand_landmarks_detector": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "pose_detection": {
+    "kps": [
+      "output_0",
+      "output_1"
+    ],
+    "scores": []
+  },
+  "pose_landmarks_detector_full": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "pose_landmarks_detector_heavy": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "pose_landmarks_detector_lite": {
+    "kps": [
+      "keypoints",
+      "pred",
+      "keypoints_output"
+    ],
+    "scores": [
+      "scores"
+    ]
+  },
+  "test_simple_model_fixed": {
+    "kps": [
+      "output_0",
+      "keypoints",
+      "heatmap"
+    ],
+    "scores": []
+  },
+  "test_simple_model_fixed.quant": {
+    "kps": [
+      "output_0",
+      "keypoints",
+      "heatmap"
+    ],
+    "scores": []
+  }
+}

@@ -1,12 +1,11 @@
 # mypy: allow-untyped-defs
 import os
 from collections import namedtuple
+
 from typing import Any
 
 import torch
-
 from .grad_mode import _DecoratorContextManager
-
 
 __all__ = [
     "UnpackedDualTensor",
@@ -138,6 +137,8 @@ class UnpackedDualTensor(_UnpackedDualTensor):
     See :func:`unpack_dual` for more details.
 
     """
+
+    pass
 
 
 def unpack_dual(tensor, *, level=None):

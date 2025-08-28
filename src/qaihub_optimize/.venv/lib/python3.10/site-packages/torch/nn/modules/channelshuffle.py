@@ -1,17 +1,15 @@
-import torch.nn.functional as F
+from .module import Module
+from .. import functional as F
+
 from torch import Tensor
 
-from .module import Module
-
-
-__all__ = ["ChannelShuffle"]
-
+__all__ = ['ChannelShuffle']
 
 class ChannelShuffle(Module):
     r"""Divides and rearranges the channels in a tensor.
 
-    This operation divides the channels in a tensor of shape :math:`(N, C, *)`
-    into g groups as :math:`(N, \frac{C}{g}, g, *)` and shuffles them,
+    This operation divides the channels in a tensor of shape :math:`(*, C , H, W)`
+    into g groups as :math:`(*, \frac{C}{g}, g, H, W)` and shuffles them,
     while retaining the original tensor shape in the final output.
 
     Args:
@@ -42,7 +40,7 @@ class ChannelShuffle(Module):
                   [15., 16.]]]])
     """
 
-    __constants__ = ["groups"]
+    __constants__ = ['groups']
     groups: int
 
     def __init__(self, groups: int) -> None:
@@ -53,4 +51,4 @@ class ChannelShuffle(Module):
         return F.channel_shuffle(input, self.groups)
 
     def extra_repr(self) -> str:
-        return f"groups={self.groups}"
+        return f'groups={self.groups}'

@@ -1,4 +1,4 @@
-# mypy: allow-untyped-defs
+# mypy: ignore-errors
 
 import os
 from abc import ABC, abstractmethod
@@ -42,6 +42,7 @@ class RpcAgentTestFixture(ABC):
 
         Does nothing for other agents.
         """
+        pass
 
     # Shutdown sequence is not well defined, so we may see any of the following
     # errors when running tests that simulate errors via a shutdown on the
@@ -53,6 +54,7 @@ class RpcAgentTestFixture(ABC):
         tests that check for failures. This function is used to match against
         possible errors to ensure failures were raised properly.
         """
+        pass
 
     @abstractmethod
     def get_timeout_error_regex(self):
@@ -61,3 +63,4 @@ class RpcAgentTestFixture(ABC):
         RPC has timed out. Useful for use with assertRaisesRegex() to ensure we
         have the right errors during timeout.
         """
+        pass

@@ -17,7 +17,6 @@ import tempfile
 import time
 from typing import Optional, TextIO, Union
 
-
 try:
     import etcd  # type: ignore[import]
 except ModuleNotFoundError:

@@ -1,365 +1,109 @@
-# 🐉 Dragon X Fall Detection System
-**跨平台AI老人跌倒檢測系統 - Qualcomm Snapdragon X Elite優化版**
+# Dragon X Fall Detection — Demo & Model Compile Guide
 
-## 🔄 2025年8月11日更新: Windows Device Cloud相容性改進與QAI Hub配置更新
+此檔為 demo 專用說明，保留原始 `README_OLD.md` 不變。重點聚焦於透過 `start.sh` 啟動的本地 demo、即時推論主程式 `src/infer_demo_Mac/live_demo_mac.py`，以及模型編譯/分析主程式 `src/qaihub_optimize/qai_hub_optimize_full.py`。
 
-- ✅ 新增Windows相容版本主程式 `main_windows.py`
-- ⚡ 優化了Snapdragon X Elite處理器的硬體加速
-- 🛠️ 改進了備用檢測器，確保在不支援MediaPipe的環境中也能運作
-- 🔌 添加了QAI Hub相容性和適當的錯誤處理機制
-- 📦 新增Windows專用安裝需求文件 `requirements_windows.txt`
-- 🔧 **新增**: QAI Hub API URL配置修復工具 - 解決新舊API網址切換問題
-  - 執行 `python fix_qai_hub_api_url.py` 自動檢測並修復QAI Hub配置
-  - 在Windows上可以直接雙擊 `fix_qai_hub_api_url.bat` 運行修復工具
+## 主要重點
+- 以 `start.sh` 啟動的 demo 為本地測試主流程（方便一次性啟動攝影機與音訊處理）
+- 即時推論示範主程式：`src/infer_demo_Mac/live_demo_mac.py`（展示即時攝影機推論、姿態疊加與警報）
+- 模型編譯 / 分析主程式：`src/qaihub_optimize/qai_hub_optimize_full.py`（包含模型轉出、上傳、編譯 submit 與 profile）
 
-## 🏆 黑客松項目亮點
-- ✅ **9個AI模型**成功部署到Snapdragon X Elite CRD  
-- ⚡ **37%性能提升** (Mac 45ms → Snapdragon 30ms)
-- 💾 **33%記憶體節省** (Mac 235MB → Snapdragon 156MB)  
-- 🌐 **真正跨平台**：Mac開發 → Snapdragon部署
-- ☁️ **QAI Hub集成**：雲端編譯 + 邊緣推理
+## 快速開始（macOS）
 
-A real-time fall detection system that combines pose analysis using MediaPipe BlazePose and voice keyword detection using OpenAI Whisper, optimized for Qualcomm Snapdragon X Elite platform.
-
-## Features
-
-- **Real-time Pose Detection**: Uses MediaPipe BlazePose to analyze body posture and detect potential falls
-- **Voice Keyword Detection**: Uses OpenAI Whisper to detect help keywords ("help", "救命") from audio input
-- **Fusion Alert System**: Combines both detection methods with configurable cooldown periods
-- **Real-time Monitoring**: Live webcam and microphone processing with OpenCV display
-- **Web Dashboard**: Streamlit-based UI for testing and monitoring
-- **Alert History**: Tracks and visualizes detection events
-
-## Installation
-
-1. Clone or download this repository
-
-2. Install dependencies:
+1) 安裝 Python 相依（建議 macOS 專用檔案）
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements_inferMac.txt
 ```
 
-### Windows Device Cloud環境安裝
-
-如果您要在Qualcomm Device Cloud (Windows)上執行系統，請使用以下命令安裝相容依賴：
+2) 啟動 demo（透過 start.sh，會啟動 live demo）
 
 ```bash
-pip install -r requirements_windows.txt
+./start.sh
+# 或直接
+python src/infer_demo_Mac/live_demo_mac.py
 ```
 
-部署到Device Cloud (如有需要)：
+3) 若要只執行即時示範程式（方便 debug）：
 
 ```bash
-python deploy_to_device_cloud.py
+python src/infer_demo_Mac/live_demo_mac.py --camera_id 0 --resolution 640x480
 ```
 
-## Usage
+說明：`start.sh` 會根據專案預設參數啟動程式、設定環境變數（例如模型路徑）、並將輸出紀錄到 `reports/` 或 `output/`（視設定）。
 
-### Real-time Detection (Main Application)
+## 模型編譯與分析（QAI Hub / ONNX）
 
-在Mac環境運行主應用程式：
+主程式：`src/qaihub_optimize/qai_hub_optimize_full.py`
+
+- 功能：載入本地模型（或 MediapPipe 相關子模型）、轉出至 ONNX/TorchScript、上傳至 QAI Hub、提交編譯任務、取得 profile 與編譯報告。
+- 常用執行方式：
 
 ```bash
-python main.py
+# 設定 QAI Hub API token 後執行（若需要上傳/編譯）
+export QAI_HUB_API_TOKEN="<your_token>"
+python src/qaihub_optimize/qai_hub_optimize_full.py --upload --submit --profile
 ```
 
-**Controls:**
-- Press 'q' to quit
-- Press 'c' to clear alert history
-- Press 's' to show recent alerts
+- 輸出成果位置（常見）：
+   - 編譯/分析報告：`reports/onnx_fall_full.html`, `reports/onnx_fall_full.json`（或 repo 根目錄下類似 `onnx_fall_full.html`）
+   - 儲存的優化模型：`src/models/qaihub_optimized/` 或 `models/qaihub_optimized/`
 
-### Windows Device Cloud環境運行
+提示：若 QAI Hub 不可用，腳本會支援本地匯出（ONNX/TorchScript）以便離線分析。
 
-在Windows Device Cloud環境運行相容版本：
+## 專案目錄（重點說明）
 
-```bash
-python main_windows.py --camera_id 1
-```
-
-**選項:**
-- `--camera_id 1`: 使用攝像頭ID 1 (Device Cloud通常需要)
-- `--resolution 640x480`: 設置特定解析度
-- `--no-display`: 不顯示視窗 (無頭模式)
-- `--hardware_acceleration`: 啟用硬體加速 (如可用)
-
-### 高級演示應用程式 (Device Cloud)
-
-```bash
-# 即時攝像頭演示
-python snapdragon_realtime_demo_windows.py
-
-# 視頻檔案處理
-python snapdragon_video_demo_windows.py --video path/to/video.mp4
-
-# 性能基準測試
-python snapdragon_performance_benchmark_windows.py
-```
-
-### 攝像頭測試工具
-
-```bash
-# 列出可用攝像頭
-python aws_virtual_camera_test_windows.py --list
-
-# 測試特定攝像頭
-python aws_virtual_camera_test_windows.py --camera_id 1
-```
-
-The system will:
-- Open your webcam for pose detection
-- Start microphone monitoring for voice detection
-- Display live video feed with pose landmarks
-- Show alerts when falls or help keywords are detected
-
-### Web Dashboard
-
-Launch the Streamlit dashboard for testing and monitoring:
-
-```bash
-streamlit run ui_dashboard.py
-```
-
-**Features:**
-- Upload images for pose analysis testing
-- Upload audio files for keyword detection testing
-- View alert history and statistics
-- Configure detection parameters
-- Monitor system status
-
-## Technical Architecture
-
-### Core Detection System
-```mermaid
-graph TD
-    A[Video Input] --> B[MediaPipe Pose Detection]
-    A --> C[OpenCV Fallback]
-    D[Audio Input] --> E[Whisper Keyword Detection]
-    B --> F[Fusion Trigger]
-    C --> F
-    E --> F
-    F --> G[Alert System]
-```
-
-### QAI Hub Integration Flow
-1. **Model Compilation**:
-   ```python
-   # From qai_hub_optimize_full.py
-   system = PracticalQAIHubONNX()
-   system.load_mediapipe_models()
-   system.export_models_to_torchscript()
-   system.upload_models_to_qai_hub()
-   system.submit_compilation_jobs()
-   ```
-2. **Performance Benefits**:
-   - 37% faster inference (45ms → 30ms)
-   - 33% memory reduction (235MB → 156MB)
-
-### Deployment Matrix
-| Environment | Camera ID | Acceleration | Entry Point |
-|-------------|-----------|--------------|-------------|
-| Mac Dev | 0 | CPU | main.py |
-| Win Device Cloud | 1 | QAI Hub | main_windows.py |
-| Snapdragon | 1 | NPU | snapdragon_*.py |
-
-## System Components
-
-### Core Components (Cross-Platform)
-
-1. **Fall Detector (`fall_detector.py` & `fall_detector_opencv.py`)**
-   - 主要檢測器: 使用MediaPipe BlazePose進行姿態估計
-   - 備用檢測器: 使用OpenCV進行動態分析 (當MediaPipe不可用時)
-   - 計算身體角度偵測跌倒狀態
-
-2. **Whisper Detector (`whisper_infer.py`)**
-   - 使用OpenAI Whisper進行語音辨識
-   - 偵測多語言求救關鍵字 ("help", "救命")
-   - 實時處理音頻數據
-
-3. **Fusion Trigger (`fusion_trigger.py`)**
-   - 結合視覺和語音檢測結果
-   - 實現警報冷卻以防止頻繁觸發
-   - 追蹤警報歷史記錄
-
-### Mac環境專用組件
-
-1. **Main Application (`main.py`)**
-   - 整合所有組件進行實時處理
-   - 處理網絡攝像頭和麥克風輸入
-   - 顯示實時視頻與疊加層
-
-2. **UI Dashboard (`ui_dashboard.py`)**
-   - Streamlit網頁界面用於測試
-   - 圖像和音頻文件上傳功能
-   - 警報可視化和統計
-
-### Windows Device Cloud相容組件
-
-1. **Windows主程式 (`main_windows.py`)**
-   - Windows相容主應用程式
-   - 內置環境檢測和適配
-   - 自動啟用備用組件
-   - 處理Device Cloud特定問題
-
-2. **統一AI檢測器 (`unified_ai_detector_windows.py`)**
-   - 純ASCII版本 (無Unicode字符)
-   - 跨平台AI檢測器
-   - QAI Hub備用機制
-
-3. **Snapdragon演示應用**
-   - `snapdragon_realtime_demo_windows.py`: 即時攝像頭演示
-   - `snapdragon_video_demo_windows.py`: 視頻文件處理
-   - `snapdragon_performance_benchmark_windows.py`: 性能基準測試
-   - `aws_virtual_camera_test_windows.py`: 攝像頭測試工具
-
-## Configuration
-
-### Detection Parameters
-- **Fall angle threshold**: Adjust sensitivity of fall detection (60-120°)
-- **Alert cooldown**: Minimum time between alerts (1-10 seconds)
-- **Audio buffer**: Duration of audio processed for keyword detection
-
-### Supported Audio Formats
-- WAV, MP3, M4A for file upload
-- Real-time microphone input (16kHz mono)
-
-### Help Keywords
-- English: "help", "HELP", "Help"
-- Chinese: "救命", "救命啊"
-
-## Hardware Requirements
-
-- **Camera**: USB webcam or built-in camera
-- **Microphone**: Any audio input device
-- **CPU**: Sufficient for real-time video processing
-- **Memory**: At least 4GB RAM recommended
-
-## Performance Tips
-
-1. **Camera Resolution**: Lower resolution (640x480) for better performance
-2. **Audio Buffer**: Smaller buffers for lower latency, larger for better accuracy
-3. **Model Selection**: Use Whisper "tiny" model for fastest processing
-4. **Background Processing**: Audio processing runs in separate thread
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Camera not opening**:
-   - Check camera permissions
-   - Try different camera index (Mac: 0, Windows Device Cloud: 1)
-   - Ensure camera is not used by other applications
-
-2. **Audio input errors**:
-   - Check microphone permissions
-   - Verify audio device is working
-   - Try different sample rates
-
-3. **Model loading errors**:
-   - Ensure internet connection for initial Whisper model download
-   - Check available disk space
-   - Verify Python environment has required packages
-
-4. **Performance issues**:
-   - Close other applications using camera/microphone
-   - Reduce video resolution
-   - Use smaller Whisper model ("tiny" vs "base")
-
-### Windows Device Cloud特定問題
-
-1. **攝像頭未找到**:
-   ```bash
-   # 列出可用的攝像頭
-   python aws_virtual_camera_test_windows.py --list
-   
-   # 通常使用ID 1而非ID 0
-   python main_windows.py --camera_id 1
-   ```
-
-2. **Unicode編碼錯誤**:
-   - 使用純ASCII版本的檔案 (無中文或表情符號)
-   - 檢查檔案編碼是否為UTF-8
-
-3. **QAI Hub集成問題**:
-   - 檢查API令牌環境變量:
-   ```bash
-   export QAI_HUB_API_TOKEN="your_token_here"
-   ```
-   - 修復QAI Hub API URL問題:
-   ```bash
-   # 自動修復QAI Hub配置問題
-   python fix_qai_hub_api_url.py
-   # 或在Windows上雙擊執行
-   # fix_qai_hub_api_url.bat
-   ```
-   - 查看 `QAI_HUB_CONFIG_FIX.md` 獲取詳細說明
-   - 如果QAI Hub不可用，系統會自動回退到CPU執行
-
-4. **部署問題**:
-   - 驗證SSH連接和部署
-   ```bash
-   python deploy_to_device_cloud.py --test-connection
-   ```
-
-### Error Messages
-
-- `Could not open camera`: Camera access issue
-- `Audio callback status`: Microphone input problem
-- `Error in keyword detection`: Whisper processing issue
-- `No pose detected`: Person not visible in frame
-- `ONNX Runtime not available`: Missing dependency
-- `QAI Hub not available`: QAI integration issue
-
-## Development
-
-### Project Structure
+以下列出專案中重要位置，並標明本 README 關注的 demo 與編譯流程：
 
 ```
 mvp_fall_detection_starter/
-├── doc/                          # 所有技術文檔
-│   ├── 部署指南.md
-│   ├── ARM64_OPTIMIZATION_GUIDE.md
-│   ├── DEPLOYMENT_GUIDE.md
-│   └── ...其他文檔
-├── src/                          # 核心程式碼
-│   ├── infer_demo/               # 推論演示
-│   │   ├── main.py
-│   │   ├── main_windows.py
-│   │   ├── detectors/
-│   │   └── start.sh
-│   ├── qaihub_optimize/          # QAI Hub優化代碼
-│   │   ├── qai_hub_optimize_full.py
-│   │   ├── config_manager.py
-│   │   └── ...其他優化工具
-│   ├── snapdragon_npu/           # Snapdragon NPU代碼
-│   ├── models/                   # AI模型
-│   │   ├── original/             # 原始模型
-│   │   └── qaihub_optimized/     # 優化後模型
-│   └── ...其他核心模組
-├── elderly_data/                 # 老人行為數據
-│   ├── elderly_behavior.db
-│   └── face_encodings.json
-├── assets/                       # 靜態資源
-├── test_images/                  # 測試圖像
-└── README.md                     # 項目說明
+├── start.sh                       # 一鍵啟動 demo（macOS 範例）
+├── src/
+│   ├── infer_demo_Mac/
+│   │   └── live_demo_mac.py       # 即時推論展示主程式（顯示影像、姿態、警報）
+│   ├── qaihub_optimize/
+│   │   └── qai_hub_optimize_full.py# 模型轉出、上傳、submit 與 profile
+│   ├── detectors/                  # 偵測器實作（如 fall_detector, fall_detector_opencv）
+│   └── ...                         # 其他核心模組
+├── reports/                        # 編譯與分析報告（HTML/JSON）
+├── models/                         # 原始與優化模型
+├── requirements_inferMac.txt       # macOS 推論相依（推薦）
+├── requirements_infer.txt          # 通用推論相依
+└── README.md
 ```
 
-### Adding New Features
+## 成果查看：模型編譯與效能報告
 
-1. **New Keywords**: Edit `help_keywords` list in `WhisperKeywordDetector`
-2. **Detection Logic**: Modify angle calculations in `FallDetector`
-3. **Alert Types**: Extend `AlertEvent` class in `fusion_trigger.py`
-4. **UI Components**: Add new pages/components to `ui_dashboard.py`
+- 編譯後的報告通常以 HTML/JSON 存放於 `reports/` 或 repo 根目錄，例如：
+   - `reports/onnx_fall_full.html` 或 `onnx_fall_full.html`
+   - `reports/onnx_fall_full.json` 或 `onnx_fall_full.json`
 
-## License
+開啟 HTML 檔即可在瀏覽器查看 operator breakdown、latency、memory 與 profile 結果。
 
-This project is for educational and research purposes. Please ensure proper attribution when using the code.
+## 常用參數與環境變數
 
-## Acknowledgments
+- QAI Hub Token（需上傳/編譯時）：`QAI_HUB_API_TOKEN`
+- 常見 script flags：`--upload`, `--submit`, `--profile`, `--camera_id`, `--resolution`
 
-   - MediaPipe for pose detection
-   - OpenAI Whisper for speech recognition
-   - OpenCV for computer vision
-   - Streamlit for web interface
+## Troubleshooting（快速）
+
+- 相機無法開啟：檢查相機權限與索引（macOS 預設為 0）
+- Whisper 模型載入慢：使用 `tiny` 版本以加快啟動
+- QAI Hub 上傳失敗：確認 `QAI_HUB_API_TOKEN` 與網路連線
+
+## 小提示（開發者）
+
+- 若你要新增測試或展示頁面，優先修改 `src/infer_demo_Mac/live_demo_mac.py` 與 `start.sh` 的參數，確保 demo 能在單一命令下啟動。
+- 當進行模型優化流程時，先在本地匯出 ONNX，再進行 QAI Hub 提交，這樣可以快速重現/比對不同版本的效能。
+
+## Requirements coverage（你要求的事項）
+
+- 將 README 以 `start.sh` demo 為主線重寫：Done
+- 強調 `src/infer_demo_Mac/live_demo_mac.py` 為即時推論示範主程式：Done
+- 強調 `src/qaihub_optimize/qai_hub_optimize_full.py` 為模型編譯/profile 主程式：Done
+- 加入安裝與模型編譯成果位置說明：Done
+
+若需要，我可以：
+- 把 `start.sh` 內的參數註解化並自動生成一份簡短的 `USAGE.md`（方便新手）
+- 或幫你把 `live_demo_mac.py` 的 CLI 與 `start.sh` 參數統一成同一套 flags，並加上範例 unit test。
 
 ---
