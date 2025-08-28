@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath('.'))
 from src.infer_demo_Mac.adapters.pose_adapter import PoseAdapter
 import onnxruntime as ort
 import sys
+import argparse
 
 
 def main():
@@ -18,10 +19,13 @@ def main():
     os.makedirs(rpt_dir, exist_ok=True)
     report = {'models_tested': []}
 
-    # optional single-model arg
-    argv_model = None
-    if len(sys.argv) > 1:
-        argv_model = sys.argv[1]
+    # CLI parsing: optional single-model arg plus provider control
+    parser = argparse.ArgumentParser(description='ONNX smoke test with provider control')
+    parser.add_argument('model', nargs='?', help='Optional single model path to test')
+    parser.add_argument('--cpu-only', action='store_true', help='Force use of CPUExecutionProvider only (fast)')
+    parser.add_argument('--providers', type=str, help='Comma-separated provider names to try in order (overrides prefer-order).')
+    args = parser.parse_args()
+    argv_model = args.model
 
     raw_candidates = sorted(glob.glob('src/models/**/*', recursive=True))
     # normalize candidates: prefer actual .onnx files; if a directory name ends with .onnx,
@@ -160,10 +164,30 @@ def main():
                 pass
 
             avail = ort.get_available_providers()
+            # Default preferred order (platform-optimized)
             pref_order = ['CoreMLExecutionProvider','SNPEExecutionProvider','QNNExecutionProvider','CUDAExecutionProvider','TensorrtExecutionProvider','DMLExecutionProvider','OpenVINOExecutionProvider','CPUExecutionProvider']
-            used = [p for p in pref_order if p in avail]
-            if not used:
-                used = avail or ['CPUExecutionProvider']
+
+            # If user requested cpu-only, force CPU
+            if args.cpu_only:
+                used = ['CPUExecutionProvider']
+            elif args.providers:
+                # allow user to pass a custom comma-separated provider list
+                requested = [p.strip() for p in args.providers.split(',') if p.strip()]
+                # keep only available ones, preserve order given
+                used = [p for p in requested if p in avail]
+                if not used:
+                    # fall back to available providers if none matched
+                    used = list(avail) or ['CPUExecutionProvider']
+            else:
+                # Default behavior: try CPU first (fast), then other preferred EPs
+                used = []
+                if 'CPUExecutionProvider' in avail:
+                    used.append('CPUExecutionProvider')
+                for p in pref_order:
+                    if p in avail and p not in used:
+                        used.append(p)
+                if not used:
+                    used = list(avail) or ['CPUExecutionProvider']
 
             sess = None
             # try providers in order and capture errors
