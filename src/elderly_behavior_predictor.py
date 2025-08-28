@@ -18,14 +18,31 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Any, Optional
 import logging
 from dataclasses import dataclass, asdict
-import face_recognition
-import pyttsx3
-import speech_recognition as sr
-import whisper
 import math
 from collections import deque, defaultdict
 import warnings
 warnings.filterwarnings("ignore")
+
+# Optional dependencies: try to import, set to None on failure
+try:
+    import face_recognition
+except Exception:
+    face_recognition = None
+
+try:
+    import pyttsx3
+except Exception:
+    pyttsx3 = None
+
+try:
+    import speech_recognition as sr
+except Exception:
+    sr = None
+
+try:
+    import whisper
+except Exception:
+    whisper = None
 
 # 嘗試導入官方QAI Hub檢測系統
 try:
@@ -877,8 +894,17 @@ class ElderlyBehaviorPredictor:
             logger.error(f"❌ 生成行為摘要失敗: {e}")
             return {'status': 'error', 'message': str(e)}
     
-    def ask_user_checkin_question(self, user_id: str = None, custom_question: str = None) -> str:
-        """詢問用戶健康狀況"""
+    def ask_user_checkin_question(self, user_id: str = None, custom_question: str = None, speak: bool = False) -> str:
+        """詢問用戶健康狀況。
+
+        Args:
+            user_id: optional user id for personalized question
+            custom_question: override question text
+            speak: if True, use internal TTS to speak the question; otherwise only return the text
+
+        Returns:
+            The question string.
+        """
         try:
             if custom_question:
                 question = custom_question
@@ -889,19 +915,20 @@ class ElderlyBehaviorPredictor:
                     "最近有跌倒的經歷嗎？",
                     "現在有任何不適症狀嗎？"
                 ]
-                
                 import random
                 question = random.choice(questions)
-            
-            # 使用TTS說出問題
-            if self.tts_engine:
-                self.tts_engine.say(question)
-                self.tts_engine.runAndWait()
-            
-            # 這裡可以集成語音識別來接收回答
-            # 目前返回問題供測試
+
+            # Only speak if caller explicitly requests it
+            if speak and self.tts_engine:
+                try:
+                    self.tts_engine.say(question)
+                    self.tts_engine.runAndWait()
+                except Exception:
+                    logger.exception('TTS playback failed')
+
+            # Return question text (no blocking recording or recognition here)
             return question
-            
+
         except Exception as e:
             logger.error(f"❌ 語音詢問失敗: {e}")
             return "語音詢問功能暫時不可用"

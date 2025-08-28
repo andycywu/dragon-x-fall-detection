@@ -106,4 +106,35 @@ mvp_fall_detection_starter/
 - 把 `start.sh` 內的參數註解化並自動生成一份簡短的 `USAGE.md`（方便新手）
 - 或幫你把 `live_demo_mac.py` 的 CLI 與 `start.sh` 參數統一成同一套 flags，並加上範例 unit test。
 
+## 可選相依（Optional dependencies）
+
+專案部分功能（例如本地 TTS 播放、whisper 語音轉文字、傳統 face_recognition 備援、以及 Streamlit 互動圖表）為可選套件。
+這些套件不會阻止程式啟動，但若要啟用完整功能，請在乾淨的 virtual environment 中安裝 `requirements_optional.txt`。
+
+安裝建議（使用 virtualenv，避免修改系統 Python）：
+
+```bash
+# 建立並啟用 venv（macOS / Linux）
+python3 -m venv .venv_optional
+source .venv_optional/bin/activate
+
+# 安裝可選套件
+pip install -r requirements_optional.txt
+```
+
+或使用專用腳本（專案提供 `install_optional.sh`）：
+
+```bash
+./install_optional.sh
+```
+
+常見可選套件：
+- `face_recognition`（dlib-backed）: 傳統人臉編碼備援
+- `pyttsx3`: 本地 TTS 引擎（Windows/macOS/Linux）
+- `SpeechRecognition`: 音訊收錄/辨識介面
+- `whisper`: OpenAI Whisper（轉錄，會佔用大量磁碟與記憶體）
+- `plotly`: Streamlit 互動圖表
+
+備註：若你在 macOS 使用系統受管理的 Python（Homebrew 管理），請使用 virtualenv 或 pipx 來安裝可選套件；直接對系統 Python 安裝可能被系統阻止。
+
 ---

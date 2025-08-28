@@ -11,8 +11,16 @@ import os
 import json
 from datetime import datetime, timedelta
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.express as px
+
+# Optional plotly imports (fallback if not installed)
+try:
+    import plotly.graph_objects as go
+    import plotly.express as px
+    _HAS_PLOTLY = True
+except Exception:
+    go = None
+    px = None
+    _HAS_PLOTLY = False
 from elderly_behavior_predictor import ElderlyBehaviorPredictor
 import tempfile
 
@@ -177,21 +185,24 @@ def show_dashboard(predictor, user_id):
         time_points = [datetime.now() - timedelta(minutes=i*10) for i in range(6)]
         risk_scores = [risk_score + np.random.normal(0, 0.1) for _ in range(6)]
         
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=time_points,
-            y=risk_scores,
-            mode='lines+markers',
-            name='風險評分',
-            line=dict(color='#2E8B57', width=3)
-        ))
-        fig.update_layout(
-            title="過去1小時風險評分變化",
-            xaxis_title="時間",
-            yaxis_title="風險評分",
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        if _HAS_PLOTLY:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=time_points,
+                y=risk_scores,
+                mode='lines+markers',
+                name='風險評分',
+                line=dict(color='#2E8B57', width=3)
+            ))
+            fig.update_layout(
+                title="過去1小時風險評分變化",
+                xaxis_title="時間",
+                yaxis_title="風險評分",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Plotly not installed — skipping interactive charts. Install optional dependencies listed in requirements_optional.txt to enable plots.")
 
 def show_user_management(predictor):
     """顯示用戶管理界面"""
@@ -280,29 +291,31 @@ def show_data_analysis(predictor, user_id):
     st.subheader(f"📈 {predictor.user_profiles[user_id]['name']} 的行為分析")
     
     # 風險評分趨勢
-    fig1 = go.Figure()
-    
     # 模擬數據
     dates = pd.date_range(end=datetime.now(), periods=24, freq='H')
     risk_scores = np.random.normal(0.4, 0.2, 24)
     risk_scores = np.clip(risk_scores, 0, 1)
-    
-    fig1.add_trace(go.Scatter(
-        x=dates,
-        y=risk_scores,
-        mode='lines+markers',
-        name='風險評分',
-        line=dict(color='#FF6B6B', width=2)
-    ))
-    
-    fig1.update_layout(
-        title="風險評分趨勢",
-        xaxis_title="時間",
-        yaxis_title="風險評分",
-        height=400
-    )
-    
-    st.plotly_chart(fig1, use_container_width=True)
+
+    if _HAS_PLOTLY:
+        fig1 = go.Figure()
+        fig1.add_trace(go.Scatter(
+            x=dates,
+            y=risk_scores,
+            mode='lines+markers',
+            name='風險評分',
+            line=dict(color='#FF6B6B', width=2)
+        ))
+
+        fig1.update_layout(
+            title="風險評分趨勢",
+            xaxis_title="時間",
+            yaxis_title="風險評分",
+            height=400
+        )
+
+        st.plotly_chart(fig1, use_container_width=True)
+    else:
+        st.warning("Plotly not installed — skipping interactive charts. Install optional dependencies listed in requirements_optional.txt to enable plots.")
     
     # 姿態指標分析
     col1, col2 = st.columns(2)
@@ -312,26 +325,32 @@ def show_data_analysis(predictor, user_id):
         balance_scores = np.random.normal(0.7, 0.15, 100)
         balance_scores = np.clip(balance_scores, 0, 1)
         
-        fig2 = px.histogram(
-            x=balance_scores,
-            nbins=20,
-            title="平衡評分分佈",
-            labels={'x': '平衡評分', 'y': '頻次'}
-        )
-        st.plotly_chart(fig2, use_container_width=True)
+        if _HAS_PLOTLY:
+            fig2 = px.histogram(
+                x=balance_scores,
+                nbins=20,
+                title="平衡評分分佈",
+                labels={'x': '平衡評分', 'y': '頻次'}
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("Plotly not installed — histogram unavailable.")
     
     with col2:
         # 活動水平
         activity_levels = np.random.normal(0.5, 0.2, 100)
         activity_levels = np.clip(activity_levels, 0, 1)
         
-        fig3 = px.histogram(
-            x=activity_levels,
-            nbins=20,
-            title="活動水平分佈",
-            labels={'x': '活動水平', 'y': '頻次'}
-        )
-        st.plotly_chart(fig3, use_container_width=True)
+        if _HAS_PLOTLY:
+            fig3 = px.histogram(
+                x=activity_levels,
+                nbins=20,
+                title="活動水平分佈",
+                labels={'x': '活動水平', 'y': '頻次'}
+            )
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.info("Plotly not installed — histogram unavailable.")
 
 def show_live_monitoring(predictor):
     """顯示即時監測"""
@@ -412,7 +431,7 @@ def show_voice_interaction(predictor, user_id):
     )
     
     if st.button("🔊 播放問題"):
-        predictor.ask_user_checkin_question(user_id, question)
+        predictor.ask_user_checkin_question(user_id, question, speak=True)
         st.success("✅ 問題已播放")
     
     # 模擬語音回覆測試
