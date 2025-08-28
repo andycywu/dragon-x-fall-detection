@@ -35,6 +35,14 @@ import streamlit as st
 from PIL import Image
 import mediapipe as mp
 import traceback
+import sqlite3
+import os as _os
+try:
+    import requests
+except Exception:
+    requests = None
+    import urllib.request as _urllib_request
+    import urllib.error as _urllib_error
 import sys
 import argparse
 from pathlib import Path
@@ -42,6 +50,21 @@ from adapters.pose_adapter import PoseAdapter
 from features.fall_features import extract_basic_features
 import logging
 import json
+# Ensure top-level `src` is on sys.path so we import the canonical predictor module
+try:
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    _src_root = os.path.join(_repo_root, 'src') if os.path.basename(_repo_root) != 'src' else _repo_root
+    if _src_root not in sys.path:
+        sys.path.insert(0, _src_root)
+except Exception:
+    pass
+
+try:
+    # prefer canonical top-level predictor
+    from elderly_behavior_predictor import ElderlyBehaviorPredictor
+except Exception:
+    # fallback to local copy if top-level import fails
+    from infer_demo_Mac.elderly_behavior_predictor import ElderlyBehaviorPredictor
 
 # prefer wide layout for PC demo
 try:
@@ -156,11 +179,10 @@ def can_load_onnx(path: str) -> bool:
 
 class ONNXRunner:
     """Small, best-effort ONNX runner."""
-    def __init__(self, path: str, providers: Optional[List[str]] = None, force_cpu: bool = False):
+    def __init__(self, path: str, providers: Optional[List[str]] = None):
         # lightweight constructor: don't create heavy InferenceSession here.
         self.path = path
         self.requested_providers = providers
-        self.force_cpu = force_cpu
         self.sess = None
         self.provider_used = None
         self.input_name = None
@@ -189,9 +211,7 @@ class ONNXRunner:
             'OpenVINOExecutionProvider',
             'CPUExecutionProvider'
         ]
-        if self.force_cpu:
-            used = ['CPUExecutionProvider']
-        elif self.requested_providers:
+        if self.requested_providers:
             used = [p for p in self.requested_providers if p in avail]
         else:
             used = [p for p in pref if p in avail]
@@ -374,6 +394,41 @@ def interpret_onnx_output(onnx_out) -> dict:
         first = onnx_out[0]
         arr = np.array(first)
         res['shapes'] = [np.array(o).shape for o in onnx_out]
+        # Heuristic: detect heatmap-like outputs (K,H,W) or (1,K,H,W) or (N,K,H,W)
+        # If any output looks like a set of per-keypoint heatmaps, convert via soft-argmax.
+        try:
+            for o in onnx_out:
+                a = np.array(o)
+                if a.ndim >= 3:
+                    s = a.shape
+                    # common layouts where one dim is number of keypoints (K) and two dims are spatial >1
+                    is_heatmap = False
+                    try:
+                        # (K,H,W)
+                        if len(s) == 3 and s[0] <= 68 and s[1] > 1 and s[2] > 1:
+                            is_heatmap = True
+                        # (H,W,K) -> handled by _soft_argmax_heatmaps transpose logic
+                        if len(s) == 3 and s[2] <= 68 and s[0] > 1 and s[1] > 1:
+                            is_heatmap = True
+                        # (N,K,H,W)
+                        if len(s) == 4 and s[1] <= 68 and s[2] > 1 and s[3] > 1:
+                            is_heatmap = True
+                        # (1,K,H,W)
+                        if len(s) == 4 and s[0] == 1 and s[1] <= 68 and s[2] > 1 and s[3] > 1:
+                            is_heatmap = True
+                    except Exception:
+                        is_heatmap = False
+                    if is_heatmap:
+                        try:
+                            kps = _soft_argmax_heatmaps(a)
+                            if kps:
+                                res['keypoints'] = kps
+                                return res
+                        except Exception:
+                            # fallthrough to other parsing strategies
+                            pass
+        except Exception:
+            pass
         # scalar
         if arr.size == 1:
             prob = float(arr.flatten()[0])
@@ -389,6 +444,7 @@ def interpret_onnx_output(onnx_out) -> dict:
             return res
         # attempt to detect keypoints: common encodings are [1, N*2] or [1, N*3] or [N,3]
         flat = arr.flatten().astype('float32')
+        # handle common flat encodings (regression outputs)
         if arr.ndim == 2 and arr.shape[0] == 1 and flat.size in (34, 51, 68, 102):
             # 34 -> 17*2 (x,y), 51 -> 17*3 (x,y,conf)
             if flat.size % 3 == 0:
@@ -399,8 +455,8 @@ def interpret_onnx_output(onnx_out) -> dict:
             if flat.size % 2 == 0:
                 n = flat.size // 2
                 pts = flat.reshape((n, 2))
-                # append dummy confidence=1.0
-                pts3 = np.concatenate([pts, np.ones((n, 1), dtype='float32')], axis=1)
+                # append dummy confidence=0.0 (conservative fallback)
+                pts3 = np.concatenate([pts, np.zeros((n, 1), dtype='float32')], axis=1)
                 res['keypoints'] = pts3.tolist()
                 return res
         # otherwise, normalize mean to 0..1 as fallback
@@ -415,6 +471,112 @@ def interpret_onnx_output(onnx_out) -> dict:
     except Exception:
         pass
     return res
+
+
+def _soft_argmax_heatmaps(hmaps: np.ndarray) -> list:
+    """Convert heatmaps to list of [x,y,conf] using soft-argmax per-channel.
+
+    Expects hmaps in shape (K, H, W) or (1, K, H, W) (we handle both by squeezing).
+    Returns list of keypoints in pixel coordinates with confidence in [0,1].
+    """
+    try:
+        h = np.array(hmaps)
+        # normalize dimensions to (K, H, W)
+        if h.ndim == 4 and h.shape[0] == 1:
+            h = h[0]
+        if h.ndim == 3 and (h.shape[0] <= 68 and h.shape[1] > 1 and h.shape[2] > 1):
+            # already (K,H,W)
+            pass
+        elif h.ndim == 3 and (h.shape[2] <= 68 and h.shape[0] > 1 and h.shape[1] > 1):
+            # (H,W,K) -> transpose
+            h = np.transpose(h, (2, 0, 1))
+        elif h.ndim == 4 and h.shape[1] <= 68:
+            # (N,K,H,W) -> take first N dim and squeeze
+            h = h[0]
+        else:
+            # unknown layout
+            h = h.reshape((h.shape[0], h.shape[1], h.shape[2])) if h.ndim >= 3 else h
+
+        K, H, W = h.shape[0], h.shape[1], h.shape[2]
+        keypoints = []
+        # softmax per heatmap then compute expected coordinates
+        for k in range(K):
+            m = h[k].astype('float64')
+            # stabilize
+            m = m - m.max()
+            expm = np.exp(m)
+            s = expm.sum()
+            if s <= 0:
+                prob = expm
+            else:
+                prob = expm / s
+            # coordinate grids
+            xs = np.arange(W)
+            ys = np.arange(H)
+            px = float((prob.sum(axis=0) * xs).sum())
+            py = float((prob.sum(axis=1) * ys).sum())
+            # confidence: take peak softmax value
+            conf = float(np.clip(prob.max(), 0.0, 1.0))
+            keypoints.append([px, py, conf])
+        return keypoints
+    except Exception:
+        return []
+
+
+def normalize_keypoints_list(kps, frame_w=None, frame_h=None):
+    """Ensure keypoints are [[x,y,conf],...] in pixel coords if possible.
+
+    If keypoints are normalized (0..1), scale by frame_w/frame_h when provided.
+    Missing confidences are set to 0.0.
+    """
+    # more robust implementation that tolerates ragged input lists
+    if kps is None:
+        return None
+    try:
+        pts = []
+        for item in kps:
+            try:
+                if item is None:
+                    continue
+                # cast to list
+                lst = list(item)
+                if len(lst) >= 3:
+                    x = float(lst[0]); y = float(lst[1]); c = float(lst[2])
+                elif len(lst) == 2:
+                    x = float(lst[0]); y = float(lst[1]); c = 0.0
+                else:
+                    # skip malformed entries
+                    continue
+                pts.append([x, y, c])
+            except Exception:
+                # skip any bad items
+                continue
+
+        if not pts:
+            return None
+
+        arr = np.array(pts, dtype='float32')
+
+        # detect normalized coords and scale to pixels when frame dims provided
+        if frame_w and frame_h:
+            try:
+                if np.max(arr[:, 0]) <= 1.0 and np.max(arr[:, 1]) <= 1.0:
+                    arr[:, 0] = arr[:, 0] * float(frame_w)
+                    arr[:, 1] = arr[:, 1] * float(frame_h)
+            except Exception:
+                pass
+
+        # sanitize confidences
+        try:
+            confs = arr[:, 2]
+            confs = np.where(np.isfinite(confs), confs, 0.0)
+            arr[:, 2] = np.clip(confs, 0.0, 1.0)
+        except Exception:
+            pass
+
+        return arr.tolist()
+    except Exception:
+        return None
 
 
 def safe_download_button(label: str, data, file_name: str, use_sidebar: bool = False):
@@ -504,8 +666,224 @@ def compute_torso_angle_from_keypoints(keypoints: list, frame_shape: Tuple[int, 
     return float(np.degrees(np.arccos(cos)))
 
 
+def compute_keypoint_confidence_from_list(keypoints: list) -> float:
+    """Compute average confidence from a keypoint list (each item [x,y,conf] or [x,y]).
+
+    Returns 0.0..1.0 (0.0 if unavailable).
+    """
+    if keypoints is None:
+        return 0.0
+    try:
+        arr = np.array(keypoints, dtype='float32')
+    except Exception:
+        return 0.0
+    if arr.size == 0:
+        return 0.0
+    # ensure at least 3 columns to read confidences
+    if arr.ndim == 1 or arr.shape[-1] < 3:
+        return 0.0
+    try:
+        confs = arr[:, 2].astype('float32')
+        # filter out nan/invalid
+        confs = confs[np.isfinite(confs)]
+        if confs.size == 0:
+            return 0.0
+        return float(np.clip(float(np.mean(confs)), 0.0, 1.0))
+    except Exception:
+        return 0.0
+
+
+def classify_action_from_torso(angle: Optional[float], conf: float, sway_score: float, angle_history: list, angle_thresh: float, conf_thresh: float, fall_delta_thresh: float = 40.0, walk_sway_min: float = 0.15, walk_sway_max: float = 0.6, sit_angle_min: float = 25.0, sit_angle_max: float = 65.0, min_conf_for_action: float = 0.25) -> str:
+    """Heuristic classifier mapping torso angle + confidence + sway -> action label (Chinese).
+
+    Returns one of: '站', '坐', '走', '摔倒', or '未知'.
+    This is a simple, tunable heuristic for demo/visualization only.
+    """
+    # Defensive checks
+    try:
+        if angle is None:
+            return '未知'
+        # recent sudden change detection
+        delta = 0.0
+        try:
+            if angle_history and len(angle_history) >= 2:
+                delta = abs(float(angle_history[-1]) - float(angle_history[-2]))
+        except Exception:
+            delta = 0.0
+
+        # Normalize inputs
+        a = float(angle)
+        c = float(conf) if conf is not None else 0.0
+        s = float(sway_score) if sway_score is not None else 0.0
+
+        # Fall conditions: large angle beyond threshold OR sudden big angle change
+        if a >= float(angle_thresh) or delta > float(fall_delta_thresh):
+            return '摔倒'
+
+        # Walking: noticeable sway but torso remains relatively upright
+        if s >= float(walk_sway_min) and s < float(walk_sway_max) and a < 45.0 and c >= max(min_conf_for_action, conf_thresh * 0.5):
+            return '走'
+
+        # Sitting: torso moderately angled
+        if a >= float(sit_angle_min) and a < float(sit_angle_max) and c >= conf_thresh:
+            return '坐'
+
+        # Standing: near vertical and low sway
+        if a < float(sit_angle_min) and s < float(walk_sway_min) and c >= conf_thresh:
+            return '站'
+
+        # fallback to unknown when confidence low
+        if c < max(min_conf_for_action, conf_thresh * 0.5):
+            return '未知'
+
+        # last-resort: map by angle
+        if a < 30.0:
+            return '站'
+        if a < 65.0:
+            return '坐'
+        return '未知'
+    except Exception:
+        return '未知'
+
+
 def main():
     st.title('SnapGuard AI Live Demo')
+
+    # load saved ui defaults if present
+    try:
+        from ui_defaults import load_ui_defaults, save_ui_defaults
+        _ui_defaults = load_ui_defaults() or {}
+    except Exception:
+        _ui_defaults = {}
+
+    # Top-fixed alert container (large, red box for critical alerts)
+    try:
+        top_alert = st.empty()
+
+        def show_top_alert(text: str, level: str = 'error'):
+            try:
+                # clear previous
+                try:
+                    top_alert.empty()
+                except Exception:
+                    pass
+                cont = top_alert.container()
+                cols = cont.columns([10, 1])
+                color = '#b30000' if level == 'error' else '#b36b00'
+                bg = '#ffecec' if level == 'error' else '#fff5e6'
+                # left: styled message, right: dismiss button
+                html = f"""
+                <div style='border:4px solid {color}; background-color:{bg}; padding:16px; text-align:left; font-size:22px; font-weight:900; color:{color};'>
+                {str(text)}
+                </div>
+                """
+                try:
+                    cols[0].markdown(html, unsafe_allow_html=True)
+                except Exception:
+                    cols[0].write(str(text))
+
+                # Dismiss button in right column (unique key per render)
+                try:
+                    # two buttons: 呼叫救援 and Dismiss
+                    key_base = int(time.time() * 1000)
+                    key_rescue = f"rescue_alert_{key_base}"
+                    key_dismiss = f"dismiss_alert_{key_base}"
+                    # Rescue button
+                    if cols[1].button('呼叫救援', key=key_rescue):
+                        try:
+                            # attempt to send webhook (best-effort)
+                            active = st.session_state.get('active_alert')
+                            payload = {
+                                'ts': active.get('ts') if active else time.time(),
+                                'user_id': active.get('user_id') if active else None,
+                                'score': active.get('score') if active else None,
+                                'engine': active.get('engine') if active else None,
+                                'note': '呼叫救援 from Streamlit UI'
+                            }
+                            url = os.environ.get('RESCUE_WEBHOOK_URL') if os.environ else None
+                            sent = False
+                            result_msg = None
+                            if url:
+                                try:
+                                    from alert_utils import send_rescue_webhook
+                                    sent, result_msg = send_rescue_webhook(url, payload, timeout=5)
+                                except Exception as e:
+                                    sent = False
+                                    try:
+                                        result_msg = str(e)
+                                    except Exception:
+                                        result_msg = 'unknown error'
+                            # persist rescue event
+                            try:
+                                act = st.session_state.get('active_alert') or {}
+                                persist_alert_event(ts=act.get('ts') or time.time(), user_id=act.get('user_id'), score=act.get('score'), engine=act.get('engine'), status='rescued', dismissed_by='user_rescue' if sent else 'user_rescue_failed', dismissed_at=time.time())
+                            except Exception:
+                                pass
+                            # store last rescue result for UI
+                            try:
+                                st.session_state['last_rescue_result'] = {'sent': bool(sent), 'msg': result_msg}
+                            except Exception:
+                                pass
+                            # clear UI
+                            st.session_state.pop('active_alert', None)
+                            clear_top_alert()
+                            try:
+                                if sent:
+                                    txt = '已發出救援請求'
+                                    if result_msg:
+                                        txt = f"{txt} ({result_msg})"
+                                    st.toast(txt, icon='✅') if hasattr(st, 'toast') else st.success(txt)
+                                else:
+                                    txt = '救援請求未送出（未設定或失敗）'
+                                    if result_msg:
+                                        txt = f"{txt}: {result_msg}"
+                                    st.warning(txt)
+                            except Exception:
+                                pass
+                        except Exception:
+                            pass
+                    # Dismiss button
+                    if cols[1].button('Dismiss', key=key_dismiss):
+                        try:
+                            # record a user dismissal event (no score)
+                            active = st.session_state.get('active_alert') or {}
+                            try:
+                                persist_alert_event(ts=active.get('ts') or time.time(), user_id=active.get('user_id'), score=active.get('score'), engine=active.get('engine'), status='dismissed', dismissed_by='user', dismissed_at=time.time())
+                            except Exception:
+                                pass
+                            # also append a lightweight record for UI history
+                            record_and_notify(time.time(), None, 'user_dismiss')
+                        except Exception:
+                            pass
+                        finally:
+                            st.session_state.pop('active_alert', None)
+                            clear_top_alert()
+                except Exception:
+                    pass
+            except Exception:
+                try:
+                    if level == 'error':
+                        top_alert.error(str(text))
+                    else:
+                        top_alert.warning(str(text))
+                except Exception:
+                    pass
+
+        def clear_top_alert():
+            try:
+                top_alert.empty()
+            except Exception:
+                pass
+    except Exception:
+        # fallback no-op helpers if top_alert creation fails
+        def show_top_alert(text: str, level: str = 'error'):
+            try:
+                st.warning(text) if level != 'error' else st.error(text)
+            except Exception:
+                pass
+
+        def clear_top_alert():
+            return
 
     # configure basic logging so adapter logs appear in Streamlit logs
     try:
@@ -515,9 +893,6 @@ def main():
     except Exception:
         pass
 
-    # Top-level alert slot (under title) for prominent fall alerts
-    top_alert = st.empty()
-
     # Sidebar: model selection and hyperparameters
     # Input controls moved to sidebar top (so model select + input are together)
 
@@ -526,6 +901,13 @@ def main():
     # use parsed default camera index when provided via CLI or env
     use_index = st.sidebar.number_input('Camera index', min_value=0, max_value=4, value=int(DEFAULT_CAMERA_INDEX))
     st.sidebar.markdown('---')
+    # Rescue webhook configuration (visible and savable)
+    try:
+        pref_wh = _ui_defaults.get('rescue_webhook_url') if isinstance(_ui_defaults, dict) else None
+        rescue_webhook = st.sidebar.text_input('Rescue webhook URL', value=pref_wh or os.environ.get('RESCUE_WEBHOOK_URL') or '')
+        st.session_state['rescue_webhook_url'] = rescue_webhook
+    except Exception:
+        pass
     
     st.sidebar.header('Model & Settings')
     # show last smoke test summary if available
@@ -556,16 +938,11 @@ def main():
     except Exception:
         pass
     models, models_base = find_onnx_models()
-    # Force CPU option: helpful on macOS when CoreML/CUDA providers may be suboptimal
-    try:
-        default_force_cpu = True if sys.platform == 'darwin' else False
-    except Exception:
-        default_force_cpu = False
-    force_cpu = st.sidebar.checkbox('Force CPU (prefer CPUExecutionProvider)', value=default_force_cpu)
     # Resolution selector (non-intrusive UI default)
     res_choices = ['320x240', '640x480', '1280x720']
     try:
-        default_idx = res_choices.index(DEFAULT_RESOLUTION) if DEFAULT_RESOLUTION in res_choices else 1
+        default_res = _ui_defaults.get('preferred_resolution') or DEFAULT_RESOLUTION
+        default_idx = res_choices.index(default_res) if default_res in res_choices else 1
     except Exception:
         default_idx = 1
     chosen_resolution = st.sidebar.selectbox('Resolution', res_choices, index=default_idx)
@@ -580,6 +957,10 @@ def main():
     st.sidebar.info(f'{base_label} — {len(models)} model(s) found')
 
     show_all = st.sidebar.checkbox('Show all models (including ones that may not load)', value=False)
+    # control showing raw model/adapter outputs for debugging
+    if 'show_raw_outputs' not in st.session_state:
+        st.session_state['show_raw_outputs'] = bool(_ui_defaults.get('show_raw_outputs', False))
+    st.session_state['show_raw_outputs'] = st.sidebar.checkbox('Show raw model outputs (debug)', value=st.session_state['show_raw_outputs'])
 
     # prepare usable/unusable lists
     usable = []
@@ -969,12 +1350,8 @@ def main():
                                 # launch background thread
                                 th = threading.Thread(target=_batch_runner, args=(resolved[:50],), daemon=True)
                                 th.start()
-                # Re-run full smoke test button (no model arg)
-                if st.sidebar.button('Re-run full ONNX smoke-test'):
-                    def _run_full():
-                        _run_smoke_test('')
-                    th = threading.Thread(target=_run_full, daemon=True)
-                    th.start()
+                except Exception:
+                    pass
     except Exception:
         pass
 
@@ -1135,7 +1512,191 @@ def main():
     angle_thresh = st.sidebar.slider('Angle thresh', 20, 180, 80)
     confidence_threshold = st.sidebar.slider('Confidence thresh', 0.0, 1.0, 0.5, step=0.05)
     cooldown = st.sidebar.number_input('Cooldown (s)', min_value=1, max_value=30, value=5)
+    # Classifier tuning parameters (exposed for live adjustment)
+    fall_delta_thresh = st.sidebar.slider('Fall delta thresh (deg)', 5, 90, int(_ui_defaults.get('fall_delta_thresh', 40)))
+    walk_sway_min = st.sidebar.slider('Walk sway min', 0.0, 1.0, float(_ui_defaults.get('walk_sway_min', 0.15)))
+    walk_sway_max = st.sidebar.slider('Walk sway max', 0.0, 1.0, float(_ui_defaults.get('walk_sway_max', 0.6)))
+    sit_angle_min = st.sidebar.slider('Sit angle min', 0, 90, int(_ui_defaults.get('sit_angle_min', 25)))
+    sit_angle_max = st.sidebar.slider('Sit angle max', 0, 180, int(_ui_defaults.get('sit_angle_max', 65)))
+    min_conf_for_action = st.sidebar.slider('Min confidence for action', 0.0, 1.0, float(_ui_defaults.get('min_conf_for_action', 0.25)))
     st.sidebar.markdown('---')
+
+    # Save defaults button
+    try:
+        if st.sidebar.button('Save sidebar as defaults'):
+            vals = {
+                'preferred_resolution': st.session_state.get('preferred_resolution'),
+                'show_raw_outputs': bool(st.session_state.get('show_raw_outputs', False)),
+                'fall_delta_thresh': int(fall_delta_thresh),
+                'walk_sway_min': float(walk_sway_min),
+                'walk_sway_max': float(walk_sway_max),
+                'sit_angle_min': int(sit_angle_min),
+                'sit_angle_max': int(sit_angle_max),
+                'min_conf_for_action': float(min_conf_for_action),
+                # additional sidebar items to persist
+                'sway_window': int(sway_window),
+                'sway_scale': int(sway_scale),
+                'sway_threshold': float(sway_threshold),
+                'chart_metric': str(chart_metric),
+                'chart_history': int(chart_history),
+                'key_mode': str(key_mode),
+                'angle_calc_mode': str(angle_calc_mode),
+                'angle_thresh': int(angle_thresh),
+                'confidence_threshold': float(confidence_threshold),
+                'cooldown': int(cooldown),
+                'voice_alerts_enabled': bool(st.session_state.get('voice_alerts_enabled', False)),
+                'tts_voice': str(st.session_state.get('tts_voice', 'ChatGPT (female, simulated)')),
+                'rescue_webhook_url': str(st.session_state.get('rescue_webhook_url', '')),
+            }
+            try:
+                ok = save_ui_defaults(vals)
+                if ok:
+                    st.sidebar.success('Saved UI defaults')
+                else:
+                    st.sidebar.error('Failed to save UI defaults')
+            except Exception:
+                st.sidebar.error('Failed to save UI defaults')
+    except Exception:
+        pass
+
+    # Load defaults now button: immediately apply saved defaults by writing into session_state and rerunning
+    try:
+        if st.sidebar.button('Load defaults now'):
+            try:
+                loaded = load_ui_defaults() or {}
+                # mapping from saved keys to Streamlit widget labels / session_state keys used in this script
+                label_map = {
+                    'preferred_resolution': 'Resolution',
+                    'show_raw_outputs': 'Show raw model outputs (debug)',
+                    'fall_delta_thresh': 'Fall delta thresh (deg)',
+                    'walk_sway_min': 'Walk sway min',
+                    'walk_sway_max': 'Walk sway max',
+                    'sit_angle_min': 'Sit angle min',
+                    'sit_angle_max': 'Sit angle max',
+                    'min_conf_for_action': 'Min confidence for action',
+                    'sway_window': 'Sway window (frames)',
+                    'sway_scale': 'Sway normalization (deg)',
+                    'sway_threshold': 'Sway alert threshold (0..1)',
+                    'chart_metric': 'Chart metric',
+                    'chart_history': 'Chart history (points)',
+                    'key_mode': 'Torso keypoint',
+                    'angle_calc_mode': 'Angle calc mode',
+                    'angle_thresh': 'Angle thresh',
+                    'confidence_threshold': 'Confidence thresh',
+                    'cooldown': 'Cooldown (s)',
+                    'voice_alerts_enabled': 'Enable voice alerts (TTS check-in)',
+                    'tts_voice': 'Select TTS voice',
+                }
+
+                # apply raw saved keys into session_state where appropriate
+                for k, v in loaded.items():
+                    try:
+                        # if we have a label mapping, set the widget's session_state key
+                        if k in label_map:
+                            st.session_state[label_map[k]] = v
+                        # set also a normalized key for internal reads used elsewhere
+                        st.session_state[k] = v
+                    except Exception:
+                        try:
+                            st.session_state[k] = v
+                        except Exception:
+                            pass
+
+                # also ensure preferred_resolution internal key matches the widget label
+                try:
+                    if 'preferred_resolution' in loaded:
+                        st.session_state['preferred_resolution'] = loaded.get('preferred_resolution')
+                        st.session_state['Resolution'] = loaded.get('preferred_resolution')
+                except Exception:
+                    pass
+
+                st.sidebar.success('Loaded UI defaults; applying changes...')
+                # rerun so widgets pick up the updated session_state values
+                try:
+                    st.experimental_rerun()
+                except Exception:
+                    # if rerun unavailable, inform user to manually refresh
+                    st.sidebar.info('Please refresh the page to apply loaded defaults')
+            except Exception as e:
+                st.sidebar.error(f'Failed to load UI defaults: {e}')
+    except Exception:
+        pass
+
+    # show last rescue result in a dedicated expander for debugging
+    try:
+        with st.sidebar.expander('Last rescue result (detailed)'):
+            last = st.session_state.get('last_rescue_result')
+            if last:
+                try:
+                    st.json(last)
+                except Exception:
+                    st.write(str(last))
+            else:
+                st.write('No rescue attempts recorded yet')
+    except Exception:
+        pass
+
+    # Voice alert control: allow demo user to enable voice-based check-in on alerts
+    try:
+        st.sidebar.header('Voice Alerts')
+        if 'voice_alerts_enabled' not in st.session_state:
+            st.session_state['voice_alerts_enabled'] = False
+        if st.sidebar.checkbox('Enable voice alerts (TTS check-in)', value=st.session_state['voice_alerts_enabled']):
+            st.session_state['voice_alerts_enabled'] = True
+            # lazy initialize predictor instance for voice/TTS if not present
+            if 'eb_predictor' not in st.session_state or st.session_state.get('eb_predictor') is None:
+                try:
+                    st.session_state['eb_predictor'] = ElderlyBehaviorPredictor()
+                    st.sidebar.write('Voice systems initialized')
+                except Exception as e:
+                    st.sidebar.error(f'Failed to init voice systems: {e}')
+        else:
+            st.session_state['voice_alerts_enabled'] = False
+            # optionally tear down predictor to free resources
+            try:
+                if st.session_state.get('eb_predictor'):
+                    # simple teardown if object has tts_engine
+                    try:
+                        p = st.session_state.get('eb_predictor')
+                        if getattr(p, 'tts_engine', None):
+                            try:
+                                p.tts_engine.stop()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    st.session_state['eb_predictor'] = None
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # show last rescue result for quick debugging
+    try:
+        last = st.session_state.get('last_rescue_result')
+        if last:
+            with st.sidebar.expander('Last rescue result'):
+                try:
+                    st.json(last)
+                except Exception:
+                    st.write(str(last))
+    except Exception:
+        pass
+
+    # TTS voice selection (macOS 'say' voices as fallback / simulation of ChatGPT female)
+    try:
+        st.sidebar.markdown('**TTS voice (macOS simulated)**')
+        # common macOS female voices: Samantha (US), Alice (it?), Victoria (en-GB)
+        voices = ['Samantha', 'Victoria', 'Karen', 'Alloy', 'Anna']
+        # include a friendly label for ChatGPT female simulation mapped to Samantha
+        voice_map = {'ChatGPT (female, simulated)': 'Samantha'}
+        voice_choices = ['ChatGPT (female, simulated)'] + voices
+        if 'tts_voice' not in st.session_state:
+            st.session_state['tts_voice'] = 'ChatGPT (female, simulated)'
+        sel = st.sidebar.selectbox('Select TTS voice', voice_choices, index=voice_choices.index(st.session_state['tts_voice']) if st.session_state['tts_voice'] in voice_choices else 0)
+        st.session_state['tts_voice'] = sel
+    except Exception:
+        pass
 
     # create main layout columns: center = inference image/video, right = chart/engine info
     col_main, col_right = st.columns([3, 1])
@@ -1143,6 +1704,8 @@ def main():
     onnx_output_slot = col_main.empty()
     engine_info_slot = col_right.empty()
     chart_slot_outer = col_right.empty()
+    # single placeholder for risk messages (avoid appending every frame)
+    risk_slot = col_main.empty()
     # bottom-fixed alert container so alerts don't push content
     bottom_alert = st.empty()
     fd = FallDetector()
@@ -1189,7 +1752,7 @@ def main():
         st.session_state.risk_history.append({'ts': time.time(), 'risk': float(risk_score), 'sway': float(sway_score), 'engine': engine})
 
 
-    def record_and_notify(ts, score, engine):
+    def record_and_notify(ts, score, engine, user_id: str = None):
         """Record a local alert entry so the UI shows it consistently across modes.
 
         Kept lightweight: append to session_state. External API hooks can be added later.
@@ -1197,10 +1760,111 @@ def main():
         try:
             if 'alerts_sent' not in st.session_state or not isinstance(st.session_state.get('alerts_sent'), list):
                 st.session_state.alerts_sent = []
-            st.session_state.alerts_sent.append({'ts': float(ts), 'score': float(score) if score is not None else None, 'engine': engine})
+            st.session_state.alerts_sent.append({'ts': float(ts), 'score': float(score) if score is not None else None, 'engine': engine, 'user_id': user_id})
+            try:
+                persist_alert_event(ts=float(ts), user_id=user_id, score=score, engine=engine, status='triggered')
+            except Exception:
+                pass
         except Exception:
             # swallow to avoid crashing the demo
             pass
+        # Optional: trigger voice interaction in background when voice alerts enabled
+        try:
+            if st.session_state.get('voice_alerts_enabled'):
+                # lazy-get predictor instance stored in session_state by the sidebar control
+                predictor_inst = st.session_state.get('eb_predictor')
+                if predictor_inst is not None:
+                    def _voice_thread():
+                        # avoid overlapping voice sessions
+                        if st.session_state.get('voice_active'):
+                            return
+                        st.session_state['voice_active'] = True
+                        try:
+                            q = None
+                            try:
+                                # get the question text from predictor WITHOUT letting predictor perform TTS
+                                p = predictor_inst
+                                orig_tts = getattr(p, 'tts_engine', None)
+                                # temporarily disable predictor's internal TTS to avoid duplicate playback
+                                try:
+                                    p.tts_engine = None
+                                except Exception:
+                                    pass
+                                # explicitly request the question text without allowing predictor to speak or record
+                                try:
+                                    q = p.ask_user_checkin_question(user_id=user_id, speak=False)
+                                except TypeError:
+                                    # older predictor signatures may not accept kwargs; fall back to positional safe call
+                                    try:
+                                        q = p.ask_user_checkin_question(user_id)
+                                    except Exception:
+                                        q = p.ask_user_checkin_question()
+                                # restore original tts engine
+                                try:
+                                    p.tts_engine = orig_tts
+                                except Exception:
+                                    pass
+                            except Exception:
+                                logging.exception('Failed to retrieve question text from predictor')
+
+                            if q:
+                                # persist last voice question for UI/debug
+                                try:
+                                    st.session_state['last_voice_question'] = q
+                                    if st.session_state.get('alerts_sent'):
+                                        st.session_state.alerts_sent[-1].update({'voice_question': q})
+                                except Exception:
+                                    pass
+
+                                # Play the question using macOS `say` with selected voice (no recording)
+                                try:
+                                    if st.session_state.get('voice_alerts_enabled', False):
+                                        # map friendly label to actual voice name
+                                        sel = st.session_state.get('tts_voice', 'ChatGPT (female, simulated)')
+                                        voice_name = voice_map.get(sel, sel) if 'voice_map' in locals() else (sel if sel not in ('ChatGPT (female, simulated)',) else 'Samantha')
+                                        # if user selected 'ChatGPT...' map to Samantha
+                                        if sel == 'ChatGPT (female, simulated)':
+                                            voice_name = 'Samantha'
+                                        # call macOS say (best-effort)
+                                        subprocess.run(['say', '-v', voice_name, q])
+                                    else:
+                                        logging.info('Voice alerts disabled; skipping TTS playback')
+                                except Exception:
+                                    # fallback: try predictor's TTS if available
+                                    try:
+                                        if st.session_state.get('voice_alerts_enabled', False) and getattr(predictor_inst, 'tts_engine', None):
+                                            predictor_inst.tts_engine.say(q)
+                                            predictor_inst.tts_engine.runAndWait()
+                                    except Exception:
+                                        logging.exception('Failed to play TTS')
+
+                        except Exception:
+                            logging.exception('Voice alert thread failed')
+                        finally:
+                            # small delay to avoid immediate re-trigger
+                            time.sleep(0.2)
+                            st.session_state['voice_active'] = False
+
+                    try:
+                        th = threading.Thread(target=_voice_thread, daemon=True)
+                        th.start()
+                    except Exception:
+                        pass
+        except Exception:
+            # don't let voice code break alert recording
+            pass
+
+    # --- Persistence helpers for alerts (delegated to src.alert_persistence) ---
+    try:
+        # import the central persistence helpers so they can be tested independently
+        from alert_persistence import persist_alert_event, ensure_alerts_db
+    except Exception:
+        # fallback to local no-op implementations
+        def ensure_alerts_db():
+            return None
+
+        def persist_alert_event(*args, **kwargs):
+            return False
 
     def recent_risk_series():
         return [entry.get('risk', 0.0) for entry in st.session_state.risk_history]
@@ -1247,14 +1911,15 @@ def main():
                         except Exception:
                             conf = 1.0
                         risk_score = float(prob) if prob is not None else ((float(angle) / 180.0) * conf if angle is not None else 0.0)
-                        fall = (float(prob) >= float(confidence_threshold)) if prob is not None else ((float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False)
+                        # fall decision will be resolved later using decision_helpers
+                        fall = False
                         # still run mediapipe for visualization
                         res = fd.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                     elif prob is not None:
                         res = fd.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                         angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                         conf = float(prob)
-                        fall = (prob >= float(confidence_threshold))
+                        fall = False
                         risk_score = float(prob)
                     else:
                         # run succeeded but output not recognized; fall back to mediapipe-derived metrics
@@ -1262,10 +1927,11 @@ def main():
                         angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                         conf = compute_confidence_from_results(res)
                         risk_score = (float(angle) / 180.0) * conf if angle is not None else 0.0
-                        fall = (float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False
+                        fall = False
                     try:
-                        onnx_output_slot.markdown('**ONNX output (raw)**')
-                        onnx_output_slot.text(str(parsed.get('raw'))[:500])
+                        if st.session_state.get('show_raw_outputs'):
+                            onnx_output_slot.markdown('**ONNX output (raw)**')
+                            onnx_output_slot.text(str(parsed.get('raw'))[:500])
                     except Exception:
                         pass
                     # adapt ONNX keypoints to canonical schema if available
@@ -1290,7 +1956,7 @@ def main():
                 angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                 conf = compute_confidence_from_results(res)
                 risk_score = (float(angle) / 180.0) * conf if angle is not None else 0.0
-                fall = (float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False
+                fall = False
                 risk_score = float(risk_score)
                 onnx_used = False
 
@@ -1326,6 +1992,15 @@ def main():
             except Exception:
                 sway_score = 0.0
 
+            # compute delta from recent angle history and final fall decision
+            try:
+                from decision_helpers import compute_delta_from_history, compute_fall_decision
+                delta = compute_delta_from_history(list(st.session_state.angle_window))
+                # decide fall using unified helper (prob may be None)
+                fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
+            except Exception:
+                delta = 0.0
+
             push_risk(risk_score, sway_score, engine_label)
             risk = {'level': 'high' if fall else 'low', 'score': float(risk_score)}
 
@@ -1334,6 +2009,38 @@ def main():
             col_main.image(out)
             # write single items to column to avoid Streamlit error about replacing with multiple elements
             col_main.write(f'Angle: {angle}')
+            # show average keypoint confidence if available
+            try:
+                avg_conf = None
+                if kps is not None:
+                    avg_conf = compute_keypoint_confidence_from_list(kps)
+                else:
+                    # try from mediapipe results
+                    avg_conf = compute_confidence_from_results(res)
+            except Exception:
+                avg_conf = 0.0
+            col_main.write(f'Keypoint confidence: {avg_conf:.2f}')
+            # compute action label
+            try:
+                # use recent angle window for delta detection
+                history = list(st.session_state.angle_window)
+                action = classify_action_from_torso(
+                    angle,
+                    avg_conf,
+                    sway_score,
+                    history,
+                    angle_thresh,
+                    confidence_threshold,
+                    fall_delta_thresh=fall_delta_thresh,
+                    walk_sway_min=walk_sway_min,
+                    walk_sway_max=walk_sway_max,
+                    sit_angle_min=sit_angle_min,
+                    sit_angle_max=sit_angle_max,
+                    min_conf_for_action=min_conf_for_action,
+                )
+            except Exception:
+                action = '未知'
+            col_main.write(f'Action: {action}')
             col_main.write(f'Fall: {fall}')
             # show small history chart in right column (slice to history length)
             try:
@@ -1365,14 +2072,40 @@ def main():
                 engine_info_slot.info(f'Inference engine: ONNX ({getattr(st.session_state.get("onnx_runner"), "provider_used", "unknown")})')
             else:
                 engine_info_slot.info('Inference engine: MediaPipe (fallback)')
-            # bottom-fixed alert
-            bottom_alert.empty()
-            if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
-                bottom_alert.warning('ALERT')
-                try:
-                    record_and_notify(time.time(), risk.get('score'), engine_label)
-                except Exception:
-                    pass
+            # Unified alert handling: show top large alert when triggered
+            try:
+                if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
+                    # only create a new active alert if none exists
+                    if not st.session_state.get('active_alert'):
+                        now_ts = time.time()
+                        uid = None
+                        try:
+                            from alert_utils import safe_identify_user
+                            p = st.session_state.get('eb_predictor')
+                            uid = safe_identify_user(p, frame)
+                        except Exception:
+                            uid = None
+                        st.session_state['active_alert'] = {'ts': now_ts, 'user_id': uid, 'score': risk.get('score'), 'engine': engine_label}
+                        # persist trigger
+                        try:
+                            persist_alert_event(ts=now_ts, user_id=uid, score=risk.get('score'), engine=engine_label, status='triggered')
+                        except Exception:
+                            pass
+                        try:
+                            record_and_notify(now_ts, risk.get('score'), engine_label, user_id=uid)
+                        except Exception:
+                            pass
+                    # show current active alert content
+                    active = st.session_state.get('active_alert') or {}
+                    timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(active.get('ts') or time.time()))
+                    uid = active.get('user_id') or 'unknown'
+                    show_top_alert(f'FALL ALERT — 老人跌倒了，請緊急救援\n時間: {timestr} — user: {uid}', level='error')
+                else:
+                    # do not auto-clear if an active alert exists; keep until user action
+                    if not st.session_state.get('active_alert'):
+                        clear_top_alert()
+            except Exception:
+                pass
     elif mode == 'Video':
         up = st.file_uploader('Upload video', type=['mp4', 'mov', 'avi'])
         if up is not None:
@@ -1382,6 +2115,10 @@ def main():
             cap = cv2.VideoCapture(tmp.name)
             frame_slot = col_main.empty()
             chart_slot = col_right.empty()
+            # placeholder to update angle/confidence/action/delta in-place for camera mode
+            stats_slot = col_right.empty()
+            # placeholder to update angle/confidence/action/delta in-place (prevents repeated appends)
+            stats_slot = col_right.empty()
             stop = st.button('Stop')
             while cap.isOpened() and not stop:
                 ret, frame = cap.read()
@@ -1408,23 +2145,25 @@ def main():
                             except Exception:
                                 conf = 1.0
                             risk_score = float(prob) if prob is not None else ((float(angle) / 180.0) * conf if angle is not None else 0.0)
-                            fall = (float(prob) >= float(confidence_threshold)) if prob is not None else ((float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False)
+                            # defer fall decision
+                            fall = False
                             res = fd.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                         elif prob is not None:
                             res = fd.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                             angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                             conf = float(prob)
-                            fall = (prob >= float(confidence_threshold))
+                            fall = False
                             risk_score = float(prob)
                         else:
                             res = fd.pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                             angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                             conf = compute_confidence_from_results(res)
                             risk_score = (float(angle) / 180.0) * conf if angle is not None else 0.0
-                            fall = (float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False
+                            fall = False
                         try:
-                            onnx_output_slot.markdown('**ONNX output (raw)**')
-                            onnx_output_slot.text(str(parsed.get('raw'))[:500])
+                            if st.session_state.get('show_raw_outputs'):
+                                onnx_output_slot.markdown('**ONNX output (raw)**')
+                                onnx_output_slot.text(str(parsed.get('raw'))[:500])
                         except Exception:
                             pass
                         try:
@@ -1452,7 +2191,7 @@ def main():
                     angle = compute_torso_angle_from_results(res, frame.shape, key_mode=key_mode, mode=angle_calc_mode)
                     conf = compute_confidence_from_results(res)
                     risk_score = (float(angle) / 180.0) * conf if angle is not None else 0.0
-                    fall = (float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False
+                    fall = False
                     risk_score = float(risk_score)
                     onnx_used = False
 
@@ -1482,7 +2221,17 @@ def main():
                 except Exception:
                     sway_score = 0.0
 
+                # compute delta and final fall decision for video frame
+                try:
+                    from decision_helpers import compute_delta_from_history, compute_fall_decision
+                    delta = compute_delta_from_history(list(st.session_state.angle_window))
+                    fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
+                except Exception:
+                    delta = 0.0
+
                 push_risk(risk_score, sway_score, engine_label)
+                # ensure a risk dict exists for consistent display
+                risk = {'level': 'high' if fall else 'low', 'score': float(risk_score)}
                 annotated = fd.draw_pose_landmarks(frame.copy(), getattr(res, 'pose_landmarks', None))
                 annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
                 frame_slot.image(annotated)
@@ -1490,21 +2239,193 @@ def main():
                 # show risk level
                 try:
                     level = 'HIGH' if risk.get('level') == 'high' else 'LOW'
+                    # update the single risk_slot placeholder instead of appending
                     if level == 'HIGH':
-                        col_main.error(f'Risk level: {level} (score={risk.get("score")})')
+                        risk_slot.warning(f'Risk level: {level} (score={risk.get("score")})')
                     else:
-                        col_main.info(f'Risk level: {level} (score={risk.get("score")})')
+                        risk_slot.info(f'Risk level: {level} (score={risk.get("score")})')
                 except Exception:
                     pass
-                # bottom-fixed alert and fall notification
-                bottom_alert.empty()
-                if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
-                    # red alert for actual fall
-                    bottom_alert.error('FALL DETECTED!')
-                    try:
-                        record_and_notify(time.time(), risk.get('score'), engine_label)
-                    except Exception:
-                        pass
+                # display angle/confidence/action for video frame
+                try:
+                    avg_conf = 0.0
+                    if 'kps' in locals() and kps is not None:
+                        avg_conf = compute_keypoint_confidence_from_list(kps)
+                    else:
+                        try:
+                            avg_conf = compute_confidence_from_results(res)
+                        except Exception:
+                            avg_conf = 0.0
+                except Exception:
+                    avg_conf = 0.0
+                try:
+                    history = list(st.session_state.angle_window)
+                    action = classify_action_from_torso(angle, avg_conf, sway_score, history, angle_thresh, confidence_threshold, fall_delta_thresh=fall_delta_thresh, walk_sway_min=walk_sway_min, walk_sway_max=walk_sway_max, sit_angle_min=sit_angle_min, sit_angle_max=sit_angle_max, min_conf_for_action=min_conf_for_action)
+                except Exception:
+                    action = '未知'
+                try:
+                    # if fall is detected, show a prominent warning above the metrics
+                    with stats_slot.container():
+                        try:
+                            if bool(fall):
+                                stats_slot.warning(f"FALL DETECTED  請立即求助 — Action: {action}")
+                        except Exception:
+                            try:
+                                if bool(fall):
+                                    stats_slot.warning('FALL DETECTED — please assist')
+                            except Exception:
+                                pass
+
+                        mcols = stats_slot.columns(4)
+                        try:
+                            mcols[0].metric('Angle (deg)', f"{angle:.1f}" if angle is not None else 'N/A')
+                        except Exception:
+                            mcols[0].metric('Angle (deg)', str(angle))
+                        try:
+                            mcols[1].metric('Delta (deg)', f"{delta:.1f}")
+                        except Exception:
+                            mcols[1].metric('Delta (deg)', str(delta))
+                        try:
+                            mcols[2].metric('Confidence', f"{avg_conf:.2f}")
+                        except Exception:
+                            mcols[2].metric('Confidence', str(avg_conf))
+                        try:
+                            mcols[3].metric('Risk score', f"{risk.get('score', 0.0):.3f}")
+                        except Exception:
+                            mcols[3].metric('Risk score', str(risk.get('score', 0.0)))
+
+                        # below metrics show Action and Fall state
+                        try:
+                            st_row = stats_slot.columns([1, 1])
+                            st_row[0].write(f'Action: {action}')
+                            st_row[1].write(f'Fall: {fall}')
+                        except Exception:
+                            try:
+                                stats_slot.write(f'Action: {action} | Fall: {fall}')
+                            except Exception:
+                                pass
+
+                        # interactive buttons for camera mode: 呼叫救援 & Dismiss (camera keys)
+                        try:
+                            btn_cols = stats_slot.columns([1, 1])
+                            key_base = int(time.time() * 1000)
+                            rescue_key = f'rescue_btn_c_{key_base}'
+                            dismiss_key = f'dismiss_btn_c_{key_base}'
+                            if btn_cols[0].button('呼叫救援', key=rescue_key) or btn_cols[0].button('呼叫救援', key=rescue_key + '_alt'):
+                                def _rescue_worker_cam():
+                                    try:
+                                        if not st.session_state.get('active_alert'):
+                                            st.session_state['active_alert'] = {'ts': time.time(), 'user_id': st.session_state.get('eb_predictor_user') if st.session_state.get('eb_predictor_user') else None, 'score': risk.get('score'), 'engine': engine_label}
+                                        active = st.session_state.get('active_alert') or {}
+                                        payload = {'ts': active.get('ts'), 'user_id': active.get('user_id'), 'score': active.get('score'), 'engine': active.get('engine'), 'note': '呼叫救援 from UI (camera)'}
+                                        url = os.environ.get('RESCUE_WEBHOOK_URL') if os.environ else None
+                                        sent = False
+                                        result_msg = None
+                                        if url:
+                                            try:
+                                                from alert_utils import send_rescue_webhook
+                                                sent, result_msg = send_rescue_webhook(url, payload, timeout=8)
+                                            except Exception as e:
+                                                sent = False
+                                                result_msg = str(e)
+                                        try:
+                                            from alert_persistence import persist_alert_event
+                                            persist_alert_event(ts=active.get('ts') or time.time(), user_id=active.get('user_id'), score=active.get('score'), engine=active.get('engine'), status='rescued' if sent else 'rescue_attempted', dismissed_by='user_rescue' if sent else 'user_rescue_failed', dismissed_at=time.time())
+                                        except Exception:
+                                            pass
+                                        try:
+                                            st.session_state['last_rescue_result'] = {'sent': bool(sent), 'msg': result_msg}
+                                        except Exception:
+                                            pass
+                                        try:
+                                            if st.session_state.get('voice_alerts_enabled'):
+                                                sel = st.session_state.get('tts_voice', 'ChatGPT (female, simulated)')
+                                                voice_name = 'Samantha' if sel == 'ChatGPT (female, simulated)' else sel
+                                                subprocess.run(['say', '-v', voice_name, '呼叫救援，偵測到疑似跌倒，請協助。'])
+                                        except Exception:
+                                            pass
+                                        try:
+                                            st.session_state.pop('active_alert', None)
+                                        except Exception:
+                                            pass
+                                        try:
+                                            clear_top_alert()
+                                        except Exception:
+                                            pass
+                                    except Exception:
+                                        logging.exception('Rescue worker (camera) failed')
+
+                                try:
+                                    th = threading.Thread(target=_rescue_worker_cam, daemon=True)
+                                    th.start()
+                                except Exception:
+                                    _rescue_worker_cam()
+
+                            if btn_cols[1].button('Dismiss', key=dismiss_key):
+                                try:
+                                    active = st.session_state.get('active_alert') or {}
+                                    try:
+                                        from alert_persistence import persist_alert_event
+                                        persist_alert_event(ts=active.get('ts') or time.time(), user_id=active.get('user_id'), score=active.get('score'), engine=active.get('engine'), status='dismissed', dismissed_by='user', dismissed_at=time.time())
+                                    except Exception:
+                                        pass
+                                    try:
+                                        record_and_notify(time.time(), None, 'user_dismiss')
+                                    except Exception:
+                                        pass
+                                except Exception:
+                                    pass
+                                finally:
+                                    try:
+                                        st.session_state.pop('active_alert', None)
+                                    except Exception:
+                                        pass
+                                    try:
+                                        clear_top_alert()
+                                    except Exception:
+                                        pass
+                        except Exception:
+                            pass
+                        except Exception:
+                            try:
+                                stats_slot.write(f'Action: {action} | Fall: {fall}')
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+                # Unified alert handling (top large alert)
+                try:
+                    if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
+                        if not st.session_state.get('active_alert'):
+                            now_ts = time.time()
+                            uid = None
+                            try:
+                                p = st.session_state.get('eb_predictor')
+                                if p is not None:
+                                    try:
+                                        uid = p.identify_user(frame)
+                                    except Exception:
+                                        uid = None
+                            except Exception:
+                                uid = None
+                            st.session_state['active_alert'] = {'ts': now_ts, 'user_id': uid, 'score': risk.get('score'), 'engine': engine_label}
+                            try:
+                                persist_alert_event(ts=now_ts, user_id=uid, score=risk.get('score'), engine=engine_label, status='triggered')
+                            except Exception:
+                                pass
+                            try:
+                                record_and_notify(now_ts, risk.get('score'), engine_label, user_id=uid)
+                            except Exception:
+                                pass
+                        active = st.session_state.get('active_alert') or {}
+                        timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(active.get('ts') or time.time()))
+                        uid = active.get('user_id') or 'unknown'
+                        show_top_alert(f'FALL ALERT — 老人跌倒了，請緊急救援\n時間: {timestr} — user: {uid}', level='error')
+                    else:
+                        if not st.session_state.get('active_alert'):
+                            clear_top_alert()
+                except Exception:
+                    pass
                 if onnx_used:
                     engine_info_slot.info(f'Inference engine: ONNX ({getattr(st.session_state.get("onnx_runner"), "provider_used", "unknown")})')
                 else:
@@ -1609,8 +2530,9 @@ def main():
                             risk_score = (float(angle) / 180.0) * conf if angle is not None else 0.0
                             fall = (float(angle) > float(angle_thresh) and conf >= float(confidence_threshold)) if angle is not None else False
                         try:
-                            onnx_output_slot.markdown('**ONNX output (raw)**')
-                            onnx_output_slot.text(str(parsed.get('raw'))[:500])
+                            if st.session_state.get('show_raw_outputs'):
+                                onnx_output_slot.markdown('**ONNX output (raw)**')
+                                onnx_output_slot.text(str(parsed.get('raw'))[:500])
                         except Exception:
                             pass
                         try:
@@ -1662,8 +2584,17 @@ def main():
                             sway_score = float(np.clip(s / float(sway_scale), 0.0, 1.0))
                 except Exception:
                     sway_score = 0.0
+                # compute delta and final fall decision for camera frame
+                try:
+                    from decision_helpers import compute_delta_from_history, compute_fall_decision
+                    delta = compute_delta_from_history(list(st.session_state.angle_window))
+                    fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
+                except Exception:
+                    delta = 0.0
 
                 push_risk(risk_score, sway_score, engine_label)
+                # ensure a risk dict exists for consistent display
+                risk = {'level': 'high' if fall else 'low', 'score': float(risk_score)}
                 annotated = fd.draw_pose_landmarks(frame.copy(), getattr(res, 'pose_landmarks', None))
                 annotated = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
                 frame_slot.image(annotated)
@@ -1672,19 +2603,97 @@ def main():
                 try:
                     level = 'HIGH' if risk.get('level') == 'high' else 'LOW'
                     if level == 'HIGH':
-                        col_main.error(f'Risk level: {level} (score={risk.get("score")})')
+                        risk_slot.warning(f'Risk level: {level} (score={risk.get("score")})')
                     else:
-                        col_main.info(f'Risk level: {level} (score={risk.get("score")})')
+                        risk_slot.info(f'Risk level: {level} (score={risk.get("score")})')
                 except Exception:
                     pass
-                # bottom-fixed alert and fall notification
-                bottom_alert.empty()
-                if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
-                    bottom_alert.error('FALL DETECTED!')
-                    try:
-                        record_and_notify(time.time(), risk.get('score'), engine_label)
-                    except Exception:
-                        pass
+                # display delta and action in right column
+                try:
+                    avg_conf = compute_confidence_from_results(res)
+                except Exception:
+                    avg_conf = 0.0
+                try:
+                    history = list(st.session_state.angle_window)
+                    action = classify_action_from_torso(angle, avg_conf, sway_score, history, angle_thresh, confidence_threshold, fall_delta_thresh=fall_delta_thresh, walk_sway_min=walk_sway_min, walk_sway_max=walk_sway_max, sit_angle_min=sit_angle_min, sit_angle_max=sit_angle_max, min_conf_for_action=min_conf_for_action)
+                except Exception:
+                    action = '未知'
+                try:
+                    with stats_slot.container():
+                        try:
+                            if bool(fall):
+                                stats_slot.warning(f"FALL DETECTED  請立即求助 — Action: {action}")
+                        except Exception:
+                            try:
+                                if bool(fall):
+                                    stats_slot.warning('FALL DETECTED — please assist')
+                            except Exception:
+                                pass
+
+                        mcols = stats_slot.columns(4)
+                        try:
+                            mcols[0].metric('Angle (deg)', f"{angle:.1f}" if angle is not None else 'N/A')
+                        except Exception:
+                            mcols[0].metric('Angle (deg)', str(angle))
+                        try:
+                            mcols[1].metric('Delta (deg)', f"{delta:.1f}")
+                        except Exception:
+                            mcols[1].metric('Delta (deg)', str(delta))
+                        try:
+                            mcols[2].metric('Confidence', f"{avg_conf:.2f}")
+                        except Exception:
+                            mcols[2].metric('Confidence', str(avg_conf))
+                        try:
+                            mcols[3].metric('Risk score', f"{risk.get('score', 0.0):.3f}")
+                        except Exception:
+                            mcols[3].metric('Risk score', str(risk.get('score', 0.0)))
+
+                        try:
+                            st_row = stats_slot.columns([1, 1])
+                            st_row[0].write(f'Action: {action}')
+                            st_row[1].write(f'Fall: {fall}')
+                        except Exception:
+                            try:
+                                stats_slot.write(f'Action: {action} | Fall: {fall}')
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+                # Unified alert handling (top large alert)
+                try:
+                    if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
+                        if not st.session_state.get('active_alert'):
+                            now_ts = time.time()
+                            # try to identify user if predictor available
+                            uid = None
+                            try:
+                                p = st.session_state.get('eb_predictor')
+                                if p is not None:
+                                    try:
+                                        uid = p.identify_user(frame)
+                                    except Exception:
+                                        uid = None
+                            except Exception:
+                                uid = None
+                            st.session_state['active_alert'] = {'ts': now_ts, 'user_id': uid, 'score': risk.get('score'), 'engine': engine_label}
+                            try:
+                                persist_alert_event(ts=now_ts, user_id=uid, score=risk.get('score'), engine=engine_label, status='triggered')
+                            except Exception:
+                                pass
+                            try:
+                                record_and_notify(now_ts, risk.get('score'), engine_label, user_id=uid)
+                            except Exception:
+                                pass
+                        active = st.session_state.get('active_alert') or {}
+                        timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(active.get('ts') or time.time()))
+                        uid = active.get('user_id') or 'unknown'
+                        show_top_alert(f'FALL ALERT — 老人跌倒了，請緊急救援\n時間: {timestr} — user: {uid}', level='error')
+                    else:
+                        if not st.session_state.get('active_alert'):
+                            clear_top_alert()
+                except Exception:
+                    pass
                 if onnx_used:
                     engine_info_slot.info(f'Inference engine: ONNX ({getattr(st.session_state.get("onnx_runner"), "provider_used", "unknown")})')
                 else:
@@ -1694,6 +2703,7 @@ def main():
                     break
                 time.sleep(0.03)
             cap.release()
+
 
 
 if __name__ == '__main__':
