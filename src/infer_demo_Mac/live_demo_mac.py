@@ -85,6 +85,21 @@ DEFAULT_RESOLUTION = _args.resolution if getattr(_args, 'resolution', None) else
 DEFAULT_NO_DISPLAY = bool(getattr(_args, 'no_display', False))
 DEFAULT_ONNX_MODEL = _args.onnx_model if getattr(_args, 'onnx_model', None) else None
 
+# If no ONNX model specified via CLI, try to read the repo config default file
+try:
+    if not DEFAULT_ONNX_MODEL:
+        cfg_file = os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'config', 'default_onnx.txt'))
+        if os.path.isfile(cfg_file):
+            try:
+                with open(cfg_file, 'r', encoding='utf-8') as _f:
+                    cur = _f.read().strip()
+                if cur:
+                    DEFAULT_ONNX_MODEL = cur
+            except Exception:
+                pass
+except Exception:
+    pass
+
 
 def find_onnx_models() -> tuple:
     """Search for ONNX models.
@@ -141,10 +156,11 @@ def can_load_onnx(path: str) -> bool:
 
 class ONNXRunner:
     """Small, best-effort ONNX runner."""
-    def __init__(self, path: str, providers: Optional[List[str]] = None):
+    def __init__(self, path: str, providers: Optional[List[str]] = None, force_cpu: bool = False):
         # lightweight constructor: don't create heavy InferenceSession here.
         self.path = path
         self.requested_providers = providers
+        self.force_cpu = force_cpu
         self.sess = None
         self.provider_used = None
         self.input_name = None
@@ -173,7 +189,9 @@ class ONNXRunner:
             'OpenVINOExecutionProvider',
             'CPUExecutionProvider'
         ]
-        if self.requested_providers:
+        if self.force_cpu:
+            used = ['CPUExecutionProvider']
+        elif self.requested_providers:
             used = [p for p in self.requested_providers if p in avail]
         else:
             used = [p for p in pref if p in avail]
@@ -497,6 +515,9 @@ def main():
     except Exception:
         pass
 
+    # Top-level alert slot (under title) for prominent fall alerts
+    top_alert = st.empty()
+
     # Sidebar: model selection and hyperparameters
     # Input controls moved to sidebar top (so model select + input are together)
 
@@ -535,6 +556,12 @@ def main():
     except Exception:
         pass
     models, models_base = find_onnx_models()
+    # Force CPU option: helpful on macOS when CoreML/CUDA providers may be suboptimal
+    try:
+        default_force_cpu = True if sys.platform == 'darwin' else False
+    except Exception:
+        default_force_cpu = False
+    force_cpu = st.sidebar.checkbox('Force CPU (prefer CPUExecutionProvider)', value=default_force_cpu)
     # Resolution selector (non-intrusive UI default)
     res_choices = ['320x240', '640x480', '1280x720']
     try:
@@ -599,7 +626,17 @@ def main():
     else:
         display_models = ['MediaPipe (fallback)'] + [_fmt_label(d) for d in display_items]
 
-    selected_model_display = st.sidebar.selectbox('ONNX Model (preferred)', display_models)
+        # attempt to preselect the configured DEFAULT_ONNX_MODEL when present in display_items
+        try:
+            preselect_index = 0
+            if DEFAULT_ONNX_MODEL and display_items:
+                for i, (_rel, path, _ok) in enumerate(display_items):
+                    if os.path.abspath(path) == os.path.abspath(DEFAULT_ONNX_MODEL) or os.path.basename(path) == os.path.basename(DEFAULT_ONNX_MODEL):
+                        preselect_index = i + 1  # +1 because display_models has fallback at 0
+                        break
+            selected_model_display = st.sidebar.selectbox('ONNX Model (preferred)', display_models, index=preselect_index)
+        except Exception:
+            selected_model_display = st.sidebar.selectbox('ONNX Model (preferred)', display_models)
     if selected_model_display and selected_model_display != 'MediaPipe (fallback)':
         idx = display_models.index(selected_model_display) - 1
         if 0 <= idx < len(display_items):
@@ -932,8 +969,12 @@ def main():
                                 # launch background thread
                                 th = threading.Thread(target=_batch_runner, args=(resolved[:50],), daemon=True)
                                 th.start()
-                except Exception:
-                    pass
+                # Re-run full smoke test button (no model arg)
+                if st.sidebar.button('Re-run full ONNX smoke-test'):
+                    def _run_full():
+                        _run_smoke_test('')
+                    th = threading.Thread(target=_run_full, daemon=True)
+                    th.start()
     except Exception:
         pass
 
@@ -1147,6 +1188,20 @@ def main():
     def push_risk(risk_score: float, sway_score: float, engine: str):
         st.session_state.risk_history.append({'ts': time.time(), 'risk': float(risk_score), 'sway': float(sway_score), 'engine': engine})
 
+
+    def record_and_notify(ts, score, engine):
+        """Record a local alert entry so the UI shows it consistently across modes.
+
+        Kept lightweight: append to session_state. External API hooks can be added later.
+        """
+        try:
+            if 'alerts_sent' not in st.session_state or not isinstance(st.session_state.get('alerts_sent'), list):
+                st.session_state.alerts_sent = []
+            st.session_state.alerts_sent.append({'ts': float(ts), 'score': float(score) if score is not None else None, 'engine': engine})
+        except Exception:
+            # swallow to avoid crashing the demo
+            pass
+
     def recent_risk_series():
         return [entry.get('risk', 0.0) for entry in st.session_state.risk_history]
 
@@ -1314,6 +1369,10 @@ def main():
             bottom_alert.empty()
             if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
                 bottom_alert.warning('ALERT')
+                try:
+                    record_and_notify(time.time(), risk.get('score'), engine_label)
+                except Exception:
+                    pass
     elif mode == 'Video':
         up = st.file_uploader('Upload video', type=['mp4', 'mov', 'avi'])
         if up is not None:
@@ -1442,11 +1501,6 @@ def main():
                 if fusion.should_trigger_alert(fall_detected=fall, help_detected=False):
                     # red alert for actual fall
                     bottom_alert.error('FALL DETECTED!')
-                    # record notification (placeholder) so we don't actually call external services
-                    def record_and_notify(ts, score, engine):
-                        if 'alerts_sent' not in st.session_state:
-                            st.session_state.alerts_sent = []
-                        st.session_state.alerts_sent.append({'ts': ts, 'score': score, 'engine': engine})
                     try:
                         record_and_notify(time.time(), risk.get('score'), engine_label)
                     except Exception:

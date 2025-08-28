@@ -70,7 +70,52 @@ def main():
 
     adapter = PoseAdapter()
 
+    def try_resolve_model_path(m):
+        """Return a resolved absolute path for model m if possible.
+
+        If m exists as file, return abspath. If not, try to find a candidate in
+        src/models that matches the basename or name prefix. Otherwise return m
+        unchanged (caller will mark file_ok False).
+        """
+        try:
+            if os.path.isabs(m) and os.path.isfile(m):
+                return os.path.abspath(m)
+            # if m is a directory ending with .onnx, prefer inner model.onnx or first inner .onnx
+            if os.path.isdir(m) and m.lower().endswith('.onnx'):
+                cand = os.path.join(m, 'model.onnx')
+                if os.path.isfile(cand):
+                    return os.path.abspath(cand)
+                inner = sorted(glob.glob(os.path.join(m, '**', '*.onnx'), recursive=True))
+                for ip in inner:
+                    if os.path.isfile(ip):
+                        return os.path.abspath(ip)
+            # if the path exists relative to repo root
+            abs_try = os.path.abspath(m)
+            if os.path.isfile(abs_try):
+                return abs_try
+            # try to match by basename inside src/models folder
+            b = os.path.basename(m)
+            name_no_ext = os.path.splitext(b)[0]
+            for base in ['src/models', 'src/models/deploy', 'src/models/qaihub_optimized']:
+                for ip in sorted(glob.glob(os.path.join(base, '**', b), recursive=True)):
+                    if os.path.isfile(ip):
+                        return os.path.abspath(ip)
+                for ip in sorted(glob.glob(os.path.join(base, '**', f'{name_no_ext}*.onnx'), recursive=True)):
+                    if os.path.isfile(ip):
+                        return os.path.abspath(ip)
+            # fallback: return original
+            return m
+        except Exception:
+            return m
+
+
     for model in chosen:
+        # normalize model var to a resolved absolute path when possible
+        try:
+            resolved = try_resolve_model_path(model)
+            model = resolved
+        except Exception:
+            pass
         entry = {
             'model': model,
             'provider_used': None,
@@ -85,10 +130,12 @@ def main():
         }
 
         try:
-            # quick file checks
+            # quick file checks (model should already be resolved when possible)
             if not os.path.isfile(model):
                 entry['file_ok'] = False
                 entry['error'] = f'Model file not found: {model}'
+                # keep the reported model path absolute if possible
+                entry['model'] = os.path.abspath(model) if not os.path.isabs(model) else model
                 report['models_tested'].append(entry)
                 continue
             try:
@@ -170,6 +217,14 @@ def main():
         except Exception as e:
             entry['error'] = traceback.format_exc()
         report['models_tested'].append(entry)
+
+    # ensure report model paths are absolute for easier UI matching
+    for m in report['models_tested']:
+        try:
+            if isinstance(m.get('model'), str) and not os.path.isabs(m.get('model')):
+                m['model'] = os.path.abspath(m['model'])
+        except Exception:
+            pass
 
     out_path = os.path.join(rpt_dir, 'onnx_smoke_test.json')
     with open(out_path, 'w', encoding='utf-8') as f:

@@ -1,0 +1,38 @@
+{
+  "models_tested": [
+    {
+      "model": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/j56z76m6g_pose_landmarks_detector_heavy_optimized.onnx__model.onnx__dir/model.onnx",
+      "provider_used": "CoreMLExecutionProvider",
+      "attempted_providers": [
+        "CoreMLExecutionProvider"
+      ],
+      "provider_errors": {},
+      "inference_ok": true,
+      "adapt_ok": true,
+      "kps_shape": [
+        17,
+        3
+      ],
+      "error": null,
+      "file_ok": true,
+      "onnx_parse_error": null
+    },
+    {
+      "model": "/Users/andycyw/mvp_fall_detection_starter/src/models/deploy/hrnet_pose-hrnetpose-float.onnx/model.onnx",
+      "provider_used": "CoreMLExecutionProvider",
+      "attempted_providers": [
+        "CoreMLExecutionProvider"
+      ],
+      "provider_errors": {},
+      "inference_ok": true,
+      "adapt_ok": true,
+      "kps_shape": [
+        17,
+        3
+      ],
+      "error": null,
+      "file_ok": true,
+      "onnx_parse_error": null
+    }
+  ]
+}
