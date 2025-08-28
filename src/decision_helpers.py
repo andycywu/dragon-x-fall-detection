@@ -11,7 +11,7 @@ def compute_delta_from_history(angle_history: List[float]) -> float:
         return 0.0
 
 
-def compute_fall_decision(prob: Optional[float], angle: Optional[float], conf: float, angle_thresh: float, confidence_threshold: float, delta: float = 0.0, fall_delta_thresh: float = 40.0, min_conf_for_action: float = 0.25) -> bool:
+def compute_fall_decision(prob: Optional[float], angle: Optional[float], conf: float, angle_thresh: float, confidence_threshold: float, delta: float = 0.0, fall_delta_thresh: float = 40.0, min_conf_for_action: float = 0.25, action: Optional[str] = None) -> bool:
     """Heuristic fall decision used by the demo.
 
     Logic:
@@ -22,6 +22,13 @@ def compute_fall_decision(prob: Optional[float], angle: Optional[float], conf: f
     Returns True for fall, False otherwise.
     """
     try:
+        # If the action classifier explicitly signals a fall, respect it
+        try:
+            if action is not None and isinstance(action, str) and '摔倒' in action:
+                return True
+        except Exception:
+            pass
+
         if prob is not None:
             try:
                 return float(prob) >= float(confidence_threshold)

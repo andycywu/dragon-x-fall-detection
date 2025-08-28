@@ -1993,13 +1993,43 @@ def main():
                 sway_score = 0.0
 
             # compute delta from recent angle history and final fall decision
-            try:
-                from decision_helpers import compute_delta_from_history, compute_fall_decision
-                delta = compute_delta_from_history(list(st.session_state.angle_window))
-                # decide fall using unified helper (prob may be None)
-                fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
-            except Exception:
-                delta = 0.0
+                try:
+                    from decision_helpers import compute_delta_from_history, compute_fall_decision
+                    delta = compute_delta_from_history(list(st.session_state.angle_window))
+                    # compute action if not already computed
+                    try:
+                        history = list(st.session_state.angle_window)
+                        action = classify_action_from_torso(
+                            angle,
+                            avg_conf if 'avg_conf' in locals() else (conf if 'conf' in locals() else 0.0),
+                            sway_score if 'sway_score' in locals() else 0.0,
+                            history,
+                            angle_thresh,
+                            confidence_threshold,
+                            fall_delta_thresh=fall_delta_thresh,
+                            walk_sway_min=walk_sway_min,
+                            walk_sway_max=walk_sway_max,
+                            sit_angle_min=sit_angle_min,
+                            sit_angle_max=sit_angle_max,
+                            min_conf_for_action=min_conf_for_action,
+                        )
+                    except Exception:
+                        action = None
+
+                    # decide fall using unified helper (prob may be None); include action
+                    fall = compute_fall_decision(
+                        prob if 'prob' in locals() else None,
+                        angle,
+                        conf,
+                        angle_thresh,
+                        confidence_threshold,
+                        delta=delta,
+                        fall_delta_thresh=fall_delta_thresh,
+                        min_conf_for_action=min_conf_for_action,
+                        action=action,
+                    )
+                except Exception:
+                    delta = 0.0
 
             push_risk(risk_score, sway_score, engine_label)
             risk = {'level': 'high' if fall else 'low', 'score': float(risk_score)}
@@ -2040,6 +2070,24 @@ def main():
                 )
             except Exception:
                 action = '未知'
+            # Ensure fall reflects the latest action/classifier decision (recompute here as final guard)
+            try:
+                from decision_helpers import compute_fall_decision, compute_delta_from_history
+                # compute or reuse delta for the most-recent angle window
+                _delta = delta if 'delta' in locals() else compute_delta_from_history(list(st.session_state.angle_window))
+                fall = compute_fall_decision(
+                    prob if 'prob' in locals() else None,
+                    angle,
+                    conf,
+                    angle_thresh,
+                    confidence_threshold,
+                    delta=_delta,
+                    fall_delta_thresh=fall_delta_thresh,
+                    min_conf_for_action=min_conf_for_action,
+                    action=action,
+                )
+            except Exception:
+                pass
             col_main.write(f'Action: {action}')
             col_main.write(f'Fall: {fall}')
             # show small history chart in right column (slice to history length)
@@ -2225,7 +2273,37 @@ def main():
                 try:
                     from decision_helpers import compute_delta_from_history, compute_fall_decision
                     delta = compute_delta_from_history(list(st.session_state.angle_window))
-                    fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
+                    # compute action label for video frame
+                    try:
+                        history = list(st.session_state.angle_window)
+                        action = classify_action_from_torso(
+                            angle,
+                            avg_conf if 'avg_conf' in locals() else (conf if 'conf' in locals() else 0.0),
+                            sway_score if 'sway_score' in locals() else 0.0,
+                            history,
+                            angle_thresh,
+                            confidence_threshold,
+                            fall_delta_thresh=fall_delta_thresh,
+                            walk_sway_min=walk_sway_min,
+                            walk_sway_max=walk_sway_max,
+                            sit_angle_min=sit_angle_min,
+                            sit_angle_max=sit_angle_max,
+                            min_conf_for_action=min_conf_for_action,
+                        )
+                    except Exception:
+                        action = None
+
+                    fall = compute_fall_decision(
+                        prob if 'prob' in locals() else None,
+                        angle,
+                        conf,
+                        angle_thresh,
+                        confidence_threshold,
+                        delta=delta,
+                        fall_delta_thresh=fall_delta_thresh,
+                        min_conf_for_action=min_conf_for_action,
+                        action=action,
+                    )
                 except Exception:
                     delta = 0.0
 
@@ -2263,6 +2341,23 @@ def main():
                     action = classify_action_from_torso(angle, avg_conf, sway_score, history, angle_thresh, confidence_threshold, fall_delta_thresh=fall_delta_thresh, walk_sway_min=walk_sway_min, walk_sway_max=walk_sway_max, sit_angle_min=sit_angle_min, sit_angle_max=sit_angle_max, min_conf_for_action=min_conf_for_action)
                 except Exception:
                     action = '未知'
+                # final guard: recompute fall based on freshly computed action
+                try:
+                    from decision_helpers import compute_fall_decision, compute_delta_from_history
+                    _delta = delta if 'delta' in locals() else compute_delta_from_history(list(st.session_state.angle_window))
+                    fall = compute_fall_decision(
+                        prob if 'prob' in locals() else None,
+                        angle,
+                        conf,
+                        angle_thresh,
+                        confidence_threshold,
+                        delta=_delta,
+                        fall_delta_thresh=fall_delta_thresh,
+                        min_conf_for_action=min_conf_for_action,
+                        action=action,
+                    )
+                except Exception:
+                    pass
                 try:
                     # if fall is detected, show a prominent warning above the metrics
                     with stats_slot.container():
@@ -2588,7 +2683,37 @@ def main():
                 try:
                     from decision_helpers import compute_delta_from_history, compute_fall_decision
                     delta = compute_delta_from_history(list(st.session_state.angle_window))
-                    fall = compute_fall_decision(prob if 'prob' in locals() else None, angle, conf, angle_thresh, confidence_threshold, delta=delta, fall_delta_thresh=fall_delta_thresh, min_conf_for_action=min_conf_for_action)
+                    # compute action label for camera frame
+                    try:
+                        history = list(st.session_state.angle_window)
+                        action = classify_action_from_torso(
+                            angle,
+                            avg_conf if 'avg_conf' in locals() else (conf if 'conf' in locals() else 0.0),
+                            sway_score if 'sway_score' in locals() else 0.0,
+                            history,
+                            angle_thresh,
+                            confidence_threshold,
+                            fall_delta_thresh=fall_delta_thresh,
+                            walk_sway_min=walk_sway_min,
+                            walk_sway_max=walk_sway_max,
+                            sit_angle_min=sit_angle_min,
+                            sit_angle_max=sit_angle_max,
+                            min_conf_for_action=min_conf_for_action,
+                        )
+                    except Exception:
+                        action = None
+
+                    fall = compute_fall_decision(
+                        prob if 'prob' in locals() else None,
+                        angle,
+                        conf,
+                        angle_thresh,
+                        confidence_threshold,
+                        delta=delta,
+                        fall_delta_thresh=fall_delta_thresh,
+                        min_conf_for_action=min_conf_for_action,
+                        action=action,
+                    )
                 except Exception:
                     delta = 0.0
 
@@ -2618,6 +2743,23 @@ def main():
                     action = classify_action_from_torso(angle, avg_conf, sway_score, history, angle_thresh, confidence_threshold, fall_delta_thresh=fall_delta_thresh, walk_sway_min=walk_sway_min, walk_sway_max=walk_sway_max, sit_angle_min=sit_angle_min, sit_angle_max=sit_angle_max, min_conf_for_action=min_conf_for_action)
                 except Exception:
                     action = '未知'
+                # final guard: recompute fall based on freshly computed action
+                try:
+                    from decision_helpers import compute_fall_decision, compute_delta_from_history
+                    _delta = delta if 'delta' in locals() else compute_delta_from_history(list(st.session_state.angle_window))
+                    fall = compute_fall_decision(
+                        prob if 'prob' in locals() else None,
+                        angle,
+                        conf,
+                        angle_thresh,
+                        confidence_threshold,
+                        delta=_delta,
+                        fall_delta_thresh=fall_delta_thresh,
+                        min_conf_for_action=min_conf_for_action,
+                        action=action,
+                    )
+                except Exception:
+                    pass
                 try:
                     with stats_slot.container():
                         try:
