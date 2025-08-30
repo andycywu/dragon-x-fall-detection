@@ -231,7 +231,7 @@ def demo_voice_interaction(predictor):
         # 演示不同類型的問題
         for i in range(3):
             print(f"\n📢 第 {i+1} 次互動:")
-            question = predictor.ask_user_checkin_question()
+            question = predictor.ask_user_checkin_question(speak=True)
             print(f"  🤖 系統問題: {question}")
             
             # 模擬不同的回答情境
@@ -399,7 +399,7 @@ def demo_live_monitoring(predictor):
                 
                 # 模擬自動詢問
                 if risk_score > 0.6:
-                    question = predictor.ask_user_checkin_question()
+                    question = predictor.ask_user_checkin_question(speak=True)
                     print(f"  🗣️ 自動詢問: {question}")
                 
             else:

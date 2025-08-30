@@ -1,0 +1,23 @@
+# Optional dependencies for enhanced features
+# Install with: ./install_optional.sh   (recommended)
+
+# Face recognition stack (note: dlib/face_recognition may need system deps)
+face_recognition
+
+# TTS and speech
+pyttsx3
+SpeechRecognition
+
+# Whisper for local transcription (heavy)
+whisper
+
+# Plotly for interactive charts in Streamlit UI
+plotly
+
+# Optional project-specific detectors / optimization packages (may be internal)
+# These may not be available on PyPI and are optional in CI/dev setups
+qaihub_optimize
+# official_qai_hub_detector and qai_hub_unified_detector are optional and may be
+# internal to QAI Hub; keep them commented out by default.
+# official_qai_hub_detector
+# qai_hub_unified_detector

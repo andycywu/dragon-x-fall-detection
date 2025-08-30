@@ -172,7 +172,8 @@ def deploy_files(ssh_key, username, port, target_dir, files, source_dir):
     
     for local_file in files:
         local_path = os.path.join(source_dir, local_file)
-        remote_path = f"{target_dir}/{local_file.replace('/', '\\')}"
+        escaped = local_file.replace('/', '\\')
+        remote_path = f"{target_dir}/{escaped}"
         
         if deploy_file(ssh_key, username, port, local_path, remote_path):
             successful += 1
@@ -209,7 +210,8 @@ def deploy_test_images(ssh_key, username, port, target_dir, source_dir):
     
     for local_file in image_files:
         local_path = os.path.join(source_dir, local_file)
-        remote_path = f"{target_dir}/{local_file.replace('/', '\\')}"
+        escaped = local_file.replace('/', '\\')
+        remote_path = f"{target_dir}/{escaped}"
         
         if deploy_file(ssh_key, username, port, local_path, remote_path):
             successful += 1
